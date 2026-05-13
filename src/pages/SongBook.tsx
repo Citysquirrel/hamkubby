@@ -48,8 +48,8 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 		const query = `${song.artist} ${song.title} 가사`;
 		window.open(
 			`https://www.google.com/search?q=${encodeURIComponent(query)}&udm=14`,
-			"_blank",
-			"width=540,height=600",
+			"lyrics",
+			"noopener,width=540,height=600",
 		);
 	}, []);
 
@@ -423,7 +423,13 @@ const SongItem = memo(
 							가사
 						</button>
 					) : (
-						<button className="song-button song-button--search" onClick={() => openLyricsSearch(song)}>
+						<button
+							className="song-button song-button--search"
+							onClick={(e) => {
+								e.stopPropagation();
+								openLyricsSearch(song);
+							}}
+						>
 							<MdSearch />
 							가사
 						</button>
