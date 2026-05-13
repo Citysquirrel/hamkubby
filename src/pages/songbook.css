@@ -1,0 +1,224 @@
+/* =========================
+   LIGHT THEME (default)
+========================= */
+
+:root {
+	--song-bg: #ffffff;
+	--song-border: #d4d4d8;
+
+	--song-title: #111827;
+	--song-artist: #6b7280;
+
+	--song-button-text: #ffffff;
+
+	--song-btn-lyrics: #0f766e;
+	--song-btn-search: #3caa65;
+}
+
+/* =========================
+   DARK THEME
+========================= */
+
+html.dark {
+	--song-bg: #18181b;
+	--song-border: #3f3f46;
+
+	--song-title: #f4f4f5;
+	--song-artist: #9ca3af;
+
+	--song-button-text: #ffffff;
+
+	--song-btn-lyrics: #115e59;
+	--song-btn-search: #348051;
+}
+
+/* =========================
+   SONG ITEM
+========================= */
+
+.song-item {
+	position: relative;
+	background: var(--song-bg);
+
+	border-radius: 10px;
+	padding: 6px 12px;
+
+	border: 1px solid var(--song-border);
+
+	transition:
+		border-color 0.15s ease,
+		transform 0.15s ease;
+
+	cursor: pointer;
+	overflow: hidden;
+}
+
+.song-item:hover {
+	border-color: #6fc78f;
+}
+
+.song-item__content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.song-item__content-wrapper {
+	min-width: 0;
+	flex: 1;
+}
+
+.song-item__left {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+
+	min-width: 0;
+	flex: 1;
+}
+
+.song-item__bottom {
+	display: flex;
+	align-items: center;
+	padding-inline: 4px 8px;
+	gap: 12px;
+	justify-content: space-between;
+}
+
+.song-item__genre-wrapper {
+	width: 48px;
+
+	display: flex;
+	justify-content: center;
+
+	flex-shrink: 0;
+}
+
+/* =========================
+   TAG
+========================= */
+
+.song-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	padding: 2px 8px;
+
+	border-radius: 9999px;
+
+	font-size: 12px;
+	font-weight: 700;
+
+	color: white;
+
+	white-space: nowrap;
+	user-select: none;
+}
+
+.song-tag--kpop {
+	background: #3ec06d;
+}
+
+.song-tag--jpop {
+	background: #3b82f6;
+}
+
+.song-tag--pop {
+	background: #eab308;
+}
+
+/* =========================
+   TEXT
+========================= */
+
+.song-item__title {
+	font-size: 1.1rem;
+	font-weight: 700;
+
+	color: var(--song-title);
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.song-item__artist {
+	font-size: 0.875rem;
+
+	color: var(--song-artist);
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.song-item__cheese {
+	display: flex;
+	flex-direction: row;
+	font-size: 0.75rem;
+	align-items: "center";
+	justify-content: "center";
+	width: 50px;
+	user-select: none;
+}
+
+.song-item__cheese--피토 {
+	color: rgb(255, 178, 85);
+}
+
+.song-item__cheese--우엑 {
+	color: rgb(255, 85, 85);
+}
+.song-item__cheese--잘몰라 {
+	color: rgb(195, 85, 255);
+}
+
+.song-item__notes {
+	font-size: 0.825rem;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.song-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+
+	border: none;
+	border-radius: 8px;
+
+	padding: 4px 8px;
+
+	font-size: 12px;
+	font-weight: 600;
+
+	color: var(--song-button-text);
+
+	cursor: pointer;
+
+	flex-shrink: 0;
+	transition:
+		transform 0.15s ease,
+		opacity 0.15s ease;
+	user-select: none;
+}
+
+.song-button:hover {
+	transform: translateY(-1px);
+	opacity: 0.92;
+}
+
+.song-button--lyrics {
+	background: var(--song-btn-lyrics);
+}
+
+.song-button--search {
+	background: var(--song-btn-search);
+}
