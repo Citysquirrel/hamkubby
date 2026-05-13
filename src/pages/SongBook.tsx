@@ -1,21 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
-import {
-	Avatar,
-	Box,
-	Button,
-	ButtonGroup,
-	Float,
-	HStack,
-	IconButton,
-	Image,
-	Input,
-	Link,
-	Separator,
-	Stack,
-	Text,
-} from "@chakra-ui/react";
-import type { Genre, Song, SortType } from "../config/types";
-import { MdKeyboardArrowUp, MdOutlineLyrics, MdSearch } from "react-icons/md";
+import { Avatar, Box, Button, ButtonGroup, HStack, Image, Input, Link, Separator, Stack, Text } from "@chakra-ui/react";
+import type { Song, SortType } from "../config/types";
+import { MdOutlineLyrics, MdSearch } from "react-icons/md";
 import { normalizeKeyword } from "../lib/search";
 import "./songbook.css";
 
@@ -26,19 +12,11 @@ const GENRE = {
 	POP: "pop",
 };
 
-const genreColor: Record<Genre, string> = {
-	all: "black",
-	kpop: "red",
-	jpop: "orange",
-	pop: "blue",
-};
-
 export default function SongBook({ data, isLoading }: { data: Song[]; isLoading: boolean }) {
 	const searchRef = useRef<HTMLInputElement>(null);
 	const [search, setSearch] = useState("");
 	const [genre, setGenre] = useState("all");
 	const [sort, setSort] = useState<SortType>("title-asc");
-	const [linkName, setLinkName] = useState({});
 
 	const toggleSort = (field: "title" | "artist") => {
 		setSort((prev) => {

@@ -1,19 +1,5 @@
-import {
-	Box,
-	Button,
-	Clipboard,
-	CloseButton,
-	Dialog,
-	IconButton,
-	Image,
-	Link,
-	Portal,
-	Stack,
-	Text,
-	type ButtonProps,
-	type IconButtonProps,
-} from "@chakra-ui/react";
-import { forwardRef, useEffect, useState } from "react";
+import { Box, Button, Clipboard, CloseButton, Dialog, Image, Link, Portal, Stack, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import { ColorModeButton } from "./components/ui/color-mode";
 import SongBook from "./pages/SongBook";
 import "./index.css";
@@ -124,7 +110,7 @@ function Notice() {
 						<Dialog.Body>
 							<Image src="/images/info.png" />
 							<Stack alignItems={"center"} marginTop={1}>
-								<Text>본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다 :)</Text>
+								<Text>본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다</Text>
 								<Link variant="underline" href={SONGBOOK_URL} colorPalette="green" target="_blank">
 									원본 열기
 									<LuExternalLink />
