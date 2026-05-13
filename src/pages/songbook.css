@@ -13,6 +13,8 @@
 
 	--song-btn-lyrics: #0f766e;
 	--song-btn-search: #3caa65;
+
+	--shadow-box: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* =========================
@@ -30,6 +32,9 @@ html.dark {
 
 	--song-btn-lyrics: #115e59;
 	--song-btn-search: #348051;
+
+	--shadow-box:
+		0 0 0 1px rgba(142, 169, 143, 0.28), 0 0 6px rgba(142, 169, 143, 0.22), inset 0 0 12px rgba(142, 169, 143, 0.05);
 }
 
 /* =========================
@@ -48,7 +53,7 @@ html.dark {
 	transition:
 		border-color 0.15s ease,
 		transform 0.15s ease;
-
+	box-shadow: var(--shadow-box);
 	cursor: pointer;
 	overflow: hidden;
 }

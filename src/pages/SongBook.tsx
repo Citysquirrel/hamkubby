@@ -1,7 +1,20 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
-import { Avatar, Box, Button, ButtonGroup, HStack, Image, Input, Link, Separator, Stack, Text } from "@chakra-ui/react";
+import {
+	Avatar,
+	Box,
+	Button,
+	ButtonGroup,
+	HStack,
+	Image,
+	Input,
+	InputGroup,
+	Link,
+	Separator,
+	Stack,
+	Text,
+} from "@chakra-ui/react";
 import type { Song, SortType } from "../config/types";
-import { MdOutlineLyrics, MdSearch } from "react-icons/md";
+import { MdClose, MdOutlineLyrics, MdSearch } from "react-icons/md";
 import { normalizeKeyword } from "../lib/search";
 import "./songbook.css";
 
@@ -111,11 +124,13 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			const active = document.activeElement as HTMLElement | null;
-
 			// 이미 입력 중이면 무시
 			if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) {
 				return;
 			}
+
+			// 스페이스바 무시
+			if (e.key === " ") return;
 
 			// 조합키 무시 (Ctrl, Cmd, Alt)
 			if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -198,16 +213,40 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 
 			<Stack id="list-container" width="100%" alignItems={"center"}>
 				<HStack position="sticky" top="0" left="0" zIndex={2} width="100%" bg={"bg"} justifyContent={"center"}>
-					<Stack width={"100%"} marginBottom="4px" borderBottom={"1px solid"} borderColor="gray.border">
+					<Stack width={"100%"} gap=".5" marginBottom="4px" borderBottom={"1px solid"} borderColor="gray.border">
 						<Stack width="100%" alignItems={"center"} marginBottom="1" padding="4px">
-							<Input
-								ref={searchRef}
+							<InputGroup
 								width="400px"
-								variant={"flushed"}
-								value={search}
-								onChange={(e) => setSearch(e.target.value)}
-								placeholder="노래 / 가수 검색"
-							/>
+								endElement={
+									search.length > 0 ? (
+										<Button
+											variant={"outline"}
+											size="2xs"
+											rounded={"full"}
+											onClick={() => {
+												setSearch("");
+											}}
+										>
+											<MdClose />
+											ESC
+										</Button>
+									) : null
+								}
+							>
+								<Input
+									ref={searchRef}
+									id={"search"}
+									variant={"flushed"}
+									value={search}
+									onChange={(e) => setSearch(e.target.value)}
+									onKeyDown={(e) => {
+										if (e.key === "Escape") {
+											setSearch("");
+										}
+									}}
+									placeholder="노래 / 가수 검색"
+								/>
+							</InputGroup>
 						</Stack>
 						<Box
 							style={{

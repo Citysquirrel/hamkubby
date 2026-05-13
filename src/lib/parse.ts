@@ -33,7 +33,6 @@ export function parseList(csv: SheetData, startIdx: number): Song[] {
 		const hiddenIdxs = String(hiddenRow[key] || "")
 			.split(",")
 			.map(Number);
-		console.log(hiddenIdxs);
 
 		if (!rows) return [];
 

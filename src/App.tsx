@@ -1,11 +1,24 @@
-import { Box, Button, Clipboard, CloseButton, Dialog, Image, Link, Portal, Stack, Text } from "@chakra-ui/react";
+import {
+	Box,
+	Button,
+	Clipboard,
+	CloseButton,
+	Dialog,
+	HStack,
+	IconButton,
+	Image,
+	Link,
+	Portal,
+	Stack,
+	Text,
+} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { ColorModeButton } from "./components/ui/color-mode";
 import SongBook from "./pages/SongBook";
 import "./index.css";
 import { fetch_ } from "./lib/fetch";
 import type { Song } from "./config/types";
-import { MdOutlineQuestionMark } from "react-icons/md";
+import { MdKeyboardDoubleArrowUp, MdOutlineQuestionMark } from "react-icons/md";
 import { parseList } from "./lib/parse";
 import { normalizeKeyword } from "./lib/search";
 import { LuExternalLink } from "react-icons/lu";
@@ -15,6 +28,13 @@ const SONGBOOK_URL = "https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj
 function App() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [data, setData] = useState<Song[]>([]);
+	const [scrollY, setScrollY] = useState(0);
+
+	const isOnTop = scrollY > 80;
+
+	const handleGotoTop = () => {
+		window.scrollTo({ top: 0 });
+	};
 
 	useEffect(() => {
 		setIsLoading(true);
@@ -26,15 +46,46 @@ function App() {
 				searchArtist: normalizeKeyword(song.artist),
 			}));
 			setData(normalized);
-			console.log(normalized);
 			setIsLoading(false);
 		});
+	}, []);
+
+	useEffect(() => {
+		const handleScroll = () => {
+			setScrollY(window.scrollY ?? 0);
+		};
+
+		window.addEventListener("scroll", handleScroll);
+
+		handleScroll();
+
+		return () => {
+			window.removeEventListener("scroll", handleScroll);
+		};
 	}, []);
 
 	return (
 		<Stack minH="100vh" bg="bg" color="fg" justifyContent={"space-between"}>
 			<ColorModeButtonFixed />
-			<Notice />
+			<HStack flexDirection={"row-reverse"} position="fixed" right="8px" bottom="8px" zIndex={999}>
+				<Notice />
+				<IconButton
+					variant="outline"
+					aria-label="go to top button"
+					size="xs"
+					borderRadius={"full"}
+					css={{
+						_icon: {
+							width: "3.5",
+							height: "3.5",
+						},
+					}}
+					transform={isOnTop ? "" : "translateY(40px)"}
+					onClick={handleGotoTop}
+				>
+					<MdKeyboardDoubleArrowUp />
+				</IconButton>
+			</HStack>
 
 			<SongBook data={data} isLoading={isLoading} />
 
@@ -79,7 +130,7 @@ function Notice() {
 	return (
 		<Dialog.Root size="xl" placement="center" motionPreset="slide-in-bottom">
 			<Dialog.Trigger asChild>
-				<Box position="fixed" right="8px" bottom="8px" zIndex={999}>
+				<Box>
 					<Button
 						variant="outline"
 						aria-label="Notice button"
