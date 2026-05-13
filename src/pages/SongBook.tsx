@@ -30,6 +30,7 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 	const [search, setSearch] = useState("");
 	const [genre, setGenre] = useState("all");
 	const [sort, setSort] = useState<SortType>("title-asc");
+	const [focused, setFocused] = useState(false);
 
 	const toggleSort = (field: "title" | "artist") => {
 		setSort((prev) => {
@@ -230,6 +231,10 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 											<MdClose />
 											ESC
 										</Button>
+									) : !focused ? (
+										<Text fontSize="xs" userSelect={"none"}>
+											아무 키나 누르면 검색창 선택
+										</Text>
 									) : null
 								}
 							>
@@ -244,6 +249,8 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 											setSearch("");
 										}
 									}}
+									onFocus={() => setFocused(true)}
+									onBlur={() => setFocused(false)}
 									placeholder="노래 / 가수 검색"
 								/>
 							</InputGroup>
@@ -254,7 +261,7 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 								display: "flex",
 								width: "100%",
 								gap: "8px",
-								padding: "4px",
+								padding: "4px 4px 8px 4px",
 								justifyContent: "center",
 								alignItems: "center",
 							}}

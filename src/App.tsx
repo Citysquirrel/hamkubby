@@ -8,6 +8,7 @@ import {
 	IconButton,
 	Image,
 	Link,
+	List,
 	Portal,
 	Stack,
 	Text,
@@ -18,10 +19,11 @@ import SongBook from "./pages/SongBook";
 import "./index.css";
 import { fetch_ } from "./lib/fetch";
 import type { Song } from "./config/types";
-import { MdKeyboardDoubleArrowUp, MdOutlineQuestionMark } from "react-icons/md";
+import { MdContentCopy, MdKeyboardDoubleArrowUp, MdOutlineQuestionMark, MdSearch } from "react-icons/md";
 import { parseList } from "./lib/parse";
 import { normalizeKeyword } from "./lib/search";
 import { LuExternalLink } from "react-icons/lu";
+import { PiCheese } from "react-icons/pi";
 
 const SONGBOOK_URL = "https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE";
 
@@ -160,8 +162,28 @@ function Notice() {
 						</Dialog.Header>
 						<Dialog.Body>
 							<Image src="/images/info.png" />
-							<Stack alignItems={"center"} marginTop={1}>
-								<Text>본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다</Text>
+							<Stack alignItems={"center"} marginTop={3} gap="1">
+								<List.Root gap="2" variant="plain" align="center">
+									<List.Item>
+										<List.Indicator asChild color="blue.500">
+											<MdSearch />
+										</List.Indicator>
+										검색 창에 원하는 곡/가수 입력
+									</List.Item>
+									<List.Item>
+										<List.Indicator asChild color="green.500">
+											<MdContentCopy />
+										</List.Indicator>
+										검색된 곡을 클릭하여 노래 제목 및 가수를 클립보드로 복사
+									</List.Item>
+									<List.Item>
+										<List.Indicator asChild color="orange.500">
+											<PiCheese />
+										</List.Indicator>
+										알맞은 가격의 미션으로 노래 신청!
+									</List.Item>
+								</List.Root>
+								<Text marginTop="2">본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다</Text>
 								<Link variant="underline" href={SONGBOOK_URL} colorPalette="green" target="_blank">
 									원본 열기
 									<LuExternalLink />
