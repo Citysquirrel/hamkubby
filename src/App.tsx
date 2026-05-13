@@ -6,7 +6,7 @@ import {
 	Dialog,
 	HStack,
 	IconButton,
-	Image,
+	Image as ChakraImage,
 	Link,
 	List,
 	Portal,
@@ -38,6 +38,7 @@ function App() {
 		window.scrollTo({ top: 0 });
 	};
 
+	// load data api & modify
 	useEffect(() => {
 		setIsLoading(true);
 		fetch_("/api/data").then((res) => {
@@ -52,6 +53,7 @@ function App() {
 		});
 	}, []);
 
+	// scroll behavior
 	useEffect(() => {
 		const handleScroll = () => {
 			setScrollY(window.scrollY ?? 0);
@@ -64,6 +66,13 @@ function App() {
 		return () => {
 			window.removeEventListener("scroll", handleScroll);
 		};
+	}, []);
+
+	// preload
+	useEffect(() => {
+		const img = new Image();
+
+		img.src = "/images/info.png";
 	}, []);
 
 	return (
@@ -130,7 +139,7 @@ function ColorModeButtonFixed() {
 
 function Notice() {
 	return (
-		<Dialog.Root size="xl" placement="center" motionPreset="slide-in-bottom">
+		<Dialog.Root size="xl" placement="center" motionPreset="slide-in-bottom" scrollBehavior="inside">
 			<Dialog.Trigger asChild>
 				<Box>
 					<Button
@@ -161,7 +170,7 @@ function Notice() {
 							</Dialog.CloseTrigger>
 						</Dialog.Header>
 						<Dialog.Body>
-							<Image src="/images/info.png" />
+							<ChakraImage src="/images/info.png" />
 							<Stack alignItems={"center"} marginTop={3} gap="1">
 								<List.Root gap="2" variant="plain" align="center">
 									<List.Item>
