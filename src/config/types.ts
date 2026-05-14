@@ -15,6 +15,7 @@ export interface Song {
 	hasLyrics?: boolean;
 	notes?: string;
 	cheese: Cheese;
+	isOfficial?: boolean;
 }
 
 interface Env {

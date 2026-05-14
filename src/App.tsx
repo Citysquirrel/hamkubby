@@ -25,6 +25,7 @@ import { normalizeKeyword } from "./lib/search";
 import { LuExternalLink } from "react-icons/lu";
 import { PiCheese } from "react-icons/pi";
 import { FaGithub } from "react-icons/fa";
+import { SiGooglesheets } from "react-icons/si";
 
 const SONGBOOK_URL = "https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE";
 
@@ -78,7 +79,27 @@ function App() {
 
 	return (
 		<Stack minH="100vh" bg="bg" color="fg" justifyContent={"space-between"}>
-			<ColorModeButtonFixed />
+			<HStack flexDirection={"row-reverse"} position="fixed" right="8px" top="8px" zIndex={999}>
+				<ColorModeButtonFixed />
+				<IconButton
+					variant="outline"
+					aria-label="go to spreadsheet"
+					size="xs"
+					borderRadius={"full"}
+					css={{
+						_icon: {
+							width: "3.5",
+							height: "3.5",
+						},
+					}}
+					onClick={() => {
+						window.open(SONGBOOK_URL, "_blank");
+					}}
+				>
+					<SiGooglesheets />
+				</IconButton>
+			</HStack>
+
 			<HStack flexDirection={"row-reverse"} position="fixed" right="8px" bottom="8px" zIndex={999}>
 				<Notice />
 				<IconButton
@@ -107,11 +128,7 @@ function App() {
 }
 
 function ColorModeButtonFixed() {
-	return (
-		<Box position="fixed" right="8px" top="8px" zIndex={999}>
-			<ColorModeButton />
-		</Box>
-	);
+	return <ColorModeButton />;
 }
 
 // const NoticeButton = forwardRef<HTMLButtonElement, ButtonProps>(function NoticeButton(props, ref) {
