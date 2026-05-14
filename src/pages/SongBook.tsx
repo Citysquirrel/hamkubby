@@ -232,9 +232,11 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 											ESC
 										</Button>
 									) : !focused ? (
-										<Text fontSize="xs" userSelect={"none"}>
-											아무 키나 누르면 검색창 선택
-										</Text>
+										<label htmlFor="search">
+											<Text fontSize="xs" userSelect={"none"}>
+												아무 키나 누르면 검색창 선택
+											</Text>
+										</label>
 									) : null
 								}
 							>
