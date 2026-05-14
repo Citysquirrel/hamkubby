@@ -24,6 +24,7 @@ import { parseList } from "./lib/parse";
 import { normalizeKeyword } from "./lib/search";
 import { LuExternalLink } from "react-icons/lu";
 import { PiCheese } from "react-icons/pi";
+import { FaGithub } from "react-icons/fa";
 
 const SONGBOOK_URL = "https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE";
 
@@ -211,14 +212,19 @@ function Footer() {
 		<Stack alignItems={"center"} gap="-0.5" padding={1}>
 			<Text fontSize="xs">본 사이트는 공식 사이트가 아닌 햄님메이드 프로젝트입니다.</Text>
 			<Text fontSize="xs">라이버 및 소속사의 정책에 따라 일부 내용이 변경되거나 제공이 중단될 수 있습니다.</Text>
-			<Clipboard.Root value="tok1324@naver.com">
-				<Clipboard.Trigger asChild>
-					<Link as="span" color="blue.fg" textStyle="sm">
-						<Clipboard.Indicator fontSize="2xs" />
-						<Clipboard.ValueText fontSize="2xs" />
-					</Link>
-				</Clipboard.Trigger>
-			</Clipboard.Root>
+			<HStack alignItems={"center"} marginTop="8px">
+				<Clipboard.Root value="tok1324@naver.com">
+					<Clipboard.Trigger>
+						<Link fontSize="xs">
+							<Clipboard.Indicator />
+							<Clipboard.ValueText />
+						</Link>
+					</Clipboard.Trigger>
+				</Clipboard.Root>
+				<Link href="https://github.com/Citysquirrel/hamkubby" target="_blank" fontSize="sm">
+					<FaGithub />
+				</Link>
+			</HStack>
 		</Stack>
 	);
 }
