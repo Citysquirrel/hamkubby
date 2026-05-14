@@ -213,6 +213,7 @@ html.dark {
 		transform 0.15s ease,
 		opacity 0.15s ease;
 	user-select: none;
+	z-index: 2;
 }
 
 .song-button:hover {
