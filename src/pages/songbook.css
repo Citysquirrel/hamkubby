@@ -228,3 +228,10 @@ html.dark {
 .song-button--search {
 	background: var(--song-btn-search);
 }
+
+/* =========================
+   PROPERTIES
+========================= */
+.cursor_text {
+	cursor: text;
+}

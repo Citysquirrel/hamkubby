@@ -213,7 +213,7 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 			</Stack>
 
 			<Stack id="list-container" width="100%" alignItems={"center"}>
-				<HStack position="sticky" top="0" left="0" zIndex={2} width="100%" bg={"bg"} justifyContent={"center"}>
+				<HStack position="sticky" top="0" left="0" zIndex={3} width="100%" bg={"bg"} justifyContent={"center"}>
 					<Stack width={"100%"} gap=".5" marginBottom="4px" borderBottom={"1px solid"} borderColor="gray.border">
 						<Stack width="100%" alignItems={"center"} marginBottom="1" padding="4px">
 							<InputGroup
@@ -232,7 +232,7 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 											ESC
 										</Button>
 									) : !focused ? (
-										<label htmlFor="search">
+										<label className="cursor_text" htmlFor="search">
 											<Text fontSize="xs" userSelect={"none"}>
 												아무 키나 누르면 검색창 선택
 											</Text>
