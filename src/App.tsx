@@ -37,6 +37,10 @@ interface Maintenance {
 
 const SONGBOOK_URL = "https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE";
 
+const API_BASE_URL = import.meta.env.DEV
+	? "https://localhost:3467"
+	: import.meta.env.VITE_API_URL || "https://api.stelcount.fans";
+
 function App() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isDataLoading, setIsDataLoading] = useState(true);
@@ -85,7 +89,7 @@ function App() {
 	// load data api & modify
 	useEffect(() => {
 		setIsDataLoading(true);
-		fetch_(`${import.meta.env.VITE_API_URL}/api/v2/songbook`)
+		fetch_(`${API_BASE_URL}/api/v2/songbook`)
 			.then((res) => {
 				if (res.status >= 200 && res.status < 300) {
 					if (res.data) {
@@ -122,7 +126,7 @@ function App() {
 		let timerId: ReturnType<typeof setTimeout>;
 
 		const fetchMaintenance = () => {
-			fetch_(`${import.meta.env.VITE_API_URL}/api/v2/maintenance`)
+			fetch_(`${API_BASE_URL}/api/v2/maintenance`)
 				.then((res) => {
 					if (isCancelled) return;
 
