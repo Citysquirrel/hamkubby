@@ -23,7 +23,17 @@ import {
 } from "@chakra-ui/react";
 import type { Song, SortType } from "../config/types";
 import { MdClose, MdOutlineDownloading } from "react-icons/md";
-import { LuCheck, LuCopy, LuExternalLink, LuYoutube, LuMusic, LuArrowRightFromLine } from "react-icons/lu";
+import {
+	LuCheck,
+	LuCopy,
+	LuExternalLink,
+	LuYoutube,
+	LuMusic,
+	LuArrowRightFromLine,
+	LuPlus,
+	LuMinus,
+	LuBold,
+} from "react-icons/lu";
 import { normalizeKeyword } from "../lib/search";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRoot } from "../components/ui/drawer";
@@ -58,6 +68,10 @@ export default function SongBook({
 	isLoading: boolean;
 	isHomeOpen: boolean;
 }) {
+	const LOCAL_STORAGE_KEY = "lyric-font-size-index";
+	const LOCAL_STORAGE_BOLD_KEY = "lyric-font-bold";
+	const LYRIC_SIZES = ["xs", "sm", "md", "xl", "2xl"];
+
 	const searchRef = useRef<HTMLInputElement>(null);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -68,6 +82,42 @@ export default function SongBook({
 	const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 	const [isOpenMobileView, setIsOpenMobileView] = useState(false);
 	const [copiedId, setCopiedId] = useState<string | null>(null);
+	const [lyricIndex, setLyricIndex] = useState<number>(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+			if (saved !== null) {
+				const parsed = Number(saved);
+				if (parsed >= 0 && parsed < LYRIC_SIZES.length) return parsed;
+			}
+		}
+		return 2;
+	});
+	const [isLyricBold, setIsLyricBold] = useState<boolean>(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(LOCAL_STORAGE_BOLD_KEY);
+			return saved === "true";
+		}
+		return false;
+	});
+
+	const handleLyricSize = (isIncrease: boolean) => {
+		const delta = isIncrease ? 1 : -1;
+		const maxIndex = LYRIC_SIZES.length - 1; // 4
+
+		const nextIndex = Math.max(0, Math.min(maxIndex, lyricIndex + delta));
+
+		if (nextIndex !== lyricIndex) {
+			setLyricIndex(nextIndex);
+			localStorage.setItem(LOCAL_STORAGE_KEY, String(nextIndex));
+		}
+	};
+
+	const handleLyricBold = () => {
+		const nextBold = !isLyricBold;
+
+		setIsLyricBold(nextBold);
+		localStorage.setItem(LOCAL_STORAGE_BOLD_KEY, String(nextBold));
+	};
 
 	// 1080px 기준으로 데스크탑(스플릿 뷰)과 모바일(바텀 시트) 분기
 	const [isDesktop] = useMediaQuery(["(min-width: 1080px)"], { fallback: [false] });
@@ -318,7 +368,42 @@ export default function SongBook({
 				<Box position="relative" mb={2} p={2} bg="cardBg" borderRadius="lg">
 					{song.lyric ? (
 						<Stack p={2}>
-							<Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize="sm">
+							<Stack position="absolute" top={2} right={2}>
+								<IconButton
+									size="2xs"
+									variant={"outline"}
+									colorPalette={"blue"}
+									onClick={() => handleLyricSize(true)}
+									disabled={lyricIndex === 4}
+								>
+									<LuPlus />
+								</IconButton>
+								<IconButton
+									size="2xs"
+									variant={"outline"}
+									colorPalette={"blue"}
+									onClick={() => handleLyricSize(false)}
+									disabled={lyricIndex === 0}
+								>
+									<LuMinus />
+								</IconButton>
+								<IconButton
+									size="2xs"
+									variant={"outline"}
+									colorPalette={"blue"}
+									onClick={() => handleLyricBold()}
+									bg={isLyricBold ? "blue.400" : undefined}
+								>
+									<LuBold />
+								</IconButton>
+							</Stack>
+							<Text
+								className="font-lyric"
+								fontWeight={isLyricBold ? "bold" : undefined}
+								whiteSpace="pre-wrap"
+								lineHeight="1.8"
+								fontSize={LYRIC_SIZES[lyricIndex]}
+							>
 								{song.lyric}
 							</Text>
 						</Stack>
@@ -370,7 +455,7 @@ export default function SongBook({
 				)}
 			</Flex>
 		);
-	}, [selectedSong, copiedId]);
+	}, [isLyricBold, lyricIndex, selectedSong, copiedId]);
 
 	return (
 		<Stack id="songbook" padding="0" margin="0" alignItems={"center"} position="static">

@@ -292,7 +292,7 @@ function HomeButton({
 				});
 			}}
 		>
-			{isHomeOpen ? <IoIosArrowDown /> : <IoIosArrowUp />}
+			{isHomeOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
 		</IconButton>
 	);
 }
@@ -447,4 +447,3 @@ function Footer() {
 }
 
 export default App;
-
