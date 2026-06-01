@@ -125,15 +125,15 @@ html.dark {
 	user-select: none;
 }
 
-.song-tag--kpop {
+.song-tag--K-POP {
 	background: #3ec06d;
 }
 
-.song-tag--jpop {
+.song-tag--J-POP {
 	background: #3b82f6;
 }
 
-.song-tag--pop {
+.song-tag--POP {
 	background: #eab308;
 }
 

@@ -11,8 +11,9 @@ interface FetchResponse {
 
 export async function fetch_(input: RequestInfo | URL, options?: FetchOptions): Promise<FetchResponse> {
 	try {
+		const timeout = options?.timeout ?? 20000;
 		const controller = new AbortController();
-		const id = setTimeout(() => controller.abort(), options?.timeout || 20000);
+		const id = timeout > 0 ? setTimeout(() => controller.abort(), timeout) : undefined;
 		const res = await fetch(input, {
 			...options,
 			signal: controller.signal,

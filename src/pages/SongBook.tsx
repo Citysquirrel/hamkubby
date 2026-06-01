@@ -1,10 +1,16 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
 import {
 	Avatar,
+	Badge,
 	Box,
 	Button,
 	ButtonGroup,
+	Flex,
+	Grid,
+	Heading,
 	HStack,
+	Icon,
+	IconButton,
 	Image,
 	Input,
 	InputGroup,
@@ -12,25 +18,78 @@ import {
 	Separator,
 	Stack,
 	Text,
+	useMediaQuery,
+	VStack,
 } from "@chakra-ui/react";
 import type { Song, SortType } from "../config/types";
-import { MdClose, MdOutlineLyrics, MdSearch } from "react-icons/md";
+import { MdClose, MdOutlineDownloading, MdOutlineLyrics, MdSearch } from "react-icons/md";
+import { LuCheck, LuCopy, LuExternalLink, LuYoutube, LuMusic, LuArrowRightFromLine } from "react-icons/lu";
 import { normalizeKeyword } from "../lib/search";
-import "./songbook.css";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRoot } from "../components/ui/drawer";
+import { toaster } from "../components/ui/toaster";
 
 const GENRE = {
 	전체: "all",
-	KPOP: "kpop",
-	JPOP: "jpop",
-	POP: "pop",
+	"K-POP": "K-POP",
+	"J-POP": "J-POP",
+	POP: "POP",
 };
 
-export default function SongBook({ data, isLoading }: { data: Song[]; isLoading: boolean }) {
+const COLOR_SCHEME: { [key: string]: string } = {
+	"K-POP": "green",
+	"J-POP": "blue",
+	POP: "yellow",
+	일반곡: "gray",
+	잘몰라: "purple",
+	우엑곡: "red",
+	피토곡: "orange",
+};
+
+const MAIN_COLOR = "#7bb18f";
+const HEADER_HEIGHT = 104;
+
+export default function SongBook({
+	data,
+	isLoading,
+	isHomeOpen,
+}: {
+	data: Song[];
+	isLoading: boolean;
+	isHomeOpen: boolean;
+}) {
 	const searchRef = useRef<HTMLInputElement>(null);
 	const [search, setSearch] = useState("");
+	const [debouncedSearch, setDebouncedSearch] = useState(search);
 	const [genre, setGenre] = useState("all");
 	const [sort, setSort] = useState<SortType>("title-asc");
 	const [focused, setFocused] = useState(false);
+
+	const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+	const [isOpenMobileView, setIsOpenMobileView] = useState(false);
+	const [copiedId, setCopiedId] = useState<string | null>(null);
+
+	// 1080px 기준으로 데스크탑(스플릿 뷰)과 모바일(바텀 시트) 분기
+	const [isDesktop] = useMediaQuery(["(min-width: 1080px)"], { fallback: [false] });
+
+	// 복사 기능
+	const handleCopy = (e: React.MouseEvent, song: Song) => {
+		e.stopPropagation(); // 상세뷰 열림 방지 (포커스 유지)
+		const textToCopy = `${song.title} - ${song.artist}`;
+		navigator.clipboard.writeText(textToCopy).then(() => {
+			toaster.create({ description: `${textToCopy} 복사 완료!`, type: "success" });
+		});
+
+		setCopiedId(song.id || song.title);
+		setTimeout(() => setCopiedId(null), 1500);
+	};
+
+	const handleSelectSong = (song: Song) => {
+		setSelectedSong(song);
+		if (!isDesktop) {
+			setIsOpenMobileView(true);
+		}
+	};
 
 	const toggleSort = (field: "title" | "artist") => {
 		setSort((prev) => {
@@ -53,8 +112,27 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 		);
 	}, []);
 
+	// --- 가상 스크롤 (Window 기준) 설정 ---
+	const listRef = useRef<HTMLDivElement>(null);
+	const [listOffset, setListOffset] = useState(0);
+
+	// 컨테이너가 렌더링된 후 화면 상단으로부터의 offset 값을 계산
+	useEffect(() => {
+		if (listRef.current) {
+			setListOffset(listRef.current.offsetTop);
+		}
+	}, [listRef.current]);
+
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			setDebouncedSearch(search);
+		}, 225);
+
+		return () => clearTimeout(handler);
+	}, [search]);
+
 	const filteredSongs = useMemo(() => {
-		const keyword = normalizeKeyword(search);
+		const keyword = normalizeKeyword(debouncedSearch);
 
 		const filtered = data.filter((song) => {
 			const searchTitle = song.searchTitle || song.title;
@@ -83,7 +161,7 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 					return 0;
 			}
 		});
-	}, [search, genre, sort, data]);
+	}, [debouncedSearch, genre, sort, data]);
 
 	const highlight = (text: string, keyword: string) => {
 		if (!keyword) return text;
@@ -174,47 +252,177 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 		{ id: 3, name: "유튜브 본점", image: "/images/youtube.svg", href: "https://www.youtube.com/@hamkubby" },
 		{ id: 4, name: "트위터 메인", image: "/images/x.svg", href: "https://x.com/hamkubby" },
 	];
+	const rowVirtualizer = useWindowVirtualizer({
+		count: filteredSongs.length,
+		estimateSize: () => 72, // 행 높이
+		overscan: 5,
+		scrollMargin: listOffset, // 상단 헤더 등의 높이를 고려한 마진
+	});
+
+	const detailViewContent = useMemo(() => {
+		if (!selectedSong) return null;
+		const song = selectedSong;
+		return (
+			<Flex direction="column" p={6} bg="bg">
+				{/* 헤더 & 복사 버튼 */}
+				<HStack justify="space-between" align="start" mb={4}>
+					<VStack align="start" gap={1}>
+						<HStack>
+							<Heading size="lg" wordBreak="keep-all">
+								{song.title}
+							</Heading>
+						</HStack>
+						<Text fontSize="lg" color="gray.600">
+							{song.artist}
+						</Text>
+					</VStack>
+					<Button
+						size="lg"
+						bg={MAIN_COLOR}
+						color="white"
+						_hover={{ bg: "#659677" }}
+						onClick={(e) => handleCopy(e, song)}
+						mr={isDesktop ? undefined : 12}
+					>
+						{copiedId === (song.id || song.title) ? (
+							<Icon as={LuCheck} boxSize={5} />
+						) : (
+							<Icon as={LuCopy} boxSize={5} />
+						)}
+						<Text ml={2} display={{ base: "none", sm: "block" }}>
+							복사
+						</Text>
+					</Button>
+				</HStack>
+
+				<HStack gap={2} mb={4} flexWrap="wrap">
+					<Badge variant="outline" colorPalette={COLOR_SCHEME[song.genre]}>
+						{song.genre}
+					</Badge>
+					<Badge variant="outline" colorPalette={COLOR_SCHEME[song.cheese]}>
+						{song.cheese}
+					</Badge>
+					{song.isOfficial && (
+						<Badge bg={MAIN_COLOR} color="white">
+							인증
+						</Badge>
+					)}
+				</HStack>
+
+				{song.notes && (
+					<Box bg="cardBg" p={3} borderRadius="md" mb={5} maxH="80px" overflowY="auto" fontSize="sm">
+						<strong>📝 Note:</strong> {song.notes}
+					</Box>
+				)}
+
+				<Box position="relative" mb={2} p={2} bg="cardBg" borderRadius="lg">
+					{song.lyric ? (
+						<Stack p={2}>
+							<Text whiteSpace="pre-wrap" lineHeight="1.8" fontSize="sm">
+								{song.lyric}
+							</Text>
+						</Stack>
+					) : (
+						<Flex direction="column" align="center" justify="center" h="200px" bg="cardBg" borderRadius="lg" gap={4}>
+							<Text color="gray.500">등록된 가사가 없습니다.</Text>
+							<Button
+								variant="outline"
+								borderColor={MAIN_COLOR}
+								color={MAIN_COLOR}
+								onClick={() => openLyricsSearch(song)}
+							>
+								<Icon as={LuExternalLink} mr={2} />
+								구글에서 가사 검색하기
+							</Button>
+						</Flex>
+					)}
+				</Box>
+
+				{song.history && song.history.length > 0 && (
+					<Box borderTop="1px solid" borderColor="gray.200" pt={4}>
+						<Text fontWeight="bold" mb={3} fontSize="sm" color="gray.500">
+							📺 방송 히스토리
+						</Text>
+						<VStack align="stretch" gap={2} maxH="150px" overflowY="auto">
+							{song.history.map((hist) => (
+								<HStack
+									key={hist.id}
+									p={2}
+									bg="gray.50"
+									borderRadius="md"
+									cursor="pointer"
+									_hover={{ bg: "gray.100" }}
+									onClick={() => window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank")}
+								>
+									<Icon as={LuYoutube} color="red.500" />
+									<Text fontSize="sm" flex="1">
+										{hist.sungAt ? new Date(hist.sungAt).toLocaleDateString() : "날짜 미상"}
+									</Text>
+									{hist.memo && (
+										<Text fontSize="xs" color="gray.500" lineClamp={1} maxW="100px">
+											{hist.memo}
+										</Text>
+									)}
+								</HStack>
+							))}
+						</VStack>
+					</Box>
+				)}
+			</Flex>
+		);
+	}, [selectedSong, copiedId]);
 
 	return (
 		<Stack id="songbook" padding="0" margin="0" alignItems={"center"} position="static">
-			<Stack alignItems={"center"}>
-				<Box className="circle-wrap" marginTop="4" position="relative">
-					<Image
-						src="https://nng-phinf.pstatic.net/MjAyNTEyMjJfMjE3/MDAxNzY2Mzg2OTg3ODk1.1acZIMhW2shvmGDkv6taba35Ojr75XDqxpCKaUIzSFwg.s4E5tYOZv7eJSZwFELZ_ybV8rztf-z5Nd3Tqd5ucPfgg.PNG/image.png?type=f120_120_na"
-						boxSize="120px"
-						borderRadius="full"
-						fit="cover"
-						border="2px solid"
-						borderColor="seagreen"
-					/>
-				</Box>
-				<Text fontSize="2xl" fontWeight={"bold"}>
-					<Box as="span" color="kbc">
-						🐹햄쿠비
+			{isHomeOpen ? (
+				<Stack alignItems={"center"}>
+					<Box className="circle-wrap" marginTop="4" position="relative">
+						<Image
+							src="https://nng-phinf.pstatic.net/MjAyNTEyMjJfMjE3/MDAxNzY2Mzg2OTg3ODk1.1acZIMhW2shvmGDkv6taba35Ojr75XDqxpCKaUIzSFwg.s4E5tYOZv7eJSZwFELZ_ybV8rztf-z5Nd3Tqd5ucPfgg.PNG/image.png?type=f120_120_na"
+							boxSize="120px"
+							borderRadius="full"
+							fit="cover"
+							border="2px solid"
+							borderColor="seagreen"
+						/>
 					</Box>
-					&nbsp;노래책🎤
-				</Text>
-				<ButtonGroup>
-					{linkGroup.map((avatar) => (
-						<Link href={avatar.href} title={avatar.name} target="_blank">
-							<Avatar.Root
-								size={"xs"}
-								border="2px solid"
-								borderColor={{ _hover: "kbc", base: { _dark: "gray.400", _light: "gray.600" } }}
-								shadow={{ _hover: "md" }}
-								shadowColor={"purple"}
-								transform="scale(1,0.95)"
-							>
-								<Avatar.Image src={avatar.image} />
-							</Avatar.Root>
-						</Link>
-					))}
-				</ButtonGroup>
-			</Stack>
+					<Text fontSize="2xl" fontWeight={"bold"}>
+						<Box as="span" color="kbc">
+							🐹햄쿠비
+						</Box>
+						&nbsp;노래책🎤
+					</Text>
+					<ButtonGroup>
+						{linkGroup.map((avatar) => (
+							<Link href={avatar.href} title={avatar.name} target="_blank">
+								<Avatar.Root
+									size={"xs"}
+									border="2px solid"
+									borderColor={{ _hover: "kbc", base: { _dark: "gray.400", _light: "gray.600" } }}
+									shadow={{ _hover: "md" }}
+									shadowColor={"purple"}
+									transform="scale(1,0.95)"
+								>
+									<Avatar.Image src={avatar.image} />
+								</Avatar.Root>
+							</Link>
+						))}
+					</ButtonGroup>
+				</Stack>
+			) : null}
 
-			<Stack id="list-container" width="100%" alignItems={"center"}>
-				<HStack position="sticky" top="0" left="0" zIndex={3} width="100%" bg={"bg"} justifyContent={"center"}>
-					<Stack width={"100%"} gap=".5" marginBottom="4px" borderBottom={"1px solid"} borderColor="gray.border">
+			<Stack id="list-container" width="100%" gap={0}>
+				<HStack
+					position="sticky"
+					top="0"
+					left="0"
+					zIndex={3}
+					width="100%"
+					bg={"bg"}
+					justifyContent={"center"}
+					align={"center"}
+				>
+					<Stack width={"100%"} gap=".5" borderBottom={"1px solid"} borderColor="gray.border">
 						<Stack width="100%" alignItems={"center"} marginBottom="1" padding="4px">
 							<InputGroup
 								width="400px"
@@ -280,9 +488,10 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 											onClick={() => {
 												setGenre(value);
 											}}
-											size={{ _hover: "md", base: "sm" }}
+											size={"sm"}
 											shadow={{ _hover: "md", base: "sm" }}
 											transition="all .2s ease-in-out"
+											_hover={{ transform: "translateY(-3px)" }}
 										>
 											{name}
 										</Button>
@@ -295,9 +504,10 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 									borderRadius={"xl"}
 									bg={sort === "title-asc" || sort === "title-desc" ? "kbg" : ""}
 									onClick={() => toggleSort("title")}
-									size={{ _hover: "md", base: "sm" }}
+									size={"sm"}
 									shadow={{ _hover: "md", base: "sm" }}
 									transition="all .2s ease-in-out"
+									_hover={{ transform: "translateY(-3px)" }}
 								>
 									제목
 									{sort === "title-asc" && " ↑"}
@@ -307,9 +517,10 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 									borderRadius={"xl"}
 									bg={sort === "artist-asc" || sort === "artist-desc" ? "kbg" : ""}
 									onClick={() => toggleSort("artist")}
-									size={{ _hover: "md", base: "sm" }}
+									size={"sm"}
 									shadow={{ _hover: "md", base: "sm" }}
 									transition="all .2s ease-in-out"
+									_hover={{ transform: "translateY(-3px)" }}
 								>
 									가수
 									{sort === "artist-asc" && " ↑"}
@@ -319,7 +530,7 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 						</Box>
 					</Stack>
 				</HStack>
-				<Stack id="list-table" gap={3} minWidth="480px" width="100%" maxWidth="920px" padding="0 8px">
+				{/* <Stack id="list-table" gap={3} minWidth="480px" width="100%" maxWidth="920px" padding="0 8px">
 					{isLoading ? (
 						<Stack width="100%" alignItems={"center"} paddingTop="24px">
 							불러오는중...
@@ -346,7 +557,159 @@ export default function SongBook({ data, isLoading }: { data: Song[]; isLoading:
 							);
 						})
 					)}
-				</Stack>
+				</Stack> */}
+				<Grid
+					// 선택된 곡이 없으면 100%(1fr), 선택되면 리스트 + 디테일(450px)
+					templateColumns={isDesktop && selectedSong ? "minmax(0, 1fr) 450px" : "1fr"}
+					alignItems="start"
+				>
+					{/* 리스트 영역 (Window Scroll) */}
+					<Box
+						ref={listRef}
+						w="100%"
+						pb={10}
+						// 리스트 좌우 예쁜 패딩 추가
+						px={isDesktop ? 12 : 8}
+						pt={6}
+					>
+						{isLoading ? (
+							<Flex h="300px" align="center" justify="center" direction="column" color="gray.400" userSelect={"none"}>
+								<Icon as={MdOutlineDownloading} boxSize={16} mb={4} opacity={0.5} />
+								<Text>불러오는 중...</Text>
+							</Flex>
+						) : filteredSongs.length === 0 ? (
+							<Flex h="300px" align="center" justify="center" direction="column" color="gray.400" userSelect={"none"}>
+								<Icon as={LuMusic} boxSize={16} mb={4} opacity={0.5} />
+								<Text>검색된 곡이 없습니다.</Text>
+							</Flex>
+						) : (
+							<Box height={`${rowVirtualizer.getTotalSize()}px`} width="100%" position="relative">
+								{rowVirtualizer.getVirtualItems().map((virtualRow) => {
+									const song = filteredSongs[virtualRow.index];
+									const isSelected = selectedSong?.id === song.id;
+									// const isChosung = isChoseongLike(search);
+									// const title = isChosung ? highlightChosung(song.title, search) : highlightText(song.title, search);
+
+									// const artist = isChosung ? highlightChosung(song.artist, search) : highlightText(song.artist, search);
+									return (
+										<Box
+											key={virtualRow.index}
+											position="absolute"
+											top={0}
+											left={0}
+											width="100%"
+											height={`${virtualRow.size}px`}
+											transform={`translateY(${virtualRow.start - listOffset}px)`}
+											paddingBottom="8px" // gap 역할
+										>
+											<Flex
+												height="100%"
+												align="center"
+												justify="space-between"
+												p={4}
+												border="1px solid"
+												borderColor={{
+													_light: isSelected ? "blue.border" : "gray.300",
+													_dark: isSelected ? "blue.border" : "gray.700",
+												}}
+												bg={isSelected && isDesktop ? `${MAIN_COLOR}30` : undefined}
+												borderRadius="lg"
+												_hover={{ boxShadow: { _light: "sm" }, borderColor: isSelected ? "blue.border" : "green.500" }}
+												transition="all 0.2s"
+												cursor="pointer"
+												onClick={() => handleSelectSong(song)}
+												shadow={{ _light: "md" }}
+											>
+												<Box flex="1" minW="0" pr={4}>
+													<HStack mb={1}>
+														<Text fontWeight="bold" truncate>
+															{highlight(song.title, search)}
+														</Text>
+														<Text fontSize="sm" color="gray.500" truncate>
+															- {highlight(song.artist, search)}
+														</Text>
+													</HStack>
+													<HStack fontSize="xs" color="gray.500">
+														<Badge variant="surface" colorPalette={COLOR_SCHEME[song.genre]}>
+															{song.genre}
+														</Badge>
+														<Badge variant="surface" colorPalette={COLOR_SCHEME[song.cheese]}>
+															{song.cheese}
+														</Badge>
+														{song.isOfficial && (
+															<Badge variant="surface" colorPalette={"teal"}>
+																인증
+															</Badge>
+														)}
+														{song.notes && (
+															<Text truncate maxW="150px">
+																📝 {song.notes}
+															</Text>
+														)}
+													</HStack>
+												</Box>
+
+												<Button
+													size="md"
+													minW="80px"
+													bg={copiedId === (song.id || song.title) ? "teal.500" : "gray.100"}
+													color={copiedId === (song.id || song.title) ? "white" : "gray.700"}
+													_hover={{ bg: copiedId === (song.id || song.title) ? "teal.600" : "gray.200" }}
+													onClick={(e) => handleCopy(e, song)}
+												>
+													{copiedId === (song.id || song.title) ? <Icon as={LuCheck} /> : <Icon as={LuCopy} />}
+													<Text ml={2} fontSize="sm">
+														복사
+													</Text>
+												</Button>
+											</Flex>
+										</Box>
+									);
+								})}
+							</Box>
+						)}
+					</Box>
+
+					{/* 우측 디테일 뷰 (PC 스플릿 뷰) */}
+					{isDesktop && selectedSong && (
+						<Box
+							position="sticky"
+							// 우측 패널이 상단 헤더에 잡아먹히지 않도록 헤더 높이만큼 띄움
+							top={`${HEADER_HEIGHT}px`}
+							height={`calc(100vh - ${HEADER_HEIGHT}px)`}
+							borderLeft="1px solid"
+							borderColor="gray.border"
+							boxShadow="-4px 0 12px rgba(0,0,0,0.03)"
+							overflow="auto"
+							pb={8}
+						>
+							<IconButton
+								position="absolute"
+								onClick={() => {
+									setSelectedSong(null);
+								}}
+								variant="ghost"
+								size="sm"
+								_hover={{ bg: "transparent" }}
+							>
+								<LuArrowRightFromLine />
+							</IconButton>
+							{detailViewContent}
+						</Box>
+					)}
+				</Grid>
+
+				{/* 모바일 바텀 시트 */}
+				{!isDesktop && (
+					<DrawerRoot placement="bottom" open={isOpenMobileView} onOpenChange={(e) => setIsOpenMobileView(e.open)}>
+						<DrawerBackdrop />
+						<DrawerContent maxH="85vh" borderTopRadius="2xl">
+							<Box w="40px" h="4px" bg="gray.300" borderRadius="full" mx="auto" mt={3} mb={1} />
+							<DrawerCloseTrigger position="absolute" top={8} right={4} />
+							<DrawerBody p={0}>{selectedSong && detailViewContent}</DrawerBody>
+						</DrawerContent>
+					</DrawerRoot>
+				)}
 			</Stack>
 		</Stack>
 	);
@@ -419,7 +782,7 @@ const SongItem = memo(
 						</div>
 					</div>
 
-					{song.hasLyrics ? (
+					{song.lyric ? (
 						<button className="song-button song-button--lyrics">
 							<MdOutlineLyrics />
 							가사

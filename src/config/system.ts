@@ -21,6 +21,12 @@ const config = defineConfig({
 						_dark: "#141517",
 					},
 				},
+				cardBg: {
+					value: {
+						_light: "#f4f4f5",
+						_dark: "#242529",
+					},
+				},
 				kbg: {
 					value: {
 						_dark: "#7bb18f",
