@@ -715,92 +715,92 @@ export default function SongBook({
 	);
 }
 
-const SongItem = memo(
-	({
-		song,
-		search,
-		highlight,
-		openLyricsSearch,
-	}: {
-		song: Song;
-		search: string;
-		highlight: (text: string, keyword: string) => string | JSX.Element;
-		openLyricsSearch: (song: any) => void;
-	}) => {
-		const [copyState, setCopyState] = useState<"pending" | "copied" | "dismiss">("pending");
-		return (
-			<div
-				className="song-item"
-				onClick={() => {
-					if (copyState !== "pending") return;
-					navigator.clipboard.writeText(`${song.title} ${song.artist}`).then(() => {
-						setCopyState("copied");
-						setTimeout(() => {
-							setCopyState("dismiss");
-							setTimeout(() => {
-								setCopyState("pending");
-							}, 500);
-						}, 2000);
-					});
-				}}
-			>
-				{copyState !== "pending" ? (
-					<Stack
-						position="absolute"
-						top="0"
-						left="0"
-						width="100%"
-						height="100%"
-						alignItems={"center"}
-						justifyContent={"center"}
-						bg="bg"
-						opacity={copyState === "copied" ? "0.9" : "0"}
-						transition="opacity .3s"
-						userSelect={"none"}
-					>
-						<Text fontSize="sm">{song.cheese}곡 복사 완료!</Text>
-					</Stack>
-				) : null}
-				<div className="song-item__content">
-					<div className="song-item__content-wrapper">
-						<div className="song-item__left">
-							<div className="song-item__genre-wrapper">
-								<span className={`song-tag song-tag--${song.genre}`}>{song.genre.toUpperCase()}</span>
-							</div>
+// const SongItem = memo(
+// 	({
+// 		song,
+// 		search,
+// 		highlight,
+// 		openLyricsSearch,
+// 	}: {
+// 		song: Song;
+// 		search: string;
+// 		highlight: (text: string, keyword: string) => string | JSX.Element;
+// 		openLyricsSearch: (song: any) => void;
+// 	}) => {
+// 		const [copyState, setCopyState] = useState<"pending" | "copied" | "dismiss">("pending");
+// 		return (
+// 			<div
+// 				className="song-item"
+// 				onClick={() => {
+// 					if (copyState !== "pending") return;
+// 					navigator.clipboard.writeText(`${song.title} ${song.artist}`).then(() => {
+// 						setCopyState("copied");
+// 						setTimeout(() => {
+// 							setCopyState("dismiss");
+// 							setTimeout(() => {
+// 								setCopyState("pending");
+// 							}, 500);
+// 						}, 2000);
+// 					});
+// 				}}
+// 			>
+// 				{copyState !== "pending" ? (
+// 					<Stack
+// 						position="absolute"
+// 						top="0"
+// 						left="0"
+// 						width="100%"
+// 						height="100%"
+// 						alignItems={"center"}
+// 						justifyContent={"center"}
+// 						bg="bg"
+// 						opacity={copyState === "copied" ? "0.9" : "0"}
+// 						transition="opacity .3s"
+// 						userSelect={"none"}
+// 					>
+// 						<Text fontSize="sm">{song.cheese}곡 복사 완료!</Text>
+// 					</Stack>
+// 				) : null}
+// 				<div className="song-item__content">
+// 					<div className="song-item__content-wrapper">
+// 						<div className="song-item__left">
+// 							<div className="song-item__genre-wrapper">
+// 								<span className={`song-tag song-tag--${song.genre}`}>{song.genre.toUpperCase()}</span>
+// 							</div>
 
-							<div className="song-item__title" title={song.title}>
-								{highlight(song.title, search)}
-							</div>
+// 							<div className="song-item__title" title={song.title}>
+// 								{highlight(song.title, search)}
+// 							</div>
 
-							<div className="song-item__artist" title={song.artist}>
-								{highlight(song.artist, search)}
-							</div>
-						</div>
-						<div className="song-item__bottom">
-							<div className={`song-item__cheese song-item__cheese--${song.cheese}`}>🧀{song.cheese}</div>
-							{song.notes && <div className="song-item__notes">💬{song.notes}</div>}
-						</div>
-					</div>
+// 							<div className="song-item__artist" title={song.artist}>
+// 								{highlight(song.artist, search)}
+// 							</div>
+// 						</div>
+// 						<div className="song-item__bottom">
+// 							<div className={`song-item__cheese song-item__cheese--${song.cheese}`}>🧀{song.cheese}</div>
+// 							{song.notes && <div className="song-item__notes">💬{song.notes}</div>}
+// 						</div>
+// 					</div>
 
-					{song.lyric ? (
-						<button className="song-button song-button--lyrics">
-							<MdOutlineLyrics />
-							가사
-						</button>
-					) : (
-						<button
-							className="song-button song-button--search"
-							onClick={(e) => {
-								e.stopPropagation();
-								openLyricsSearch(song);
-							}}
-						>
-							<MdSearch />
-							가사
-						</button>
-					)}
-				</div>
-			</div>
-		);
-	},
-);
+// 					{song.lyric ? (
+// 						<button className="song-button song-button--lyrics">
+// 							<MdOutlineLyrics />
+// 							가사
+// 						</button>
+// 					) : (
+// 						<button
+// 							className="song-button song-button--search"
+// 							onClick={(e) => {
+// 								e.stopPropagation();
+// 								openLyricsSearch(song);
+// 							}}
+// 						>
+// 							<MdSearch />
+// 							가사
+// 						</button>
+// 					)}
+// 				</div>
+// 			</div>
+// 		);
+// 	},
+// );
