@@ -13,6 +13,7 @@ import {
 	Stack,
 	Text,
 	Heading,
+	Badge,
 } from "@chakra-ui/react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { ColorModeButton } from "./components/ui/color-mode";
@@ -59,23 +60,19 @@ function App() {
 	};
 
 	const parseRawData = (rawData: RawSongData[]): Song[] => {
-		return rawData.map((song) => {
-			const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
-			// const [syncType, rawSyncValue] = restSong.syncId.split("::");
+		return rawData
+			.filter((song) => song.isActive) // isActive true 필터
+			.map((song) => {
+				const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
 
-			// const columnData =
-			// 	song.columnData || (syncType === "SHEET" && rawSyncValue?.includes("-"))
-			// 		? String(Number(rawSyncValue.split("-")[1]) + 6)
-			// 		: "";
-
-			//TODO: searchBase searchChosung searchJamo 설정
-			return {
-				...restSong,
-				// columnData,
-				synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
-				actionStatus: isActive ? "ACTIVE" : "DISABLED",
-			};
-		});
+				//TODO: searchBase searchChosung searchJamo 설정
+				return {
+					...restSong,
+					// columnData,
+					synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
+					actionStatus: isActive ? "ACTIVE" : "DISABLED",
+				};
+			});
 	};
 
 	// 로컬스토리지 불러오기
@@ -383,7 +380,6 @@ function Notice() {
 							</Dialog.CloseTrigger>
 						</Dialog.Header>
 						<Dialog.Body>
-							<ChakraImage src="/images/info.png" />
 							<Stack alignItems={"center"} marginTop={3} gap="1">
 								<Box bg="cardBg" p={4} borderRadius="md" mb={5} overflowY="auto" fontSize="sm">
 									<List.Root gap="2" variant="plain" align="center">
@@ -407,11 +403,15 @@ function Notice() {
 										</List.Item>
 									</List.Root>
 								</Box>
-								<Text marginTop="2">본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다</Text>
+								<Box mb={4}>
+									<Badge colorPalette={"teal"}>인증</Badge> 배지는 햄쿠비가 직접 시트에 입력한 곡입니다.
+								</Box>
+								<ChakraImage mb={12} src="/images/info.png" />
+								{/* <Text marginTop="2">본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다</Text>
 								<Link variant="underline" href={SONGBOOK_URL} colorPalette="green" target="_blank" mb={12}>
 									원본 열기
 									<LuExternalLink />
-								</Link>
+								</Link> */}
 							</Stack>
 							<Footer />
 						</Dialog.Body>
