@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Avatar,
 	Badge,
@@ -22,7 +22,7 @@ import {
 	VStack,
 } from "@chakra-ui/react";
 import type { Song, SortType } from "../config/types";
-import { MdClose, MdOutlineDownloading, MdOutlineLyrics, MdSearch } from "react-icons/md";
+import { MdClose, MdOutlineDownloading } from "react-icons/md";
 import { LuCheck, LuCopy, LuExternalLink, LuYoutube, LuMusic, LuArrowRightFromLine } from "react-icons/lu";
 import { normalizeKeyword } from "../lib/search";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
