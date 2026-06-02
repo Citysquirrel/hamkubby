@@ -193,6 +193,11 @@ export default function SongBook({
 			return matchSearch && (genre === "all" || song.genre === genre);
 		});
 
+		if (selectedSong) {
+			const a = filtered.find((s) => s.syncId === selectedSong.syncId);
+			if (a) setSelectedSong(a);
+		}
+
 		return [...filtered].sort((a, b) => {
 			switch (sort) {
 				case "title-asc":

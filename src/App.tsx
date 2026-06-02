@@ -84,37 +84,53 @@ function App() {
 
 	// load data api & modify
 	useEffect(() => {
-		setIsDataLoading(true);
-		fetch_(`${API_BASE_URL}/api/v2/songbook`)
-			.then((res) => {
-				if (res.status >= 200 && res.status < 300) {
-					if (res.data) {
-						const data: RawSongData[] = res.data.data;
-						const parsed = parseRawData(data).map((song) => ({
-							...song,
-							searchTitle: normalizeKeyword(song.title),
-							searchArtist: normalizeKeyword(song.artist),
-						}));
-						setData(parsed);
+		const fetchSongbookData = (isInitialLoad = false) => {
+			if (isInitialLoad) {
+				setIsDataLoading(true);
+			}
+
+			fetch_(`${API_BASE_URL}/api/v2/songbook`)
+				.then((res) => {
+					if (res.status >= 200 && res.status < 300) {
+						if (res.data) {
+							const data: RawSongData[] = res.data.data;
+							const parsed = parseRawData(data).map((song) => ({
+								...song,
+								searchTitle: normalizeKeyword(song.title),
+								searchArtist: normalizeKeyword(song.artist),
+							}));
+							setData(parsed);
+						}
+					} else {
+						toaster.create({
+							description: "노래책 데이터 로드 실패: 서버에 문제가 발생했습니다!",
+							type: "error",
+							closable: true,
+						});
 					}
-				} else {
+				})
+				.catch(() => {
 					toaster.create({
 						description: "노래책 데이터 로드 실패: 서버에 문제가 발생했습니다!",
 						type: "error",
 						closable: true,
 					});
-				}
-			})
-			.catch(() => {
-				toaster.create({
-					description: "노래책 데이터 로드 실패: 서버에 문제가 발생했습니다!",
-					type: "error",
-					closable: true,
+				})
+				.finally(() => {
+					if (isInitialLoad) {
+						setIsDataLoading(false);
+					}
 				});
-			})
-			.finally(() => {
-				setIsDataLoading(false);
-			});
+		};
+
+		fetchSongbookData(true);
+
+		const POLLING_INTERVAL = 30 * 1000;
+		const intervalId = setInterval(() => {
+			fetchSongbookData(false);
+		}, POLLING_INTERVAL);
+
+		return () => clearInterval(intervalId);
 	}, []);
 
 	useEffect(() => {
