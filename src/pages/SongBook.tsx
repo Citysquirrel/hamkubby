@@ -710,6 +710,11 @@ export default function SongBook({
 																인증
 															</Badge>
 														)}
+														{!!song.lyric && (
+															<Badge variant="surface" colorPalette={"cyan"}>
+																가사
+															</Badge>
+														)}
 														{song.notes && (
 															<Text truncate maxW="150px">
 																📝 {song.notes}
