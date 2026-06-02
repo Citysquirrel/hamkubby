@@ -264,6 +264,12 @@ export default function SongBook({
 			// 조합키 무시 (Ctrl, Cmd, Alt)
 			if (e.ctrlKey || e.metaKey || e.altKey) return;
 
+			// Esc 예외
+			if (e.key === "Escape") {
+				searchRef.current?.focus();
+				setSearch("");
+			}
+
 			// 특수키 무시
 			if (e.key.length !== 1) return;
 
@@ -615,34 +621,7 @@ export default function SongBook({
 						</Box>
 					</Stack>
 				</HStack>
-				{/* <Stack id="list-table" gap={3} minWidth="480px" width="100%" maxWidth="920px" padding="0 8px">
-					{isLoading ? (
-						<Stack width="100%" alignItems={"center"} paddingTop="24px">
-							불러오는중...
-						</Stack>
-					) : filteredSongs.length === 0 ? (
-						<Stack width="100%" alignItems={"center"} paddingTop="24px">
-							검색 결과 없음
-						</Stack>
-					) : (
-						filteredSongs.map((song) => {
-							// const isChosung = isChoseongLike(search);
-							// const title = isChosung ? highlightChosung(song.title, search) : highlightText(song.title, search);
 
-							// const artist = isChosung ? highlightChosung(song.artist, search) : highlightText(song.artist, search);
-
-							return (
-								<SongItem
-									key={song.id}
-									song={song}
-									search={search}
-									highlight={highlight}
-									openLyricsSearch={openLyricsSearch}
-								/>
-							);
-						})
-					)}
-				</Stack> */}
 				<Grid
 					// 선택된 곡이 없으면 100%(1fr), 선택되면 리스트 + 디테일(450px)
 					templateColumns={isDesktop && selectedSong ? "minmax(0, 1fr) 450px" : "1fr"}

@@ -22,7 +22,6 @@ import "./index.css";
 import { fetch_ } from "./lib/fetch";
 import type { RawSongData, Song } from "./config/types";
 import { MdContentCopy, MdKeyboardDoubleArrowUp, MdOutlineQuestionMark, MdSearch } from "react-icons/md";
-import { LuExternalLink } from "react-icons/lu";
 import { PiCheese } from "react-icons/pi";
 import { FaGithub } from "react-icons/fa";
 import { SiGooglesheets } from "react-icons/si";
@@ -322,30 +321,6 @@ function SheetButton() {
 function ColorModeButtonFixed() {
 	return <ColorModeButton />;
 }
-
-// const NoticeButton = forwardRef<HTMLButtonElement, ButtonProps>(function NoticeButton(props, ref) {
-// 	return (
-// 		<Box position="fixed" right="8px" bottom="8px" zIndex={999}>
-// 			<Button
-// 				variant="outline"
-// 				aria-label="Notice button"
-// 				size="xs"
-// 				borderRadius={"full"}
-// 				ref={ref}
-// 				{...props}
-// 				css={{
-// 					_icon: {
-// 						width: "3.5",
-// 						height: "3.5",
-// 					},
-// 				}}
-// 			>
-// 				<MdOutlineQuestionMark />
-// 				도움말
-// 			</Button>
-// 		</Box>
-// 	);
-// });
 
 function Notice() {
 	return (
