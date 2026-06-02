@@ -1,9 +1,11 @@
 import { Image } from "@chakra-ui/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Cursor: React.FC = () => {
 	// DOM 요소에 직접 접근하기 위한 ref
 	const cursorRef = useRef<HTMLImageElement>(null);
+
+	const [isMobile, setIsMobile] = useState(false);
 
 	// 좌표 및 회전 값을 저장하기 위한 ref (리렌더링 방지)
 	const coordsRef = useRef({
@@ -20,9 +22,33 @@ const Cursor: React.FC = () => {
 	const animationFrameIdRef = useRef<number>(0);
 
 	useEffect(() => {
+		// 터치 디바이스(모바일) 감지 로직
+		// 미디어 쿼리 방식과 터치 이벤트 존재 여부를 모두 확인하여 정확도 향상
+		const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
+		if (isTouchDevice) {
+			setIsMobile(true);
+			return; // 모바일이면 하위 이벤트 리스너나 애니메이션 루프를 실행하지 않음
+		}
+
+		// 최초 상호작용 여부 플래그
+		let hasInteracted = false;
+
 		// 마우스 움직임 이벤트 리스너
 		const handleMouseMove = (e: MouseEvent) => {
 			const { clientX, clientY } = e;
+			if (!hasInteracted) {
+				hasInteracted = true;
+
+				// 좌측 상단(0, 0)에서 날아오는 현상을 방지하기 위해
+				// 현재(current) 위치를 즉시 마우스 위치로 덮어씌움
+				coordsRef.current.currentX = clientX;
+				coordsRef.current.currentY = clientY;
+
+				// 투명도를 올려 부드럽게 나타나게 함 (transition 효과 적용됨)
+				if (cursorRef.current) {
+					cursorRef.current.style.opacity = "0.8";
+				}
+			}
 			coordsRef.current.targetX = clientX;
 			coordsRef.current.targetY = clientY;
 			coordsRef.current.lastMoveTime = Date.now(); // 움직임 시간 기록
@@ -91,6 +117,8 @@ const Cursor: React.FC = () => {
 		};
 	}, []);
 
+	if (isMobile) return null;
+
 	const cursorStyle: React.CSSProperties = {
 		position: "fixed",
 		top: 0,
@@ -100,7 +128,8 @@ const Cursor: React.FC = () => {
 		pointerEvents: "none",
 		zIndex: 9999,
 		willChange: "transform",
-		opacity: 0.8,
+		opacity: 0,
+		transition: "opacity 0.4s ease-out", // transform이 꼬이지 않도록 opacity에만 적용
 		filter: "drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.4))",
 	};
 
