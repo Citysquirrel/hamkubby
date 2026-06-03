@@ -801,7 +801,7 @@ const SongHistorySection = ({ song }: { song: Song }) => {
 			bg="cardBg"
 			borderRadius="md"
 			cursor="pointer"
-			_hover={{ bg: "gray.100" }}
+			_hover={{ bg: { _light: "blue.100", _dark: "blue.800" } }}
 			onClick={(e) => {
 				e.stopPropagation();
 				window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
@@ -814,7 +814,7 @@ const SongHistorySection = ({ song }: { song: Song }) => {
 			<HStack gap="1">
 				{hist.priority === 7 && <Icon as={LuStar} color="orange.400" fill="orange.400" />}
 				{hist.memo && (
-					<Text fontSize="xs" color="gray.500" lineClamp={1} maxW="100px">
+					<Text fontSize="xs" color={{ _light: "gray.700", _dark: "gray.300" }} lineClamp={1} maxW="220px">
 						{hist.memo}
 					</Text>
 				)}
@@ -839,7 +839,7 @@ const SongHistorySection = ({ song }: { song: Song }) => {
 						</Text>
 
 						{sortedHistories.length > 1 && (
-							<HStack gap="1" color="gray.400">
+							<HStack gap="1" color="gray.500" _hover={{ color: { _light: "blue.500", _dark: "blue.500" } }}>
 								<Text fontSize="xs">{open ? "접기" : "더보기"}</Text>
 								<Icon as={open ? LuChevronUp : LuChevronDown} />
 							</HStack>
