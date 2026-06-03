@@ -5,6 +5,7 @@ import {
 	Box,
 	Button,
 	ButtonGroup,
+	Collapsible,
 	Flex,
 	Grid,
 	Heading,
@@ -21,7 +22,7 @@ import {
 	useMediaQuery,
 	VStack,
 } from "@chakra-ui/react";
-import type { Song, SortType } from "../config/types";
+import type { HamkubbySongHistoryModel, Song, SortType } from "../config/types";
 import { MdClose, MdOutlineDownloading } from "react-icons/md";
 import {
 	LuCheck,
@@ -33,11 +34,15 @@ import {
 	LuPlus,
 	LuMinus,
 	LuBold,
+	LuStar,
+	LuChevronUp,
+	LuChevronDown,
 } from "react-icons/lu";
 import { normalizeKeyword } from "../lib/search";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRoot } from "../components/ui/drawer";
 import { toaster } from "../components/ui/toaster";
+import { formatDateToYYYYMMDD } from "../lib/date";
 
 const GENRE = {
 	전체: "all",
@@ -356,6 +361,7 @@ export default function SongBook({
 					</Button>
 				</HStack>
 
+				{/* 태그 */}
 				<HStack gap={2} mb={4} flexWrap="wrap">
 					<Badge variant="outline" colorPalette={COLOR_SCHEME[song.genre]}>
 						{song.genre}
@@ -370,13 +376,17 @@ export default function SongBook({
 					)}
 				</HStack>
 
+				{/* 메모 */}
 				{song.notes && (
 					<Box bg="cardBg" p={3} borderRadius="md" mb={5} maxH="80px" overflowY="auto" fontSize="sm">
 						<strong>📝 Note:</strong> {song.notes}
 					</Box>
 				)}
 
-				<Box position="relative" mb={2} p={2} bg="cardBg" borderRadius="lg">
+				<SongHistorySection song={song} />
+
+				{/* 가사 */}
+				<Box position="relative" mt={2} mb={2} p={2} bg="cardBg" borderRadius="lg">
 					{song.lyric ? (
 						<Stack p={2}>
 							<Stack position="absolute" top={2} right={2}>
@@ -433,37 +443,6 @@ export default function SongBook({
 						</Flex>
 					)}
 				</Box>
-
-				{song.history && song.history.length > 0 && (
-					<Box borderTop="1px solid" borderColor="gray.200" pt={4}>
-						<Text fontWeight="bold" mb={3} fontSize="sm" color="gray.500">
-							📺 방송 히스토리
-						</Text>
-						<VStack align="stretch" gap={2} maxH="150px" overflowY="auto">
-							{song.history.map((hist) => (
-								<HStack
-									key={hist.id}
-									p={2}
-									bg="gray.50"
-									borderRadius="md"
-									cursor="pointer"
-									_hover={{ bg: "gray.100" }}
-									onClick={() => window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank")}
-								>
-									<Icon as={LuYoutube} color="red.500" />
-									<Text fontSize="sm" flex="1">
-										{hist.sungAt ? new Date(hist.sungAt).toLocaleDateString() : "날짜 미상"}
-									</Text>
-									{hist.memo && (
-										<Text fontSize="xs" color="gray.500" lineClamp={1} maxW="100px">
-											{hist.memo}
-										</Text>
-									)}
-								</HStack>
-							))}
-						</VStack>
-					</Box>
-				)}
 			</Flex>
 		);
 	}, [isLyricBold, lyricIndex, selectedSong, copiedId]);
@@ -789,92 +768,99 @@ export default function SongBook({
 	);
 }
 
-// const SongItem = memo(
-// 	({
-// 		song,
-// 		search,
-// 		highlight,
-// 		openLyricsSearch,
-// 	}: {
-// 		song: Song;
-// 		search: string;
-// 		highlight: (text: string, keyword: string) => string | JSX.Element;
-// 		openLyricsSearch: (song: any) => void;
-// 	}) => {
-// 		const [copyState, setCopyState] = useState<"pending" | "copied" | "dismiss">("pending");
-// 		return (
-// 			<div
-// 				className="song-item"
-// 				onClick={() => {
-// 					if (copyState !== "pending") return;
-// 					navigator.clipboard.writeText(`${song.title} ${song.artist}`).then(() => {
-// 						setCopyState("copied");
-// 						setTimeout(() => {
-// 							setCopyState("dismiss");
-// 							setTimeout(() => {
-// 								setCopyState("pending");
-// 							}, 500);
-// 						}, 2000);
-// 					});
-// 				}}
-// 			>
-// 				{copyState !== "pending" ? (
-// 					<Stack
-// 						position="absolute"
-// 						top="0"
-// 						left="0"
-// 						width="100%"
-// 						height="100%"
-// 						alignItems={"center"}
-// 						justifyContent={"center"}
-// 						bg="bg"
-// 						opacity={copyState === "copied" ? "0.9" : "0"}
-// 						transition="opacity .3s"
-// 						userSelect={"none"}
-// 					>
-// 						<Text fontSize="sm">{song.cheese}곡 복사 완료!</Text>
-// 					</Stack>
-// 				) : null}
-// 				<div className="song-item__content">
-// 					<div className="song-item__content-wrapper">
-// 						<div className="song-item__left">
-// 							<div className="song-item__genre-wrapper">
-// 								<span className={`song-tag song-tag--${song.genre}`}>{song.genre.toUpperCase()}</span>
-// 							</div>
+const SongHistorySection = ({ song }: { song: Song }) => {
+	const [open, setOpen] = useState(false);
 
-// 							<div className="song-item__title" title={song.title}>
-// 								{highlight(song.title, search)}
-// 							</div>
+	const sortedHistories = useMemo(() => {
+		if (!song.song_histories) return [];
 
-// 							<div className="song-item__artist" title={song.artist}>
-// 								{highlight(song.artist, search)}
-// 							</div>
-// 						</div>
-// 						<div className="song-item__bottom">
-// 							<div className={`song-item__cheese song-item__cheese--${song.cheese}`}>🧀{song.cheese}</div>
-// 							{song.notes && <div className="song-item__notes">💬{song.notes}</div>}
-// 						</div>
-// 					</div>
+		return [...song.song_histories].sort((a, b) => {
+			// priority가 7인 경우 무조건 최상단으로 끌어올림 (둘 중 하나만 7일 경우)
+			if (a.priority === 7 && b.priority !== 7) return -1;
+			if (b.priority === 7 && a.priority !== 7) return 1;
 
-// 					{song.lyric ? (
-// 						<button className="song-button song-button--lyrics">
-// 							<MdOutlineLyrics />
-// 							가사
-// 						</button>
-// 					) : (
-// 						<button
-// 							className="song-button song-button--search"
-// 							onClick={(e) => {
-// 								e.stopPropagation();
-// 								openLyricsSearch(song);
-// 							}}
-// 						>
-// 							<MdSearch />
-// 							가사
-// 						</button>
-// 					)}
-// 				</div>
-// 			</div>
-// 		);
-// 	},
-// );
+			// 둘 다 7이거나, 둘 다 7이 아닐 경우 -> priority가 높은 순(내림차순) 정렬
+			if (a.priority !== b.priority) {
+				return b.priority - a.priority;
+			}
+
+			// priority마저 같다면 -> 날짜가 가까울수록(최신일수록) 위로 정렬
+			const timeA = new Date(a.sungAt).getTime();
+			const timeB = new Date(b.sungAt).getTime();
+
+			return timeB - timeA;
+		});
+	}, [song.song_histories]);
+
+	if (sortedHistories.length === 0) return null;
+
+	const renderItem = (hist: HamkubbySongHistoryModel) => (
+		<HStack
+			key={hist.id}
+			p="2"
+			bg="cardBg"
+			borderRadius="md"
+			cursor="pointer"
+			_hover={{ bg: "gray.100" }}
+			onClick={(e) => {
+				e.stopPropagation();
+				window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
+			}}
+		>
+			<Icon as={LuYoutube} color="red.500" />
+			<Text fontSize="sm" flex="1">
+				{formatDateToYYYYMMDD(hist.sungAt)}
+			</Text>
+			<HStack gap="1">
+				{hist.priority === 7 && <Icon as={LuStar} color="orange.400" fill="orange.400" />}
+				{hist.memo && (
+					<Text fontSize="xs" color="gray.500" lineClamp={1} maxW="100px">
+						{hist.memo}
+					</Text>
+				)}
+			</HStack>
+		</HStack>
+	);
+
+	return (
+		<Collapsible.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
+			<Box borderTopWidth="1px" borderColor="gray.border" pt="2">
+				{/* 헤더 영역: 클릭 시 확장됨 */}
+				<Collapsible.Trigger asChild>
+					<Flex
+						justify="space-between"
+						align="center"
+						mb="2"
+						cursor={sortedHistories.length > 1 ? "pointer" : "default"}
+						userSelect="none"
+					>
+						<Text fontWeight="bold" fontSize="sm" color="gray.500">
+							📺 방송 히스토리 {sortedHistories.length > 1 && `(${sortedHistories.length})`}
+						</Text>
+
+						{sortedHistories.length > 1 && (
+							<HStack gap="1" color="gray.400">
+								<Text fontSize="xs">{open ? "접기" : "더보기"}</Text>
+								<Icon as={open ? LuChevronUp : LuChevronDown} />
+							</HStack>
+						)}
+					</Flex>
+				</Collapsible.Trigger>
+
+				<VStack align="stretch" gap={0}>
+					{/* 첫 번째 항목은 항상 노출 */}
+					{renderItem(sortedHistories[0])}
+
+					{/* 나머지 항목: Collapsible 내부에 위치 */}
+					{sortedHistories.length > 1 && (
+						<Collapsible.Content>
+							<VStack align="stretch" gap="2" pt="2" maxH="180px" overflowY="auto">
+								{sortedHistories.slice(1).map(renderItem)}
+							</VStack>
+						</Collapsible.Content>
+					)}
+				</VStack>
+			</Box>
+		</Collapsible.Root>
+	);
+};

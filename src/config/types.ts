@@ -5,13 +5,15 @@ export type SortType = "title-asc" | "title-desc" | "artist-asc" | "artist-desc"
 export type Genre = "all" | "kpop" | "jpop" | "pop" | (string & {});
 type ActionStatus = "ACTIVE" | "DELETED" | "DISABLED";
 
-interface HamkubbySongHistoryModel {
+export interface HamkubbySongHistoryModel {
 	id: number;
-	sungAt: Date | null;
+	historyId: string;
+	sungAt: string;
 	youtubeVideoId: string;
 	start: number;
 	end: number;
 	memo?: string | null;
+	priority: number;
 	hamkubby_id: number;
 }
 export interface Song {
@@ -28,7 +30,7 @@ export interface Song {
 	cheese: Cheese;
 	isOfficial?: boolean;
 	actionStatus?: ActionStatus;
-	history?: HamkubbySongHistoryModel[]; // Join된 히스토리 데이터
+	song_histories?: HamkubbySongHistoryModel[]; // Join된 히스토리 데이터
 }
 
 export type RawSongData = Omit<Song, "synonyms" | "actionStatus"> & {
