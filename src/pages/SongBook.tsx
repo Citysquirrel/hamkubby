@@ -863,8 +863,8 @@ const SongHistorySection = ({ song }: { song: Song }) => {
 			p="2"
 			bg="cardBg"
 			borderRadius="md"
-			cursor="pointer"
-			_hover={{ bg: { _light: "blue.100", _dark: "blue.800" } }}
+			cursor={hist.youtubeVideoId ? "pointer" : "auto"}
+			_hover={hist.youtubeVideoId ? { bg: { _light: "blue.100", _dark: "blue.800" } } : undefined}
 			onClick={(e) => {
 				e.stopPropagation();
 				if (hist.youtubeVideoId) window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
