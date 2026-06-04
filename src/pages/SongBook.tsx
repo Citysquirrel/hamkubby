@@ -418,14 +418,19 @@ export default function SongBook({
 					<Badge variant="outline" colorPalette={COLOR_SCHEME[song.genre]}>
 						{song.genre}
 					</Badge>
-					<Badge variant="outline" colorPalette={COLOR_SCHEME[song.cheese]}>
-						{song.cheese}
-					</Badge>
-					{song.isOfficial && (
+
+					{song.isOfficial ? (
 						<Badge bg={MAIN_COLOR} color="white">
-							인증
+							공식
 						</Badge>
+					) : (
+						<Badge colorPalette={"red"}>비공식</Badge>
 					)}
+					{song.isOfficial ? (
+						<Badge variant="outline" colorPalette={COLOR_SCHEME[song.cheese]}>
+							{song.cheese}
+						</Badge>
+					) : null}
 				</HStack>
 
 				{/* 메모 */}
@@ -734,14 +739,20 @@ export default function SongBook({
 														<Badge variant="surface" colorPalette={COLOR_SCHEME[song.genre]}>
 															{song.genre}
 														</Badge>
-														<Badge variant="surface" colorPalette={COLOR_SCHEME[song.cheese]}>
-															{song.cheese}
-														</Badge>
-														{song.isOfficial && (
+														{song.isOfficial ? (
 															<Badge variant="surface" colorPalette={"teal"}>
-																인증
+																공식
+															</Badge>
+														) : (
+															<Badge variant="surface" colorPalette={"red"}>
+																비공식
 															</Badge>
 														)}
+														{song.isOfficial ? (
+															<Badge variant="surface" colorPalette={COLOR_SCHEME[song.cheese]}>
+																{song.cheese}
+															</Badge>
+														) : null}
 														{!!song.lyric && (
 															<Badge variant="surface" colorPalette={"cyan"}>
 																가사

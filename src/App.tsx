@@ -395,7 +395,11 @@ function Notice() {
 									</List.Root>
 								</Box>
 								<Box mb={4}>
-									<Badge colorPalette={"teal"}>인증</Badge> 배지는 햄쿠비가 직접 시트에 입력한 곡입니다.
+									<Badge colorPalette={"teal"}>공식</Badge> 태그는 햄쿠비가 직접 시트에 입력한 곡입니다.
+								</Box>
+								<Box mb={1}>
+									<Badge colorPalette={"red"}>비공식</Badge> 태그는 시트에 없는, 과거에 불렀던 기록 토대로 등록한
+									곡입니다. 신청에 유의해 주세요
 								</Box>
 								<ChakraImage mb={12} src="/images/info.png" />
 								{/* <Text marginTop="2">본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다</Text>
