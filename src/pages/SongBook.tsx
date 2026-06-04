@@ -105,6 +105,13 @@ export default function SongBook({
 		return false;
 	});
 
+	// 디테일 뷰의 너비 조정 상태
+	const [detailWidth, setDetailWidth] = useState(() => {
+		const savedWidth = localStorage.getItem("detail-view-width");
+		return savedWidth ? parseInt(savedWidth, 10) : 450;
+	});
+	const [isDragging, setIsDragging] = useState(false);
+
 	const handleLyricSize = (isIncrease: boolean) => {
 		const delta = isIncrease ? 1 : -1;
 		const maxIndex = LYRIC_SIZES.length - 1; // 4
@@ -157,6 +164,51 @@ export default function SongBook({
 			return `${field}-asc`;
 		});
 	};
+
+	//------------------------------------//
+	// 드래그 핸들러								//
+	//------------------------------------//
+	const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+		e.preventDefault(); // 기본 텍스트 선택 방지
+		setIsDragging(true);
+	};
+
+	// 마우스 이동 중 너비 계산
+	const handleMouseMove = useCallback(
+		(e: MouseEvent) => {
+			if (!isDragging) return;
+
+			// 우측 패널이므로 '전체 화면 너비 - 현재 마우스 X좌표'가 패널의 너비가 됨
+			const newWidth = document.body.clientWidth - e.clientX;
+
+			if (newWidth > 450 && newWidth < 600) {
+				setDetailWidth(newWidth);
+			}
+		},
+		[isDragging],
+	);
+
+	// 드래그 종료
+	const handleMouseUp = useCallback(() => {
+		setIsDragging(false);
+		localStorage.setItem("detail-view-width", detailWidth.toString());
+	}, [detailWidth]);
+
+	// 드래그 중일 때만 window에 이벤트 리스너 부착
+	useEffect(() => {
+		if (isDragging) {
+			window.addEventListener("mousemove", handleMouseMove);
+			window.addEventListener("mouseup", handleMouseUp);
+		} else {
+			window.removeEventListener("mousemove", handleMouseMove);
+			window.removeEventListener("mouseup", handleMouseUp);
+		}
+
+		return () => {
+			window.removeEventListener("mousemove", handleMouseMove);
+			window.removeEventListener("mouseup", handleMouseUp);
+		};
+	}, [isDragging, handleMouseMove, handleMouseUp]);
 
 	const openLyricsSearch = useCallback((song: any) => {
 		const query = `${song.artist} ${song.title} 가사`;
@@ -608,8 +660,9 @@ export default function SongBook({
 
 				<Grid
 					// 선택된 곡이 없으면 100%(1fr), 선택되면 리스트 + 디테일(450px)
-					templateColumns={isDesktop && selectedSong ? "minmax(0, 1fr) 450px" : "1fr"}
+					templateColumns={isDesktop && selectedSong ? `minmax(0, 1fr) 5px ${detailWidth}px` : "1fr"}
 					alignItems="start"
+					userSelect={isDragging ? "none" : "auto"}
 				>
 					{/* 리스트 영역 (Window Scroll) */}
 					<Box
@@ -722,6 +775,16 @@ export default function SongBook({
 							</Box>
 						)}
 					</Box>
+
+					{/* 리사이저 영역 */}
+					<Box
+						height="100%"
+						onMouseDown={handleMouseDown}
+						cursor="col-resize"
+						backgroundColor={isDragging ? "blue.500" : { _light: "gray.300", _dark: "gray.600" }}
+						transition="background-color 0.2s"
+						zIndex={10}
+					/>
 
 					{/* 우측 디테일 뷰 (PC 스플릿 뷰) */}
 					{isDesktop && selectedSong && (
