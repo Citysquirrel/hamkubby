@@ -867,7 +867,8 @@ const SongHistorySection = ({ song }: { song: Song }) => {
 			_hover={{ bg: { _light: "blue.100", _dark: "blue.800" } }}
 			onClick={(e) => {
 				e.stopPropagation();
-				window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
+				if (hist.youtubeVideoId) window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
+				else toaster.create({ description: `등록된 유튜브 링크가 없습니다`, type: "info" });
 			}}
 		>
 			<Icon as={LuYoutube} color="red.500" />
