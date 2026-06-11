@@ -435,7 +435,7 @@ export default function SongBook({
 
 				{/* 메모 */}
 				{song.notes && (
-					<Box bg="cardBg" p={3} borderRadius="md" mb={5} maxH="80px" overflowY="auto" fontSize="sm">
+					<Box bg="cardBg" p={3} borderRadius="md" mb={2} maxH="80px" overflowY="auto" fontSize="sm">
 						<strong>📝 Note:</strong> {song.notes}
 					</Box>
 				)}
@@ -787,42 +787,47 @@ export default function SongBook({
 						)}
 					</Box>
 
-					{/* 리사이저 영역 */}
-					<Box
-						height="100%"
-						onMouseDown={handleMouseDown}
-						cursor="col-resize"
-						backgroundColor={isDragging ? "blue.500" : { _light: "gray.300", _dark: "gray.600" }}
-						transition="background-color 0.2s"
-						zIndex={10}
-					/>
-
 					{/* 우측 디테일 뷰 (PC 스플릿 뷰) */}
 					{isDesktop && selectedSong && (
-						<Box
-							position="sticky"
-							// 우측 패널이 상단 헤더에 잡아먹히지 않도록 헤더 높이만큼 띄움
-							top={`${HEADER_HEIGHT}px`}
-							height={`calc(100vh - ${HEADER_HEIGHT}px)`}
-							borderLeft="1px solid"
-							borderColor="gray.border"
-							boxShadow="-4px 0 12px rgba(0,0,0,0.03)"
-							overflow="auto"
-							pb={8}
-						>
-							<IconButton
-								position="absolute"
-								onClick={() => {
-									setSelectedSong(null);
-								}}
-								variant="ghost"
-								size="sm"
-								_hover={{ bg: "transparent" }}
+						<>
+							{/* 리사이저 영역 */}
+							<Box
+								position="sticky"
+								top={`${HEADER_HEIGHT}px`}
+								height={`calc(100vh - ${HEADER_HEIGHT}px)`}
+								onMouseDown={handleMouseDown}
+								cursor="col-resize"
+								backgroundColor={isDragging ? "blue.500" : { _light: "gray.300", _dark: "gray.600" }}
+								transition="background-color 0.2s"
+								// zIndex={10}
+							/>
+							<Box
+								position="sticky"
+								// 우측 패널이 상단 헤더에 잡아먹히지 않도록 헤더 높이만큼 띄움
+								top={`${HEADER_HEIGHT}px`}
+								height={`calc(100vh - ${HEADER_HEIGHT}px)`}
+								borderLeft="1px solid"
+								borderColor="gray.border"
+								boxShadow="-4px 0 12px rgba(0,0,0,0.03)"
+								overflow="auto"
+								pb={8}
 							>
-								<LuArrowRightFromLine />
-							</IconButton>
-							{detailViewContent}
-						</Box>
+								{/* 접기 버튼 */}
+								<Box position="sticky" top="0" left="0" height="0" zIndex={1} overflow="visible">
+									<IconButton
+										onClick={() => {
+											setSelectedSong(null);
+										}}
+										variant="ghost"
+										size="xs"
+										_hover={{ bg: { _light: "gray.100", _dark: "gray.800" } }}
+									>
+										<LuArrowRightFromLine />
+									</IconButton>
+								</Box>
+								{detailViewContent}
+							</Box>
+						</>
 					)}
 				</Grid>
 
