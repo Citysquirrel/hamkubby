@@ -573,7 +573,7 @@ export default function SongBook({
 											ESC
 										</Button>
 									) : !focused ? (
-										<label className="cursor_text" htmlFor="search">
+										<label className="cursor_text" htmlFor="search" style={{ cursor: "text" }}>
 											<Text fontSize="xs" userSelect={"none"}>
 												아무 키나 누르면 검색창 선택
 											</Text>
