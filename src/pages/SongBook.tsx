@@ -558,6 +558,7 @@ export default function SongBook({
 						<Stack width="100%" alignItems={"center"} marginBottom="1" padding="4px">
 							<InputGroup
 								width="400px"
+								cursor={"text"}
 								endElement={
 									search.length > 0 ? (
 										<Button
@@ -573,7 +574,7 @@ export default function SongBook({
 										</Button>
 									) : !focused ? (
 										<label className="cursor_text" htmlFor="search">
-											<Text fontSize="xs" userSelect={"none"} cursor={"text"}>
+											<Text fontSize="xs" userSelect={"none"}>
 												아무 키나 누르면 검색창 선택
 											</Text>
 										</label>
