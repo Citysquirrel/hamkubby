@@ -2,7 +2,6 @@ import { Image } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 
 const Cursor: React.FC = () => {
-	// DOM 요소에 직접 접근하기 위한 ref
 	const cursorRef = useRef<HTMLImageElement>(null);
 
 	const [isMobile, setIsMobile] = useState(false);
@@ -16,10 +15,14 @@ const Cursor: React.FC = () => {
 		rotation: 0, // 현재 회전 각도
 		rotationSpeed: 0, // 현재 회전 속도 (움직임에 비례)
 		lastMoveTime: 0, // 마지막 움직임 시간 (멈춤 감지용)
+		isAnimating: true, // 애니메이션 루프 실행 상태 제어 플래그
 	});
 
 	// 애니메이션 프레임 ID 저장
 	const animationFrameIdRef = useRef<number>(0);
+
+	const stopTimeoutRef = useRef<number | null>(null);
+	const startAnimationRef = useRef<() => void>(() => {});
 
 	useEffect(() => {
 		// 터치 디바이스(모바일) 감지 로직
@@ -58,6 +61,11 @@ const Cursor: React.FC = () => {
 
 		// 💡 핵심: requestAnimationFrame 애니메이션 루프
 		const animateCursor = () => {
+			if (!coordsRef.current.isAnimating) {
+				animationFrameIdRef.current = 0;
+				return;
+			}
+
 			const { targetX, targetY, currentX, currentY, rotation, rotationSpeed, lastMoveTime } = coordsRef.current;
 
 			// 1. Lerp (Linear Interpolation)를 이용한 부드러운 위치 추적
@@ -105,6 +113,12 @@ const Cursor: React.FC = () => {
 			animationFrameIdRef.current = requestAnimationFrame(animateCursor);
 		};
 
+		startAnimationRef.current = () => {
+			if (animationFrameIdRef.current === 0) {
+				animateCursor();
+			}
+		};
+
 		// 애니메이션 루프 시작
 		animateCursor();
 
@@ -114,6 +128,51 @@ const Cursor: React.FC = () => {
 			if (animationFrameIdRef.current) {
 				cancelAnimationFrame(animationFrameIdRef.current);
 			}
+		};
+	}, []);
+
+	// 커서가 화면 밖으로 나갈때와 들어왔을 때
+	useEffect(() => {
+		const handleMouseLeave = () => {
+			if (cursorRef.current) {
+				cursorRef.current.style.opacity = "0";
+			}
+
+			//? 새로 추가된 최적화 코드 시작
+			// 기존에 걸려있던 타이머가 있다면 지우고, 400ms 뒤에 애니메이션 루프 정지
+			if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
+			stopTimeoutRef.current = setTimeout(() => {
+				coordsRef.current.isAnimating = false;
+			}, 400); // CSS transition 시간(0.4s)과 동일하게 맞춤
+			//? 새로 추가된 최적화 코드 끝
+		};
+
+		const handleMouseEnter = () => {
+			if (cursorRef.current) {
+				cursorRef.current.style.opacity = "0.8";
+			}
+
+			//? 새로 추가된 최적화 코드 시작
+			// 커서가 400ms가 지나기 전에 다시 들어왔다면 정지 타이머 취소
+			if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
+
+			// 플래그를 다시 켜고 애니메이션 즉시 재시작
+			coordsRef.current.isAnimating = true;
+			startAnimationRef.current();
+			//? 새로 추가된 최적화 코드 끝
+		};
+
+		// document 객체에 이벤트 리스너 등록
+		document.addEventListener("mouseleave", handleMouseLeave);
+		document.addEventListener("mouseenter", handleMouseEnter);
+
+		// 메모리 누수 방지
+		return () => {
+			document.removeEventListener("mouseleave", handleMouseLeave);
+			document.removeEventListener("mouseenter", handleMouseEnter);
+
+			//? 새로 추가된 최적화 코드: 컴포넌트 언마운트 시 타이머 찌꺼기 제거
+			if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
 		};
 	}, []);
 
