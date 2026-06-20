@@ -1,14 +1,31 @@
 import { createRoot } from "react-dom/client";
-import { ChakraProvider } from "@chakra-ui/react";
-import { ColorModeProvider } from "./components/ui/color-mode.tsx";
 import App from "./App.tsx";
-import system from "./config/system.ts";
+import { AppProvider } from "./providers/AppProvider.tsx";
+import { Toaster } from "./components/ui/toaster.tsx";
+import { lazy, Suspense } from "react";
+
+const DevComponents = import.meta.env.DEV
+	? lazy(() =>
+			import("./components/DevDock.tsx").then((module) => ({
+				default: () => (
+					<>
+						<module.ConsoleDock />
+						<module.NetworkDock />
+					</>
+				),
+			})),
+		)
+	: null;
 
 createRoot(document.getElementById("root")!).render(
-	<ChakraProvider value={system}>
-		<ColorModeProvider>
-			<App />
-		</ColorModeProvider>
-	</ChakraProvider>,
+	<AppProvider>
+		<Toaster />
+		{DevComponents && (
+			<Suspense fallback={null}>
+				<DevComponents />
+			</Suspense>
+		)}
+		<App />
+	</AppProvider>,
 );
 
