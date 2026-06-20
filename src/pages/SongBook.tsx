@@ -67,11 +67,11 @@ const HEADER_HEIGHT = 104;
 export default function SongBook({
 	data,
 	isLoading,
-	isHomeOpen,
+	isProfileOpen,
 }: {
 	data: Song[];
 	isLoading: boolean;
-	isHomeOpen: boolean;
+	isProfileOpen: boolean;
 }) {
 	const LOCAL_STORAGE_KEY = "lyric-font-size-index";
 	const LOCAL_STORAGE_BOLD_KEY = "lyric-font-bold";
@@ -506,7 +506,7 @@ export default function SongBook({
 
 	return (
 		<Stack id="songbook" padding="0" margin="0" alignItems={"center"} position="static">
-			{isHomeOpen ? (
+			{isProfileOpen ? (
 				<Stack alignItems={"center"}>
 					<Box className="circle-wrap" marginTop="4" position="relative">
 						<Image

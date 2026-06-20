@@ -43,8 +43,8 @@ const API_BASE_URL = import.meta.env.DEV
 
 function App() {
 	const [isLoading, setIsLoading] = useState(true);
-	const [isDataLoading, setIsDataLoading] = useState(true);
-	const [isHomeOpen, setIsHomeOpen] = useState(true);
+	const [isSongDataLoading, setIsSongDataLoading] = useState(true);
+	const [isProfileOpen, setIsProfileOpen] = useState(true);
 	const [maintenance, setMaintenance] = useState<Maintenance>({
 		maintenance_mode_hamkubby: false,
 		maintenance_message_hamkubby: "",
@@ -78,7 +78,7 @@ function App() {
 	useEffect(() => {
 		const saved = localStorage.getItem("isHomeOpen");
 		if (saved !== null) {
-			setIsHomeOpen(JSON.parse(saved));
+			setIsProfileOpen(JSON.parse(saved));
 		}
 	}, []);
 
@@ -86,7 +86,7 @@ function App() {
 	useEffect(() => {
 		const fetchSongbookData = (isInitialLoad = false) => {
 			if (isInitialLoad) {
-				setIsDataLoading(true);
+				setIsSongDataLoading(true);
 			}
 
 			fetch_(`${API_BASE_URL}/api/v2/songbook`)
@@ -118,7 +118,7 @@ function App() {
 				})
 				.finally(() => {
 					if (isInitialLoad) {
-						setIsDataLoading(false);
+						setIsSongDataLoading(false);
 					}
 				});
 		};
@@ -133,6 +133,7 @@ function App() {
 		return () => clearInterval(intervalId);
 	}, []);
 
+	// Maintenance API Call
 	useEffect(() => {
 		let isCancelled = false;
 		let timerId: ReturnType<typeof setTimeout>;
@@ -213,7 +214,7 @@ function App() {
 				<HStack flexDirection={"row-reverse"} position="fixed" right="8px" top="8px" zIndex={999}>
 					<ColorModeButtonFixed />
 					<SheetButton />
-					<HomeButton isHomeOpen={isHomeOpen} setIsHomeOpen={setIsHomeOpen} />
+					<ProfileButton isProfileOpen={isProfileOpen} setIsProfileOpen={setIsProfileOpen} />
 				</HStack>
 
 				<HStack flexDirection={"row-reverse"} position="fixed" right="8px" bottom="8px" zIndex={999}>
@@ -236,7 +237,7 @@ function App() {
 					</IconButton>
 				</HStack>
 
-				<SongBook data={data} isLoading={isDataLoading} isHomeOpen={isHomeOpen} />
+				<SongBook data={data} isLoading={isSongDataLoading} isProfileOpen={isProfileOpen} />
 
 				{/* <Footer /> */}
 			</Stack>
@@ -280,12 +281,12 @@ function LoadingCanvas({ isLoading }: { isLoading: boolean }) {
 	);
 }
 
-function HomeButton({
-	isHomeOpen,
-	setIsHomeOpen,
+function ProfileButton({
+	isProfileOpen,
+	setIsProfileOpen,
 }: {
-	isHomeOpen: boolean;
-	setIsHomeOpen: Dispatch<SetStateAction<boolean>>;
+	isProfileOpen: boolean;
+	setIsProfileOpen: Dispatch<SetStateAction<boolean>>;
 }) {
 	return (
 		<IconButton
@@ -300,14 +301,14 @@ function HomeButton({
 				},
 			}}
 			onClick={() => {
-				setIsHomeOpen((prev) => {
+				setIsProfileOpen((prev) => {
 					const nextState = !prev;
 					localStorage.setItem("isHomeOpen", JSON.stringify(nextState));
 					return nextState;
 				});
 			}}
 		>
-			{isHomeOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
+			{isProfileOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
 		</IconButton>
 	);
 }
