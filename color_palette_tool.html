@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Chakra UI Semantic Colors</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<style>
+			/* 토스트 알림 애니메이션 */
+			#toast {
+				transition:
+					opacity 0.2s ease-in-out,
+					transform 0.2s ease-in-out;
+				opacity: 0;
+				transform: translate(-50%, 20px);
+				pointer-events: none;
+			}
+			#toast.show {
+				opacity: 1;
+				transform: translate(-50%, 0);
+			}
+		</style>
+	</head>
+	<body class="bg-gray-50 min-h-screen text-gray-800 p-6 md:p-10">
+		<div class="max-w-7xl mx-auto">
+			<header class="mb-10">
+				<h1 class="text-3xl font-bold text-gray-900 mb-2">🎨 Semantic Color Palette</h1>
+				<p class="text-gray-500">
+					색상을 클릭하면 시멘틱 토큰 이름(예:
+					<code class="bg-gray-200 px-1 rounded text-sm text-gray-700">primary.base</code>)이 클립보드에 복사됩니다.
+				</p>
+			</header>
+
+			<!-- 색상 팔레트가 렌더링될 컨테이너 -->
+			<div id="palette-container" class="space-y-12"></div>
+		</div>
+
+		<!-- 토스트 알림 메시지 -->
+		<div
+			id="toast"
+			class="fixed bottom-10 left-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl font-mono text-sm z-50 flex items-center gap-2"
+		>
+			<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+			</svg>
+			<span id="toast-text">복사되었습니다!</span>
+		</div>
+
+		<script>
+			// 1. 색상 데이터 정의
+			const colorData = {
+				primary: { lightest: "#EDF7F4", light: "#B8E0DC", base: "#2F7974", hover: "#22625F", deep: "#164644" },
+				secondary: { lightest: "#F7F1ED", light: "#DFCBC3", base: "#946657", hover: "#764E42", deep: "#56372E" },
+				accent: { lightest: "#FBEEF1", light: "#F3D3D9", base: "#E18EA0", hover: "#C8415E", deep: "#AC3954" },
+				wine: { base: "#6B2E3E", hover: "#511F2D" },
+				neutral: {
+					0: "#FEFCFB",
+					50: "#FBF7F4",
+					100: "#F5EEEA",
+					200: "#E7DEDA",
+					300: "#D1C2BD",
+					400: "#AC9791",
+					600: "#7C615A",
+					800: "#493531",
+					900: "#2C1E1C",
+				},
+				success: { lightest: "#E3F7EE", base: "#3B9169", deep: "#297A56" },
+				warning: { lightest: "#F9EFE2", base: "#D6A266", deep: "#A05D22" },
+				danger: { lightest: "#FBEAEB", base: "#D25660", deep: "#B82E37" },
+				info: { lightest: "#F4EEF7", base: "#A076B2", deep: "#814E97" },
+			};
+
+			// 2. DOM 요소 가져오기
+			const container = document.getElementById("palette-container");
+			const toast = document.getElementById("toast");
+			const toastText = document.getElementById("toast-text");
+			let toastTimeout;
+
+			// 3. 텍스트 복사 함수 (호환성을 위해 execCommand 사용)
+			function copyToClipboard(text) {
+				const textArea = document.createElement("textarea");
+				textArea.value = text;
+				// 화면 밖으로 숨김 처리
+				textArea.style.position = "fixed";
+				textArea.style.left = "-9999px";
+				document.body.appendChild(textArea);
+
+				textArea.select();
+				try {
+					document.execCommand("copy");
+					showToast(text);
+				} catch (err) {
+					console.error("복사 실패:", err);
+				} finally {
+					document.body.removeChild(textArea);
+				}
+			}
+
+			// 4. 토스트 알림 표시 함수
+			function showToast(copiedText) {
+				toastText.innerHTML = `<span class="font-bold text-green-300">${copiedText}</span> 가 복사되었습니다!`;
+				toast.classList.add("show");
+
+				clearTimeout(toastTimeout);
+				toastTimeout = setTimeout(() => {
+					toast.classList.remove("show");
+				}, 2000);
+			}
+
+			// 5. UI 렌더링 함수
+			function renderPalette() {
+				for (const [groupName, colors] of Object.entries(colorData)) {
+					// 그룹 컨테이너 생성
+					const groupSection = document.createElement("section");
+
+					// 그룹 제목 (예: Primary, Secondary)
+					const title = document.createElement("h2");
+					title.className = "text-xl font-bold text-gray-700 mb-4 capitalize border-b border-gray-200 pb-2";
+					title.textContent = groupName;
+					groupSection.appendChild(title);
+
+					// 색상 카드 그리드
+					const grid = document.createElement("div");
+					grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4";
+
+					for (const [shadeName, hexValue] of Object.entries(colors)) {
+						const semanticToken = `${groupName}.${shadeName}`;
+
+						// 카드 요소
+						const card = document.createElement("div");
+						card.className =
+							"bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer border border-gray-100 group flex flex-col h-full";
+
+						// 클릭 이벤트 부착
+						card.onclick = () => copyToClipboard(semanticToken);
+
+						// 색상 블록
+						const colorBox = document.createElement("div");
+						colorBox.className = "h-16 w-full group-hover:opacity-90 transition-opacity";
+						colorBox.style.backgroundColor = hexValue;
+
+						// 하단 텍스트 영역
+						const infoBox = document.createElement("div");
+						infoBox.className = "p-3 flex flex-col flex-grow justify-center";
+
+						const tokenText = document.createElement("div");
+						tokenText.className = "font-mono font-semibold text-sm text-gray-800 truncate";
+						tokenText.textContent = semanticToken;
+
+						const hexText = document.createElement("div");
+						hexText.className = "font-mono text-xs text-gray-500 mt-1 uppercase tracking-wider";
+						hexText.textContent = hexValue;
+
+						infoBox.appendChild(tokenText);
+						infoBox.appendChild(hexText);
+
+						card.appendChild(colorBox);
+						card.appendChild(infoBox);
+						grid.appendChild(card);
+					}
+
+					groupSection.appendChild(grid);
+					container.appendChild(groupSection);
+				}
+			}
+
+			// 앱 초기화
+			renderPalette();
+		</script>
+	</body>
+</html>
