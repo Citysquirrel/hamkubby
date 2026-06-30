@@ -6,6 +6,7 @@ import {
 	Button,
 	ButtonGroup,
 	Collapsible,
+	createListCollection,
 	Flex,
 	Grid,
 	Heading,
@@ -16,6 +17,7 @@ import {
 	Input,
 	InputGroup,
 	Link,
+	Select,
 	Separator,
 	Stack,
 	Text,
@@ -44,12 +46,32 @@ import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRo
 import { toaster } from "../components/ui/toaster";
 import { formatDateToYYYYMMDD } from "../lib/date";
 
-const GENRE = {
-	전체: "all",
-	"K-POP": "K-POP",
-	"J-POP": "J-POP",
-	POP: "POP",
-};
+const genreItems = [
+	{ label: "K-POP", value: "genre:K-POP" },
+	{ label: "J-POP", value: "genre:J-POP" },
+	{ label: "POP", value: "genre:POP" },
+];
+
+const lyricsItems = [
+	{ label: "가사 있음", value: "lyrics:yes" },
+	{ label: "가사 없음", value: "lyrics:no" },
+];
+
+const officialItems = [
+	{ label: "공식", value: "official:true" },
+	{ label: "비공식", value: "official:false" },
+];
+
+const cheeseItems = [
+	{ label: "일반곡", value: "cheese:일반곡" },
+	{ label: "잘몰라", value: "cheese:잘몰라" },
+	{ label: "우엑곡", value: "cheese:우엑곡" },
+	{ label: "피토곡", value: "cheese:피토곡" },
+];
+
+const filterCollection = createListCollection({
+	items: [...genreItems, ...lyricsItems, ...officialItems, ...cheeseItems],
+});
 
 const COLOR_SCHEME: { [key: string]: string } = {
 	"K-POP": "green",
@@ -80,7 +102,7 @@ export default function SongBook({
 	const searchRef = useRef<HTMLInputElement>(null);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState(search);
-	const [genre, setGenre] = useState("all");
+	const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 	const [sort, setSort] = useState<SortType>("title-asc");
 	const [focused, setFocused] = useState(false);
 
@@ -238,6 +260,24 @@ export default function SongBook({
 		return () => clearTimeout(handler);
 	}, [search]);
 
+	const activeFilters = useMemo(
+		() =>
+			selectedFilters.reduce(
+				(acc, filterVal) => {
+					const [category, value] = filterVal.split(":");
+
+					if (!acc[category]) {
+						acc[category] = [];
+					}
+					acc[category].push(value);
+
+					return acc;
+				},
+				{} as Record<string, string[]>,
+			),
+		[selectedFilters],
+	);
+
 	const filteredSongs = useMemo(() => {
 		const keyword = normalizeKeyword(debouncedSearch);
 
@@ -247,7 +287,30 @@ export default function SongBook({
 
 			const matchSearch = searchTitle.includes(keyword) || searchArtist.includes(keyword);
 
-			return matchSearch && (genre === "all" || song.genre === genre);
+			const matchGenre = activeFilters.genre?.length > 0 ? activeFilters.genre.includes(song.genre) : true;
+			const matchLyrics = (() => {
+				const lyricFilters = activeFilters.lyrics;
+
+				if (!lyricFilters || lyricFilters.length === 0 || lyricFilters.length === 2) {
+					return true;
+				}
+
+				const hasLyricText = !!song.lyric && song.lyric.trim() !== "";
+
+				if (lyricFilters.includes("yes")) {
+					return hasLyricText;
+				}
+				if (lyricFilters.includes("no")) {
+					return !hasLyricText;
+				}
+
+				return true;
+			})();
+			const matchOfficial =
+				activeFilters.official?.length > 0 ? activeFilters.official.includes(String(song.isOfficial)) : true;
+			const matchCheese = activeFilters.cheese?.length > 0 ? activeFilters.cheese.includes(song.cheese) : true;
+
+			return matchSearch && matchGenre && matchLyrics && matchOfficial && matchCheese;
 		});
 
 		if (selectedSong) {
@@ -273,7 +336,7 @@ export default function SongBook({
 					return 0;
 			}
 		});
-	}, [debouncedSearch, genre, sort, data]);
+	}, [debouncedSearch, sort, data, selectedFilters]);
 
 	const highlight = (text: string, keyword: string) => {
 		if (!keyword) return text;
@@ -396,9 +459,9 @@ export default function SongBook({
 					</VStack>
 					<Button
 						size="lg"
-						bg={MAIN_COLOR}
+						bg={"primary"}
 						color="white"
-						_hover={{ bg: "#659677" }}
+						_hover={{ bg: "primary.hover" }}
 						onClick={(e) => handleCopy(e, song)}
 						mr={isDesktop ? undefined : 12}
 					>
@@ -408,7 +471,7 @@ export default function SongBook({
 							<Icon as={LuCopy} boxSize={5} />
 						)}
 						<Text ml={2} display={{ base: "none", sm: "block" }}>
-							복사
+							{copiedId === (song.id || song.title) ? "완료" : "복사"}
 						</Text>
 					</Button>
 				</HStack>
@@ -420,7 +483,7 @@ export default function SongBook({
 					</Badge>
 
 					{song.isOfficial ? (
-						<Badge bg={MAIN_COLOR} color="white">
+						<Badge bg={"primary"} color="primary.lightest">
 							공식
 						</Badge>
 					) : (
@@ -515,11 +578,12 @@ export default function SongBook({
 							borderRadius="full"
 							fit="cover"
 							border="2px solid"
-							borderColor="seagreen"
+							borderColor="primary"
+							boxShadow={{ _light: "0 0 8px #2f7974", _dark: "0 0 8px #54BCB5" }}
 						/>
 					</Box>
 					<Text fontSize="2xl" fontWeight={"bold"}>
-						<Box as="span" color="kbc">
+						<Box as="span" color="primary">
 							🐹햄쿠비
 						</Box>
 						&nbsp;노래책🎤
@@ -530,9 +594,7 @@ export default function SongBook({
 								<Avatar.Root
 									size={"xs"}
 									border="2px solid"
-									borderColor={{ _hover: "kbc", base: { _dark: "gray.400", _light: "gray.600" } }}
-									shadow={{ _hover: "md" }}
-									shadowColor={"purple"}
+									borderColor={{ _hover: "primary.hover", base: "primary" }}
 									transform="scale(1,0.95)"
 								>
 									<Avatar.Image src={avatar.image} />
@@ -557,7 +619,7 @@ export default function SongBook({
 					<Stack width={"100%"} gap=".5" borderBottom={"1px solid"} borderColor="gray.border">
 						<Stack width="100%" alignItems={"center"} marginBottom="1" padding="4px">
 							<InputGroup
-								width="400px"
+								maxWidth="400px"
 								cursor={"text"}
 								endElement={
 									search.length > 0 ? (
@@ -595,6 +657,7 @@ export default function SongBook({
 									onFocus={() => setFocused(true)}
 									onBlur={() => setFocused(false)}
 									placeholder="노래 / 가수 검색"
+									css={{ "--focus-color": "colors.primary" }}
 								/>
 							</InputGroup>
 						</Stack>
@@ -611,55 +674,127 @@ export default function SongBook({
 							position="relative"
 							bg={"bg"}
 						>
-							<ButtonGroup variant={"outline"} height="40px">
-								{Object.entries(GENRE).map(([name, value]) => {
-									return (
-										<Button
-											key={`${name}-${value}`}
-											borderRadius={"xl"}
-											bg={genre === value ? "kbg" : ""}
-											onClick={() => {
-												setGenre(value);
+							<Select.Root
+								collection={filterCollection}
+								multiple
+								size="md"
+								width="320px"
+								value={selectedFilters}
+								onValueChange={(e) => setSelectedFilters(e.value)}
+								closeOnSelect={false}
+							>
+								<Select.Control>
+									<Select.Trigger
+										cursor="pointer"
+										css={{
+											"&[data-placeholder-shown] > span": {
+												fontSize: "sm",
+												fontWeight: "normal",
+												color: "gray.400",
+											},
+										}}
+									>
+										<Select.Context>
+											{(select) => {
+												const currentText = select.valueAsString;
+												const dynamicFontSize = currentText.length > 34 ? "2xs" : currentText.length > 20 ? "xs" : "sm";
+												return (
+													<Select.ValueText
+														placeholder="필터를 선택해주세요"
+														fontSize={dynamicFontSize}
+														transition="font-size 0.2s"
+													/>
+												);
 											}}
-											size={"sm"}
-											shadow={{ _hover: "md", base: "sm" }}
-											transition="all .2s ease-in-out"
-											_hover={{ transform: "translateY(-3px)" }}
-										>
-											{name}
-										</Button>
-									);
-								})}
-							</ButtonGroup>
-							<Separator orientation={"vertical"} height="4" />
-							<ButtonGroup variant={"outline"} height="40px">
-								<Button
-									borderRadius={"xl"}
-									bg={sort === "title-asc" || sort === "title-desc" ? "kbg" : ""}
-									onClick={() => toggleSort("title")}
-									size={"sm"}
-									shadow={{ _hover: "md", base: "sm" }}
-									transition="all .2s ease-in-out"
-									_hover={{ transform: "translateY(-3px)" }}
-								>
-									제목
-									{sort === "title-asc" && " ↑"}
-									{sort === "title-desc" && " ↓"}
-								</Button>
-								<Button
-									borderRadius={"xl"}
-									bg={sort === "artist-asc" || sort === "artist-desc" ? "kbg" : ""}
-									onClick={() => toggleSort("artist")}
-									size={"sm"}
-									shadow={{ _hover: "md", base: "sm" }}
-									transition="all .2s ease-in-out"
-									_hover={{ transform: "translateY(-3px)" }}
-								>
-									가수
-									{sort === "artist-asc" && " ↑"}
-									{sort === "artist-desc" && " ↓"}
-								</Button>
-							</ButtonGroup>
+										</Select.Context>
+									</Select.Trigger>
+									<Select.IndicatorGroup>
+										<Select.ClearTrigger cursor="pointer" />
+									</Select.IndicatorGroup>
+								</Select.Control>
+
+								<Select.Positioner>
+									<Select.Content bg={"bg"} flexDirection={"row"} w="100%" position="absolute" zIndex="popover">
+										<VStack w="100%">
+											<Select.ItemGroup w="100%">
+												{/* <Select.ItemGroupLabel fontWeight="bold" color="blue.500">
+													🎵 음악 장르
+												</Select.ItemGroupLabel> */}
+
+												{genreItems.map((item) => (
+													<Select.Item
+														item={item}
+														key={item.value}
+														cursor="pointer"
+														_hover={{ bg: "secondary.lightest" }}
+														_checked={{ bg: "primary.lightest" }}
+													>
+														<Select.ItemText>{item.label}</Select.ItemText>
+														<Select.ItemIndicator>✓</Select.ItemIndicator>
+													</Select.Item>
+												))}
+											</Select.ItemGroup>
+
+											<Separator orientation="horizontal" w="90%" />
+
+											<Select.ItemGroup mt={0} w="100%">
+												{cheeseItems.map((item) => (
+													<Select.Item
+														item={item}
+														key={item.value}
+														cursor="pointer"
+														_hover={{ bg: "secondary.lightest" }}
+														_checked={{ bg: "primary.lightest" }}
+													>
+														<Select.ItemText>{item.label}</Select.ItemText>
+														<Select.ItemIndicator>✓</Select.ItemIndicator>
+													</Select.Item>
+												))}
+											</Select.ItemGroup>
+										</VStack>
+
+										<Separator orientation={"vertical"} m={1} />
+
+										<VStack w="100%">
+											<Select.ItemGroup mt={0} w="100%">
+												{officialItems.map((item) => (
+													<Select.Item
+														item={item}
+														key={item.value}
+														cursor="pointer"
+														_hover={{ bg: "secondary.lightest" }}
+														_checked={{ bg: "primary.lightest" }}
+													>
+														<Select.ItemText>{item.label}</Select.ItemText>
+														<Select.ItemIndicator>✓</Select.ItemIndicator>
+													</Select.Item>
+												))}
+											</Select.ItemGroup>
+
+											<Separator orientation="horizontal" w="90%" />
+
+											<Select.ItemGroup mt={0} w="100%">
+												{/* <Select.ItemGroupLabel fontWeight="bold" color="green.500">
+													📝 가사 포함 여부
+												</Select.ItemGroupLabel> */}
+
+												{lyricsItems.map((item) => (
+													<Select.Item
+														item={item}
+														key={item.value}
+														cursor="pointer"
+														_hover={{ bg: "secondary.lightest" }}
+														_checked={{ bg: "primary.lightest" }}
+													>
+														<Select.ItemText>{item.label}</Select.ItemText>
+														<Select.ItemIndicator>✓</Select.ItemIndicator>
+													</Select.Item>
+												))}
+											</Select.ItemGroup>
+										</VStack>
+									</Select.Content>
+								</Select.Positioner>
+							</Select.Root>
 						</Box>
 					</Stack>
 				</HStack>
@@ -671,11 +806,10 @@ export default function SongBook({
 					userSelect={isDragging ? "none" : "auto"}
 				>
 					{/* 리스트 영역 (Window Scroll) */}
-					<Box
+					<Box //
 						ref={listRef}
 						w="100%"
 						pb={10}
-						// 리스트 좌우 예쁜 패딩 추가
 						px={isDesktop ? 12 : 8}
 						pt={6}
 					>
@@ -716,12 +850,12 @@ export default function SongBook({
 												p={4}
 												border="1px solid"
 												borderColor={{
-													_light: isSelected ? "blue.border" : "gray.300",
-													_dark: isSelected ? "blue.border" : "gray.700",
+													_light: isSelected ? "accent" : "gray.300",
+													_dark: isSelected ? "accent" : "gray.700",
 												}}
-												bg={isSelected && isDesktop ? `${MAIN_COLOR}30` : undefined}
+												bg={isSelected && isDesktop ? "accent.lightest" : undefined}
 												borderRadius="lg"
-												_hover={{ boxShadow: { _light: "sm" }, borderColor: isSelected ? "blue.border" : "green.500" }}
+												_hover={{ boxShadow: { _light: "sm" }, borderColor: isSelected ? "accent" : "primary.hover" }}
 												transition="all 0.2s"
 												cursor="pointer"
 												onClick={() => handleSelectSong(song)}
@@ -770,14 +904,14 @@ export default function SongBook({
 												<Button
 													size="md"
 													minW="80px"
-													bg={copiedId === (song.id || song.title) ? "teal.500" : "gray.100"}
-													color={copiedId === (song.id || song.title) ? "white" : "gray.700"}
-													_hover={{ bg: copiedId === (song.id || song.title) ? "teal.600" : "gray.200" }}
+													bg={copiedId === (song.id || song.title) ? "primary" : "secondary"}
+													color={copiedId === (song.id || song.title) ? "primary.lightest" : "secondary.lightest"}
+													_hover={{ bg: copiedId === (song.id || song.title) ? "primary.hover" : "secondary.hover" }}
 													onClick={(e) => handleCopy(e, song)}
 												>
 													{copiedId === (song.id || song.title) ? <Icon as={LuCheck} /> : <Icon as={LuCopy} />}
 													<Text ml={2} fontSize="sm">
-														복사
+														{copiedId === (song.id || song.title) ? "완료" : "복사"}
 													</Text>
 												</Button>
 											</Flex>
@@ -798,7 +932,7 @@ export default function SongBook({
 								height={`calc(100vh - ${HEADER_HEIGHT}px)`}
 								onMouseDown={handleMouseDown}
 								cursor="col-resize"
-								backgroundColor={isDragging ? "blue.500" : { _light: "gray.300", _dark: "gray.600" }}
+								backgroundColor={isDragging ? "accent" : "accent.lightest"}
 								transition="background-color 0.2s"
 								// zIndex={10}
 							/>
