@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Box, Flex, Text, Button, Badge, VStack, HStack, Accordion } from "@chakra-ui/react";
+import { Accordion, Badge, Box, Button, Flex, HStack, Text, VStack } from "@chakra-ui/react";
+import React, { useEffect, useRef, useState } from "react";
 import type { NetworkLog } from "../lib/fetch";
 import { toaster } from "./ui/toaster";
 

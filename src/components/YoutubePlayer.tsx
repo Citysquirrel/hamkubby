@@ -1,6 +1,6 @@
+import { AspectRatio, Box, type BoxProps } from "@chakra-ui/react";
 import React from "react";
 import YouTube, { type YouTubeProps } from "react-youtube";
-import { AspectRatio, Box, type BoxProps } from "@chakra-ui/react";
 
 interface YoutubePlayerProps extends BoxProps {
 	videoId: string;

@@ -1,64 +1,56 @@
-import { getChoseong } from "es-hangul";
+const doubleConsonantMap: Record<string, string> = {
+	ㄳ: "ㄱㅅ",
+	ㄵ: "ㄴㅈ",
+	ㄶ: "ㄴㅎ",
+	ㄺ: "ㄹㄱ",
+	ㄻ: "ㄹㅁ",
+	ㄼ: "ㄹㅂ",
+	ㄽ: "ㄹㅅ",
+	ㄾ: "ㄹㅌ",
+	ㄿ: "ㄹㅍ",
+	ㅀ: "ㄹㅎ",
+	ㅄ: "ㅂㅅ",
+};
 
 export const normalizeKeyword = (str: string) => {
-	return str.replace(/\s+/g, "").toLowerCase();
+	let processed = str.normalize("NFC").toLowerCase();
+	processed = processed.replace(/[ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ]/g, (match) => doubleConsonantMap[match]);
+	return processed.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-z0-9\+\-&]/gi, "");
 };
 
-export const isChoseongMatch = (text: string, query: string) => {
-	const t = normalizeKeyword(text);
-	const q = normalizeKeyword(query);
+// 겹받침 딕셔너리
 
-	// 1. 둘 다 한글이면 정상 초성 비교
-	if (isKorean(t) && isKorean(q)) {
-		return getChoseong(t).includes(getChoseong(q));
+export const getChosung = (str: string) => {
+	if (!str) return "";
+	const cho = [
+		"ㄱ",
+		"ㄲ",
+		"ㄴ",
+		"ㄷ",
+		"ㄸ",
+		"ㄹ",
+		"ㅁ",
+		"ㅂ",
+		"ㅃ",
+		"ㅅ",
+		"ㅆ",
+		"ㅇ",
+		"ㅈ",
+		"ㅉ",
+		"ㅊ",
+		"ㅋ",
+		"ㅌ",
+		"ㅍ",
+		"ㅎ",
+	];
+	let result = "";
+
+	for (let i = 0; i < str.length; i++) {
+		const code = str.charCodeAt(i) - 44032;
+		if (code > -1 && code < 11172) result += cho[Math.floor(code / 588)];
+		else result += str.charAt(i);
 	}
-
-	// 2. query가 초성 입력이면 (ㄱㄴㄷ 형태)
-	if (isChoseongLike(q)) {
-		return getChoseong(t).includes(q);
-	}
-
-	return false;
-};
-
-export const isKorean = (str: string) => /[가-힣]/.test(str);
-
-export const isChoseongLike = (str: string) => /^[ㄱ-ㅎ]+$/.test(str); // 초성 입력 감지
-
-export const getScore = (song: any, query: string) => {
-	const q = normalizeKeyword(query);
-
-	const title = normalizeKeyword(song.title);
-	const artist = normalizeKeyword(song.artist);
-
-	let score = 0;
-
-	// 1. 완전일치
-	if (title === q) score += 100;
-	if (artist === q) score += 90;
-
-	// 2. prefix 점수
-	if (title.startsWith(q)) score += 70;
-	if (artist.startsWith(q)) score += 60;
-
-	// 3. 포함
-	if (title.includes(q)) score += 50;
-	if (artist.includes(q)) score += 40;
-
-	// 4. 초성
-	if (isChoseongMatch(song.title, query)) score += 40;
-	if (isChoseongMatch(song.artist, query)) score += 35;
-
-	// 5. 별칭 점수(각각 완전일치, 포함, 초성 점수)
-	song.synonyms?.forEach((syn: string) => {
-		const s = normalizeKeyword(syn);
-
-		if (s === q) score += 80;
-		if (s.includes(q)) score += 30;
-		if (isChoseongMatch(syn, query)) score += 20;
-	});
-
-	return score;
+	return result;
 };
 
 export const highlightText = (text: string, query: string) => {
@@ -84,42 +76,6 @@ export const highlightText = (text: string, query: string) => {
 			{text.slice(realEnd)}
 		</>
 	);
-};
-
-export const highlightChosung = (text: string, query: string) => {
-	const map = buildIndexMap(text);
-
-	const t = getChoseong(text);
-	const q = getChoseong(query);
-
-	const start = t.indexOf(q);
-	if (start === -1) return null;
-
-	const end = start + q.length;
-
-	const realStart = map[start];
-	const realEnd = map[end - 1] + 1;
-
-	return (
-		<>
-			{text.slice(0, realStart)}
-			<mark>{text.slice(realStart, realEnd)}</mark>
-			{text.slice(realEnd)}
-		</>
-	);
-};
-
-export const getChoseongMatchRange = (text: string, query: string) => {
-	const t = getChoseong(text);
-	const q = getChoseong(query);
-
-	const start = t.indexOf(q);
-	if (start === -1) return null;
-
-	return {
-		start,
-		end: start + q.length,
-	};
 };
 
 export const buildIndexMap = (text: string) => {

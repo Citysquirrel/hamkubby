@@ -24,6 +24,8 @@ import {
 	VStack,
 } from "@chakra-ui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import Fuse from "fuse.js";
+import Inko from "inko";
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
 	LuArrowRightFromLine,
@@ -44,7 +46,9 @@ import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRo
 import { toaster } from "../components/ui/toaster";
 import type { HamkubbySongHistoryModel, Song, SortType } from "../config/types";
 import { formatDateToYYYYMMDD } from "../lib/date";
-import { normalizeKeyword } from "../lib/search";
+import { getChosung, normalizeKeyword } from "../lib/search";
+
+const inko = new Inko();
 
 const genreItems = [
 	{ label: "K-POP", value: "genre:K-POP" },
@@ -284,15 +288,36 @@ export default function SongBook({
 		[selectedFilters],
 	);
 
+	const processedSongs = useMemo(() => {
+		if (!data) return [];
+		return data.map((song) => ({
+			...song,
+			searchTitle: normalizeKeyword(song.title),
+			searchArtist: normalizeKeyword(song.artist),
+			searchTitleCho: getChosung(song.title),
+			searchArtistCho: getChosung(song.artist),
+
+			// 한글을 영타로 변환한 필드 (예: "밤양갱" -> "qkadidrod")
+			searchTitleEng: inko.ko2en(song.title),
+			searchArtistEng: inko.ko2en(song.artist),
+		}));
+	}, [data]);
+
+	const fuse = useMemo(() => {
+		return new Fuse(processedSongs, {
+			keys: ["searchTitle", "searchArtist", "searchTitleCho", "searchArtistCho", "searchTitleEng", "searchArtistEng"],
+			threshold: 0.4,
+			ignoreLocation: true,
+		});
+	}, [processedSongs]);
+
+	//! 필터링 된 데이터
 	const filteredSongs = useMemo(() => {
 		const keyword = normalizeKeyword(debouncedSearch);
 
-		const filtered = data.filter((song) => {
-			const searchTitle = song.searchTitle || song.title;
-			const searchArtist = song.searchArtist || song.artist;
+		const baseData = keyword ? fuse.search(keyword).map((f) => f.item) : data;
 
-			const matchSearch = searchTitle.includes(keyword) || searchArtist.includes(keyword);
-
+		const filtered = baseData.filter((song) => {
 			const matchGenre = activeFilters.genre?.length > 0 ? activeFilters.genre.includes(song.genre) : true;
 			const matchLyrics = (() => {
 				const lyricFilters = activeFilters.lyrics;
@@ -316,7 +341,7 @@ export default function SongBook({
 				activeFilters.official?.length > 0 ? activeFilters.official.includes(String(song.isOfficial)) : true;
 			const matchCheese = activeFilters.cheese?.length > 0 ? activeFilters.cheese.includes(song.cheese) : true;
 
-			return matchSearch && matchGenre && matchLyrics && matchOfficial && matchCheese;
+			return matchGenre && matchLyrics && matchOfficial && matchCheese;
 		});
 
 		if (selectedSong) {
@@ -325,24 +350,24 @@ export default function SongBook({
 		}
 
 		return [...filtered].sort((a, b) => {
+			if (keyword) {
+				return 0;
+			}
+
 			switch (sort) {
 				case "title-asc":
 					return a.title.localeCompare(b.title, "ko");
-
 				case "title-desc":
 					return b.title.localeCompare(a.title, "ko");
-
 				case "artist-asc":
 					return a.artist.localeCompare(b.artist, "ko");
-
 				case "artist-desc":
 					return b.artist.localeCompare(a.artist, "ko");
-
 				default:
 					return 0;
 			}
 		});
-	}, [debouncedSearch, sort, data, selectedFilters]);
+	}, [debouncedSearch, sort, data, activeFilters, fuse, selectedSong]);
 
 	const highlight = (text: string, keyword: string) => {
 		if (!keyword) return text;
@@ -835,10 +860,7 @@ export default function SongBook({
 								{rowVirtualizer.getVirtualItems().map((virtualRow) => {
 									const song = filteredSongs[virtualRow.index];
 									const isSelected = selectedSong?.id === song.id;
-									// const isChosung = isChoseongLike(search);
-									// const title = isChosung ? highlightChosung(song.title, search) : highlightText(song.title, search);
 
-									// const artist = isChosung ? highlightChosung(song.artist, search) : highlightText(song.artist, search);
 									return (
 										<Box
 											key={virtualRow.index}

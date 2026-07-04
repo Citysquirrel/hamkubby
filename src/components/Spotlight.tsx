@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 /**
  * @description 튜토리얼 가이드의 개별 단계를 정의하는 인터페이스

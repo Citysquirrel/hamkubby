@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { Box, Flex, Text, IconButton, HStack, Slider, Icon } from "@chakra-ui/react";
+import { Box, Flex, HStack, Icon, IconButton, Slider, Text } from "@chakra-ui/react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { MdDragIndicator } from "react-icons/md";
 import { YoutubePlayer } from "./YoutubePlayer"; // 위에서 만든 컴포넌트
 import { CloseButton } from "./ui/close-button";
-import { MdDragIndicator } from "react-icons/md";
 
 interface DraggablePreviewProps {
 	videoId: string;

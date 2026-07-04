@@ -1,6 +1,6 @@
-import type { KVNamespace, EventContext } from "@cloudflare/workers-types";
+import type { EventContext, KVNamespace } from "@cloudflare/workers-types";
 type Cheese = "잘몰라" | "일반곡" | "피토곡" | "우엑곡" | "숙제곡" | (string & {});
-export type SortType = "title-asc" | "title-desc" | "artist-asc" | "artist-desc";
+export type SortType = "default" | "title-asc" | "title-desc" | "artist-asc" | "artist-desc";
 
 export type Genre = "K-POP" | "J-POP" | "POP" | (string & {});
 type ActionStatus = "ACTIVE" | "DELETED" | "DISABLED";

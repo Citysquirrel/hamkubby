@@ -22,6 +22,7 @@ import { MdContentCopy, MdKeyboardDoubleArrowUp, MdOutlineQuestionMark, MdSearch
 import { PiCheese } from "react-icons/pi";
 import { SiGooglesheets } from "react-icons/si";
 import Cursor from "./components/Cursor";
+import { DraggablePreview } from "./components/DraggablePreview";
 import { ColorModeButton } from "./components/ui/color-mode";
 import { toaster } from "./components/ui/toaster";
 import type { RawSongData, Song } from "./config/types";
@@ -29,7 +30,6 @@ import "./index.css";
 import { fetch_ } from "./lib/fetch";
 import { normalizeKeyword } from "./lib/search";
 import SongBook, { type PreviewVideo } from "./pages/SongBook";
-import { DraggablePreview } from "./components/DraggablePreview";
 
 interface Maintenance {
 	maintenance_mode_hamkubby: boolean;
