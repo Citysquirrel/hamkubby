@@ -1,15 +1,23 @@
-import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
+import { createSystem, defaultConfig, defineConfig, defineRecipe } from "@chakra-ui/react";
 
-// 예시이므로 이후 사용할 시 적절히 수정하여 사용
+const badgeRecipe = defineRecipe({
+	base: {
+		fontFamily: `"Spoqa Han Sans Neo", Consolas, Roboto, sans-serif`,
+	},
+});
+
 const config = defineConfig({
 	theme: {
+		recipes: {
+			badge: badgeRecipe,
+		},
 		tokens: {
 			fonts: {
 				body: {
-					value: `"Spoqa Han Sans Neo", Consolas, Roboto, sans-serif`,
+					value: `"LINE Seed Sans EN", "LINE Seed Sans JP", "Spoqa Han Sans Neo", Consolas, Roboto, sans-serif`,
 				},
 				heading: {
-					value: `"Spoqa Han Sans Neo", Consolas, Roboto, sans-serif`,
+					value: `"LINE Seed Sans EN", "LINE Seed Sans JP", "Spoqa Han Sans Neo", Consolas, Roboto, sans-serif`,
 				},
 			},
 		},
