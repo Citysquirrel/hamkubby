@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
 	Avatar,
 	Badge,
@@ -24,28 +23,28 @@ import {
 	useMediaQuery,
 	VStack,
 } from "@chakra-ui/react";
-import type { HamkubbySongHistoryModel, Song, SortType } from "../config/types";
-import { MdClose, MdOutlineDownloading } from "react-icons/md";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
+	LuArrowRightFromLine,
+	LuBold,
 	LuCheck,
+	LuChevronDown,
+	LuChevronUp,
 	LuCopy,
 	LuExternalLink,
-	LuYoutube,
-	LuMusic,
-	LuArrowRightFromLine,
-	LuPlus,
 	LuMinus,
-	LuBold,
+	LuMusic,
+	LuPlus,
 	LuStar,
-	LuChevronUp,
-	LuChevronDown,
+	LuYoutube,
 } from "react-icons/lu";
-import { normalizeKeyword } from "../lib/search";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { MdClose, MdOutlineDownloading } from "react-icons/md";
 import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRoot } from "../components/ui/drawer";
 import { toaster } from "../components/ui/toaster";
+import type { HamkubbySongHistoryModel, Song, SortType } from "../config/types";
 import { formatDateToYYYYMMDD } from "../lib/date";
-import { DraggablePreview } from "../components/DraggablePreview";
+import { normalizeKeyword } from "../lib/search";
 
 const genreItems = [
 	{ label: "K-POP", value: "genre:K-POP" },
@@ -87,14 +86,20 @@ const COLOR_SCHEME: { [key: string]: string } = {
 const MAIN_COLOR = "#7bb18f";
 const HEADER_HEIGHT = 104;
 
+export type PreviewVideo = [string, number | undefined, number | undefined];
+
 export default function SongBook({
 	data,
 	isLoading,
 	isProfileOpen,
+	setShowPreview,
+	setPreviewVideo,
 }: {
 	data: Song[];
 	isLoading: boolean;
 	isProfileOpen: boolean;
+	setShowPreview: Dispatch<SetStateAction<boolean>>;
+	setPreviewVideo: Dispatch<SetStateAction<PreviewVideo>>;
 }) {
 	const LOCAL_STORAGE_KEY = "lyric-font-size-index";
 	const LOCAL_STORAGE_BOLD_KEY = "lyric-font-bold";
@@ -127,14 +132,6 @@ export default function SongBook({
 		}
 		return false;
 	});
-
-	// 비디오 프리뷰 상태
-	const [showPreview, setShowPreview] = useState(false);
-	const [previewVideo, setPreviewVideo] = useState<[string, number | undefined, number | undefined]>([
-		"",
-		undefined,
-		undefined,
-	]);
 
 	// 디테일 뷰의 너비 조정 상태
 	const [detailWidth, setDetailWidth] = useState(() => {
@@ -579,17 +576,6 @@ export default function SongBook({
 
 	return (
 		<Stack id="songbook" padding="0" margin="0" alignItems={"center"} position="static">
-			{showPreview && (
-				<DraggablePreview
-					videoId={previewVideo[0]}
-					start={previewVideo[1]}
-					end={previewVideo[2]}
-					onClose={() => {
-						setShowPreview(false);
-					}}
-				/>
-			)}
-
 			{isProfileOpen ? (
 				<Stack alignItems={"center"}>
 					<Box className="circle-wrap" marginTop="4" position="relative">

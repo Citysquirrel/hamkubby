@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { Box, Flex, Text, IconButton, HStack, Slider } from "@chakra-ui/react";
+import { Box, Flex, Text, IconButton, HStack, Slider, Icon } from "@chakra-ui/react";
 import { YoutubePlayer } from "./YoutubePlayer"; // 위에서 만든 컴포넌트
 import { CloseButton } from "./ui/close-button";
+import { MdDragIndicator } from "react-icons/md";
 
 interface DraggablePreviewProps {
 	videoId: string;
@@ -231,6 +232,9 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 				justify="space-between"
 			>
 				<HStack spaceX="2">
+					<Icon>
+						<MdDragIndicator />
+					</Icon>
 					<Text fontSize="xs" fontWeight="bold">
 						동영상 미리보기(beta)
 					</Text>
@@ -253,7 +257,7 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 				// 미리보기이므로 추천 영상 안뜨게 조절
 				playerOptions={{
 					playerVars: {
-						autoplay: 0,
+						autoplay: 1,
 						mute: 0,
 						controls: 0,
 						rel: 0,

@@ -1,34 +1,35 @@
 import {
+	Badge,
 	Box,
 	Button,
+	Image as ChakraImage,
 	Clipboard,
 	CloseButton,
 	Dialog,
+	Heading,
 	HStack,
 	IconButton,
-	Image as ChakraImage,
 	Link,
 	List,
 	Portal,
 	Stack,
 	Text,
-	Heading,
-	Badge,
 } from "@chakra-ui/react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { ColorModeButton } from "./components/ui/color-mode";
-import SongBook from "./pages/SongBook";
-import "./index.css";
-import { fetch_ } from "./lib/fetch";
-import type { RawSongData, Song } from "./config/types";
+import { FaGithub } from "react-icons/fa";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { MdContentCopy, MdKeyboardDoubleArrowUp, MdOutlineQuestionMark, MdSearch } from "react-icons/md";
 import { PiCheese } from "react-icons/pi";
-import { FaGithub } from "react-icons/fa";
 import { SiGooglesheets } from "react-icons/si";
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import { toaster } from "./components/ui/toaster";
-import { normalizeKeyword } from "./lib/search";
 import Cursor from "./components/Cursor";
+import { ColorModeButton } from "./components/ui/color-mode";
+import { toaster } from "./components/ui/toaster";
+import type { RawSongData, Song } from "./config/types";
+import "./index.css";
+import { fetch_ } from "./lib/fetch";
+import { normalizeKeyword } from "./lib/search";
+import SongBook, { type PreviewVideo } from "./pages/SongBook";
+import { DraggablePreview } from "./components/DraggablePreview";
 
 interface Maintenance {
 	maintenance_mode_hamkubby: boolean;
@@ -51,6 +52,10 @@ function App() {
 	});
 	const [data, setData] = useState<Song[]>([]);
 	const [scrollY, setScrollY] = useState(0);
+
+	// 비디오 프리뷰 상태
+	const [showPreview, setShowPreview] = useState(false);
+	const [previewVideo, setPreviewVideo] = useState<PreviewVideo>(["", undefined, undefined]);
 
 	const isOnTop = scrollY > 80;
 
@@ -208,6 +213,16 @@ function App() {
 		);
 	return (
 		<>
+			{showPreview && (
+				<DraggablePreview
+					videoId={previewVideo[0]}
+					start={previewVideo[1]}
+					end={previewVideo[2]}
+					onClose={() => {
+						setShowPreview(false);
+					}}
+				/>
+			)}
 			<Cursor />
 			<LoadingCanvas isLoading={isLoading} />
 			<Stack minH="100vh" bg="bg" color="fg" justifyContent={"space-between"}>
@@ -237,7 +252,13 @@ function App() {
 					</IconButton>
 				</HStack>
 
-				<SongBook data={data} isLoading={isSongDataLoading} isProfileOpen={isProfileOpen} />
+				<SongBook
+					data={data}
+					isLoading={isSongDataLoading}
+					isProfileOpen={isProfileOpen}
+					setShowPreview={setShowPreview}
+					setPreviewVideo={setPreviewVideo}
+				/>
 
 				{/* <Footer /> */}
 			</Stack>
