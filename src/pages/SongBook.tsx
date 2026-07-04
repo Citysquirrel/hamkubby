@@ -670,7 +670,7 @@ export default function SongBook({
 					<Stack width={"100%"} gap=".5" borderBottom={"1px solid"} borderColor="gray.border">
 						<Stack width="100%" alignItems={"center"} marginBottom="1" padding="4px">
 							<InputGroup
-								maxWidth="400px"
+								maxWidth="320px"
 								cursor={"text"}
 								endElement={
 									search.length > 0 ? (
