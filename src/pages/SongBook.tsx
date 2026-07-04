@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
 	Avatar,
 	Badge,
@@ -45,6 +45,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRoot } from "../components/ui/drawer";
 import { toaster } from "../components/ui/toaster";
 import { formatDateToYYYYMMDD } from "../lib/date";
+import { DraggablePreview } from "../components/DraggablePreview";
 
 const genreItems = [
 	{ label: "K-POP", value: "genre:K-POP" },
@@ -126,6 +127,14 @@ export default function SongBook({
 		}
 		return false;
 	});
+
+	// 비디오 프리뷰 상태
+	const [showPreview, setShowPreview] = useState(false);
+	const [previewVideo, setPreviewVideo] = useState<[string, number | undefined, number | undefined]>([
+		"",
+		undefined,
+		undefined,
+	]);
 
 	// 디테일 뷰의 너비 조정 상태
 	const [detailWidth, setDetailWidth] = useState(() => {
@@ -408,6 +417,7 @@ export default function SongBook({
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, []);
 	//? 가중치 검색용. 버그 수정 후 배포
+	//TODO: AI검색으로 대체 llm vector 테이블 만들기
 	// const filteredSongs = useMemo(() => {
 	// 	return songData
 	// 		.map((song) => ({
@@ -503,7 +513,7 @@ export default function SongBook({
 					</Box>
 				)}
 
-				<SongHistorySection song={song} />
+				<SongHistorySection song={song} setShowPreview={setShowPreview} setPreviewVideo={setPreviewVideo} />
 
 				{/* 가사 */}
 				<Box position="relative" mt={2} mb={2} p={2} bg="cardBg" borderRadius="lg">
@@ -569,6 +579,17 @@ export default function SongBook({
 
 	return (
 		<Stack id="songbook" padding="0" margin="0" alignItems={"center"} position="static">
+			{showPreview && (
+				<DraggablePreview
+					videoId={previewVideo[0]}
+					start={previewVideo[1]}
+					end={previewVideo[2]}
+					onClose={() => {
+						setShowPreview(false);
+					}}
+				/>
+			)}
+
 			{isProfileOpen ? (
 				<Stack alignItems={"center"}>
 					<Box className="circle-wrap" marginTop="4" position="relative">
@@ -982,7 +1003,15 @@ export default function SongBook({
 	);
 }
 
-const SongHistorySection = ({ song }: { song: Song }) => {
+const SongHistorySection = ({
+	song,
+	setShowPreview,
+	setPreviewVideo,
+}: {
+	song: Song;
+	setShowPreview: Dispatch<SetStateAction<boolean>>;
+	setPreviewVideo: Dispatch<SetStateAction<[string, number | undefined, number | undefined]>>;
+}) => {
 	const [open, setOpen] = useState(false);
 
 	const sortedHistories = useMemo(() => {
@@ -1018,8 +1047,11 @@ const SongHistorySection = ({ song }: { song: Song }) => {
 			_hover={hist.youtubeVideoId ? { bg: { _light: "blue.100", _dark: "blue.800" } } : undefined}
 			onClick={(e) => {
 				e.stopPropagation();
-				if (hist.youtubeVideoId) window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
-				else toaster.create({ description: `등록된 유튜브 링크가 없습니다`, type: "info" });
+				// if (hist.youtubeVideoId) window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
+				if (hist.youtubeVideoId) {
+					setShowPreview(true);
+					setPreviewVideo([hist.youtubeVideoId, hist.start || undefined, hist.end || undefined]);
+				} else toaster.create({ description: `등록된 유튜브 링크가 없습니다`, type: "info" });
 			}}
 		>
 			<Icon as={LuYoutube} color="red.500" />

@@ -10,8 +10,8 @@ export interface HamkubbySongHistoryModel {
 	historyId: string;
 	sungAt: string;
 	youtubeVideoId: string;
-	start: number;
-	end: number;
+	start: number | null;
+	end: number | null;
 	memo?: string | null;
 	priority: number;
 	hamkubby_id: number;
