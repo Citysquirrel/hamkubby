@@ -270,6 +270,25 @@ export default function SongBook({
 		return () => clearTimeout(handler);
 	}, [search]);
 
+	// #region 디테일 뷰 모달 상태 및 핸들러
+	const [touchY, setTouchY] = useState(0);
+
+	const handleTouchStart = (e: React.TouchEvent) => {
+		setTouchY(e.touches[0].clientY);
+	};
+
+	const onOpenChange = ({ open }: { open: boolean }) => setIsOpenMobileView(open);
+
+	const handleTouchEnd = (e: React.TouchEvent) => {
+		const touchEndY = e.changedTouches[0].clientY;
+		const distance = touchEndY - touchY;
+
+		if (distance > 70) {
+			onOpenChange({ open: false });
+		}
+	};
+	// #endregion
+
 	const activeFilters = useMemo(
 		() =>
 			selectedFilters.reduce(
@@ -997,9 +1016,14 @@ export default function SongBook({
 
 				{/* 모바일 바텀 시트 */}
 				{!isDesktop && (
-					<DrawerRoot placement="bottom" open={isOpenMobileView} onOpenChange={(e) => setIsOpenMobileView(e.open)}>
+					<DrawerRoot placement="bottom" open={isOpenMobileView} onOpenChange={onOpenChange}>
 						<DrawerBackdrop />
-						<DrawerContent maxH="85vh" borderTopRadius="2xl">
+						<DrawerContent
+							maxH="85vh"
+							borderTopRadius="2xl"
+							onTouchStart={handleTouchStart}
+							onTouchEnd={handleTouchEnd}
+						>
 							<Box w="40px" h="4px" bg="gray.300" borderRadius="full" mx="auto" mt={3} mb={1} />
 							<DrawerCloseTrigger position="absolute" top={8} right={4} />
 							<DrawerBody p={0}>{selectedSong && detailViewContent}</DrawerBody>

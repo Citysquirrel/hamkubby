@@ -1,4 +1,4 @@
-import { Box, Flex, HStack, Icon, IconButton, Slider, Text } from "@chakra-ui/react";
+import { Box, Flex, HStack, Icon, IconButton, Portal, Slider, Text } from "@chakra-ui/react";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MdDragIndicator } from "react-icons/md";
 import { YoutubePlayer } from "./YoutubePlayer"; // 위에서 만든 컴포넌트
@@ -69,27 +69,62 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 		}
 	}, []);
 
-	const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-		// 닫기 버튼 드래그방지
-		if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest(".chakra-slider")) return;
-		if (!position) return;
+	// resize시 위치 재조정
+	useEffect(() => {
+		const handleResize = () => {
+			setPosition((prev) => {
+				if (!prev || !popupRef.current) return prev;
+				const { offsetWidth, offsetHeight } = popupRef.current;
 
-		setIsDragging(true);
+				const minX = -(offsetWidth / 2);
+				const maxX = window.innerWidth - offsetWidth / 2;
+				const minY = 0;
+				const maxY = window.innerHeight - offsetHeight / 2;
 
-		dragStartOffset.current = {
-			x: e.clientX - position.x,
-			y: e.clientY - position.y,
+				// 현재 위치가 변경된 창 크기를 벗어났다면 clamp로 밀어넣음
+				return {
+					x: Math.max(minX, Math.min(prev.x, maxX)),
+					y: Math.max(minY, Math.min(prev.y, maxY)),
+				};
+			});
 		};
+
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
+
+	// const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+	// 	// 닫기 버튼 드래그방지
+	// 	if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest(".chakra-slider")) return;
+	// 	if (!position) return;
+
+	// 	setIsDragging(true);
+
+	// 	dragStartOffset.current = {
+	// 		x: e.clientX - position.x,
+	// 		y: e.clientY - position.y,
+	// 	};
+	// };
+
+	const handleDragStart = (clientX: number, clientY: number, target: EventTarget) => {
+		if ((target as HTMLElement).closest("button") || (target as HTMLElement).closest(".chakra-slider")) return;
+		if (!position) return;
+		setIsDragging(true);
+		dragStartOffset.current = { x: clientX - position.x, y: clientY - position.y };
 	};
 
+	const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => handleDragStart(e.clientX, e.clientY, e.target);
+	const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) =>
+		handleDragStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
+
 	useEffect(() => {
-		const handleMouseMove = (e: MouseEvent) => {
+		const handleMove = (clientX: number, clientY: number) => {
 			if (!isDragging || !popupRef.current) return;
 
 			const { offsetWidth, offsetHeight } = popupRef.current;
 
-			let newX = e.clientX - dragStartOffset.current.x;
-			let newY = e.clientY - dragStartOffset.current.y;
+			let newX = clientX - dragStartOffset.current.x;
+			let newY = clientY - dragStartOffset.current.y;
 
 			// 화면 이탈 제한
 			const minX = -(offsetWidth / 2);
@@ -104,18 +139,23 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 			setPosition({ x: newX, y: newY });
 		};
 
-		const handleMouseUp = () => {
-			setIsDragging(false);
-		};
+		const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+		const handleTouchMove = (e: TouchEvent) => handleMove(e.touches[0].clientX, e.touches[0].clientY);
+
+		const handleEnd = () => setIsDragging(false);
 
 		if (isDragging) {
 			window.addEventListener("mousemove", handleMouseMove);
-			window.addEventListener("mouseup", handleMouseUp);
+			window.addEventListener("mouseup", handleEnd);
+			window.addEventListener("touchmove", handleTouchMove, { passive: false });
+			window.addEventListener("touchend", handleEnd);
 		}
 
 		return () => {
 			window.removeEventListener("mousemove", handleMouseMove);
-			window.removeEventListener("mouseup", handleMouseUp);
+			window.removeEventListener("mouseup", handleEnd);
+			window.removeEventListener("touchmove", handleTouchMove);
+			window.removeEventListener("touchend", handleEnd);
 		};
 	}, [isDragging]);
 
@@ -205,110 +245,115 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 	// #endregion
 
 	return (
-		<Box
-			ref={popupRef}
-			position="fixed"
-			opacity={position ? 1 : 0}
-			visibility={position ? "visible" : "hidden"}
-			left={position ? `${position.x}px` : "0px"}
-			top={position ? `${position.y}px` : "0px"}
-			zIndex="9999"
-			w="360px"
-			bg="bg"
-			borderRadius="lg"
-			boxShadow="lg"
-			border="1px solid"
-			borderColor="primary"
-			overflow="hidden"
-			userSelect={isDragging ? "none" : "auto"}
-			transition={isDragging ? "none" : "opacity 0.2s ease-in-out"}
-		>
-			<Flex
-				onMouseDown={handleMouseDown}
-				cursor={isDragging ? "grabbing" : "grab"}
+		<Portal>
+			<Box
+				ref={popupRef}
+				position="fixed"
+				opacity={position ? 1 : 0}
+				visibility={position ? "visible" : "hidden"}
+				left={position ? `${position.x}px` : "0px"}
+				top={position ? `${position.y}px` : "0px"}
+				zIndex="9999"
+				w="360px"
 				bg="bg"
-				p={"2px 2px 2px 12px"}
-				align="center"
-				justify="space-between"
+				borderRadius="lg"
+				boxShadow="lg"
+				border="1px solid"
+				borderColor="primary"
+				overflow="hidden"
+				userSelect={isDragging ? "none" : "auto"}
+				transition={isDragging ? "none" : "opacity 0.2s ease-in-out"}
+				pointerEvents="auto"
 			>
-				<HStack spaceX="2">
-					<Icon>
-						<MdDragIndicator />
-					</Icon>
-					<Text fontSize="xs" fontWeight="bold">
-						동영상 미리보기(beta)
-					</Text>
-					<Text fontSize="10px" color="gray">
-						({playerStateText})
-					</Text>
-				</HStack>
-				{onClose && <CloseButton aria-label="Close preview" variant="ghost" size="xs" onClick={onClose} />}
-			</Flex>
+				<Flex
+					onMouseDown={handleMouseDown}
+					onTouchStart={handleTouchStart}
+					touchAction="none"
+					cursor={isDragging ? "grabbing" : "grab"}
+					bg="bg"
+					p={"2px 2px 2px 12px"}
+					align="center"
+					justify="space-between"
+				>
+					<HStack spaceX="2">
+						<Icon>
+							<MdDragIndicator />
+						</Icon>
+						<Text fontSize="xs" fontWeight="bold">
+							동영상 미리보기(beta)
+						</Text>
+						<Text fontSize="10px" color="gray">
+							({playerStateText})
+						</Text>
+					</HStack>
+					{onClose && <CloseButton aria-label="Close preview" variant="ghost" size="xs" onClick={onClose} />}
+				</Flex>
 
-			<YoutubePlayer
-				videoId={videoId}
-				start={start}
-				end={end}
-				volume={volume[0]}
-				onReady={onPlayerReady}
-				onStateChange={onPlayerStateChange}
-				onYoutubeError={onPlayerError}
-				w="full"
-				// 미리보기이므로 추천 영상 안뜨게 조절
-				playerOptions={{
-					playerVars: {
-						autoplay: 1,
-						mute: 0,
-						controls: 0,
-						rel: 0,
-						modestbranding: 1,
-					},
-				}}
-			/>
+				<YoutubePlayer
+					videoId={videoId}
+					start={start}
+					end={end}
+					volume={volume[0]}
+					onReady={onPlayerReady}
+					onStateChange={onPlayerStateChange}
+					onYoutubeError={onPlayerError}
+					w="full"
+					// 미리보기이므로 추천 영상 안뜨게 조절
+					playerOptions={{
+						playerVars: {
+							autoplay: 1,
+							mute: 0,
+							controls: 0,
+							rel: 0,
+							modestbranding: 1,
+						},
+					}}
+				/>
 
-			<Flex
-				bg="bg"
-				p={0.5}
-				px="3"
-				align="center"
-				justify="space-between"
-				borderTop="1px solid"
-				borderColor="border.muted"
-			>
-				{/* 왼쪽: 재생 / 일시정지 버튼 */}
-				<IconButton size="sm" variant="ghost" onClick={togglePlay} disabled={!player}>
-					{isPlaying ? "⏸" : "▶"}
-				</IconButton>
-
-				{/* 오른쪽: 음소거 + 볼륨 슬라이더 */}
-				<HStack spaceX="2" w="60%" justify="flex-end">
-					<IconButton size="sm" variant="ghost" onClick={toggleMute} disabled={!player}>
-						{isMuted || volume[0] === 0 ? "🔇" : volume[0] < 50 ? "🔉" : "🔊"}
+				<Flex
+					bg="bg"
+					p={0.5}
+					px="3"
+					align="center"
+					justify="space-between"
+					borderTop="1px solid"
+					borderColor="border.muted"
+				>
+					{/* 왼쪽: 재생 / 일시정지 버튼 */}
+					<IconButton size="sm" variant="ghost" onClick={togglePlay} disabled={!player}>
+						{isPlaying ? "⏸" : "▶"}
 					</IconButton>
-					<Slider.Root
-						className="chakra-slider"
-						value={[isMuted ? 0 : volume[0]]}
-						onValueChange={handleVolumeChange}
-						onValueChangeEnd={() => {
-							setIsVolumeChanging(false);
-						}}
-						min={0}
-						max={100}
-						step={1}
-						w="100px"
-						disabled={!player}
-					>
-						<Slider.Control>
-							<Slider.Track bg="bg" h="1.5" borderRadius="full">
-								<Slider.Range bg="primary.hover" />
-							</Slider.Track>
-							<Slider.Thumb index={0} boxSize="3" bg="primary.hover" borderRadius="full">
-								{isVolumeChanging && <Slider.ValueText fontSize="xs" transform={"translateY(-12px)"} />}
-							</Slider.Thumb>
-						</Slider.Control>
-					</Slider.Root>
-				</HStack>
-			</Flex>
-		</Box>
+
+					{/* 오른쪽: 음소거 + 볼륨 슬라이더 */}
+					<HStack spaceX="2" w="60%" justify="flex-end">
+						<IconButton size="sm" variant="ghost" onClick={toggleMute} disabled={!player}>
+							{isMuted || volume[0] === 0 ? "🔇" : volume[0] < 50 ? "🔉" : "🔊"}
+						</IconButton>
+						<Slider.Root
+							className="chakra-slider"
+							value={[isMuted ? 0 : volume[0]]}
+							onValueChange={handleVolumeChange}
+							onValueChangeEnd={() => {
+								setIsVolumeChanging(false);
+							}}
+							min={0}
+							max={100}
+							step={1}
+							w="100px"
+							disabled={!player}
+						>
+							<Slider.Control>
+								<Slider.Track bg="bg" h="1.5" borderRadius="full">
+									<Slider.Range bg="primary.hover" />
+								</Slider.Track>
+								<Slider.Thumb index={0} boxSize="3" bg="primary.hover" borderRadius="full">
+									{isVolumeChanging && <Slider.ValueText fontSize="xs" transform={"translateY(-12px)"} />}
+								</Slider.Thumb>
+							</Slider.Control>
+						</Slider.Root>
+					</HStack>
+				</Flex>
+			</Box>
+		</Portal>
 	);
 };
