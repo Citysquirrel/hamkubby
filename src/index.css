@@ -1,5 +1,11 @@
 body {
-	font-family: var(--font-line-seed);
+	font-family:
+		"LINE Seed Sans EN",
+		"LINE Seed Sans JP",
+		"LINE Seed Sans KR",
+		-apple-system,
+		BlinkMacSystemFont,
+		sans-serif;
 }
 
 mark {
@@ -73,35 +79,35 @@ mark {
 	src: url("/fonts/LINESeedSans_W_Th.woff2") format("woff2");
 	font-weight: 100;
 	font-display: swap;
-	unicode-range: U+0041-005A, U+0061-007A;
+	unicode-range: U+0020-00FF;
 }
 @font-face {
 	font-family: "LINE Seed Sans EN";
 	src: url("/fonts/LINESeedSans_W_Rg.woff2") format("woff2");
 	font-weight: 400;
 	font-display: swap;
-	unicode-range: U+0041-005A, U+0061-007A;
+	unicode-range: U+0020-00FF;
 }
 @font-face {
 	font-family: "LINE Seed Sans EN";
 	src: url("/fonts/LINESeedSans_W_Bd.woff2") format("woff2");
 	font-weight: 700;
 	font-display: swap;
-	unicode-range: U+0041-005A, U+0061-007A;
+	unicode-range: U+0020-00FF;
 }
 @font-face {
 	font-family: "LINE Seed Sans EN";
 	src: url("/fonts/LINESeedSans_W_XBd.woff2") format("woff2");
 	font-weight: 800;
 	font-display: swap;
-	unicode-range: U+0041-005A, U+0061-007A;
+	unicode-range: U+0020-00FF;
 }
 @font-face {
 	font-family: "LINE Seed Sans EN";
 	src: url("/fonts/LINESeedSans_W_He.woff2") format("woff2");
 	font-weight: 900;
 	font-display: swap;
-	unicode-range: U+0041-005A, U+0061-007A;
+	unicode-range: U+0020-00FF;
 }
 
 /* ==========================================================
