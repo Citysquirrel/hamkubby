@@ -457,17 +457,7 @@ export default function SongBook({
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, []);
-	//? 가중치 검색용. 버그 수정 후 배포
-	//TODO: AI검색으로 대체 llm vector 테이블 만들기
-	// const filteredSongs = useMemo(() => {
-	// 	return songData
-	// 		.map((song) => ({
-	// 			...song,
-	// 			score: getScore(song, search),
-	// 		}))
-	// 		.filter((song) => song.score > 0)
-	// 		.sort((a, b) => b.score - a.score);
-	// }, [search, genre, songData]);
+
 	const linkGroup = [
 		{
 			id: 1,
@@ -601,7 +591,7 @@ export default function SongBook({
 						</Stack>
 					) : (
 						<Flex direction="column" align="center" justify="center" h="200px" bg="cardBg" borderRadius="lg" gap={4}>
-							<Text color="gray.500">등록된 가사가 없습니다.</Text>
+							<Text color="gray.500">가사는 본 사이트에서 제공되지 않습니다 :/</Text>
 							<Button
 								variant="outline"
 								borderColor={MAIN_COLOR}
@@ -1079,7 +1069,6 @@ const SongHistorySection = ({
 			_hover={hist.youtubeVideoId ? { bg: { _light: "blue.100", _dark: "blue.800" } } : undefined}
 			onClick={(e) => {
 				e.stopPropagation();
-				// if (hist.youtubeVideoId) window.open(`https://youtu.be/${hist.youtubeVideoId}?t=${hist.start}`, "_blank");
 				if (hist.youtubeVideoId) {
 					setShowPreview(true);
 					setPreviewVideo([hist.youtubeVideoId, hist.start || undefined, hist.end || undefined]);

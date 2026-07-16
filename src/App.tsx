@@ -30,6 +30,7 @@ import "./index.css";
 import { fetch_ } from "./lib/fetch";
 import { normalizeKeyword } from "./lib/search";
 import SongBook, { type PreviewVideo } from "./pages/SongBook";
+import { confirmOnExit } from "./lib/confirm";
 
 interface Maintenance {
 	maintenance_mode_hamkubby: boolean;
@@ -57,6 +58,8 @@ function App() {
 	const [showPreview, setShowPreview] = useState(false);
 	const [previewVideo, setPreviewVideo] = useState<PreviewVideo>(["", undefined, undefined]);
 
+	const { enableBeforeUnload, disableBeforeUnload } = confirmOnExit();
+
 	const isOnTop = scrollY > 80;
 
 	const handleGotoTop = () => {
@@ -67,17 +70,23 @@ function App() {
 		return rawData
 			.filter((song) => song.isActive) // isActive true 필터
 			.map((song) => {
-				const { updatedAt, deletedAt, createdAt, isActive, ...restSong } = song;
+				const { synonyms, isActive, ...restSong } = song;
 
-				//TODO: searchBase searchChosung searchJamo 설정
 				return {
 					...restSong,
-					// columnData,
-					synonyms: restSong.synonyms ? JSON.parse(restSong.synonyms) : [],
+					synonyms: synonyms ? JSON.parse(synonyms) : [],
 					actionStatus: isActive ? "ACTIVE" : "DISABLED",
 				};
 			});
 	};
+
+	useEffect(() => {
+		if (showPreview) enableBeforeUnload();
+		else disableBeforeUnload();
+		return () => {
+			disableBeforeUnload();
+		};
+	}, [showPreview]);
 
 	// 로컬스토리지 불러오기
 	useEffect(() => {
