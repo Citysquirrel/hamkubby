@@ -74,7 +74,7 @@ const cheeseItems = [
 ];
 
 const filterCollection = createListCollection({
-	items: [...genreItems, ...lyricsItems, ...officialItems, ...cheeseItems],
+	items: [...genreItems, ...officialItems, ...cheeseItems],
 });
 
 const COLOR_SCHEME: { [key: string]: string } = {
@@ -814,10 +814,8 @@ export default function SongBook({
 
 											<Separator orientation="horizontal" w="90%" />
 
-											<Select.ItemGroup mt={0} w="100%">
-												{/* <Select.ItemGroupLabel fontWeight="bold" color="green.500">
-													📝 가사 포함 여부
-												</Select.ItemGroupLabel> */}
+											{/* <Select.ItemGroup mt={0} w="100%">
+												
 
 												{lyricsItems.map((item) => (
 													<Select.Item
@@ -831,7 +829,7 @@ export default function SongBook({
 														<Select.ItemIndicator>✓</Select.ItemIndicator>
 													</Select.Item>
 												))}
-											</Select.ItemGroup>
+											</Select.ItemGroup> */}
 										</VStack>
 									</Select.Content>
 								</Select.Positioner>
