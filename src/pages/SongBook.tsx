@@ -358,7 +358,11 @@ export default function SongBook({
 			})();
 			const matchOfficial =
 				activeFilters.official?.length > 0 ? activeFilters.official.includes(String(song.isOfficial)) : true;
-			const matchCheese = activeFilters.cheese?.length > 0 ? activeFilters.cheese.includes(song.cheese) : true;
+			const matchCheese = !song.isOfficial
+				? true // 비공식 곡일 경우 영향받지 않도록 구성
+				: activeFilters.cheese?.length > 0
+					? activeFilters.cheese.includes(song.cheese)
+					: true;
 
 			return matchGenre && matchLyrics && matchOfficial && matchCheese;
 		});
