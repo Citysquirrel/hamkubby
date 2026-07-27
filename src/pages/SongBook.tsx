@@ -47,6 +47,7 @@ import { toaster } from "../components/ui/toaster";
 import type { HamkubbySongHistoryModel, Song, SortType } from "../config/types";
 import { formatDateToYYYYMMDD } from "../lib/date";
 import { getChosung, normalizeKeyword } from "../lib/search";
+import { Background } from "../components/Background";
 
 const inko = new Inko();
 
@@ -110,11 +111,13 @@ export default function SongBook({
 	const LYRIC_SIZES = ["xs", "sm", "md", "xl", "2xl"];
 
 	const searchRef = useRef<HTMLInputElement>(null);
+	const sentinelRef = useRef<HTMLDivElement>(null);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState(search);
 	const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 	const [sort, setSort] = useState<SortType>("title-asc");
 	const [focused, setFocused] = useState(false);
+	const [isHeaderOnTop, setIsHeaderOnTop] = useState(false);
 
 	const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 	const [isOpenMobileView, setIsOpenMobileView] = useState(false);
@@ -429,6 +432,26 @@ export default function SongBook({
 		);
 	};
 
+	// 헤더 색상 조작
+	useEffect(() => {
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				setIsHeaderOnTop(!entry.isIntersecting);
+			},
+			{ threshold: 1.0, rootMargin: "-1px 0px 0px 0px" },
+		);
+
+		if (sentinelRef.current) {
+			observer.observe(sentinelRef.current);
+		}
+
+		return () => {
+			if (sentinelRef.current) {
+				observer.unobserve(sentinelRef.current);
+			}
+		};
+	}, []);
+
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			const active = document.activeElement as HTMLElement | null;
@@ -489,7 +512,7 @@ export default function SongBook({
 		if (!selectedSong) return null;
 		const song = selectedSong;
 		return (
-			<Flex direction="column" p={6} bg="bg">
+			<Flex direction="column" p={6}>
 				{/* 헤더 & 복사 버튼 */}
 				<HStack justify="space-between" align="start" mb={4}>
 					<VStack align="start" gap={1}>
@@ -614,6 +637,7 @@ export default function SongBook({
 
 	return (
 		<Stack id="songbook" padding="0" margin="0" alignItems={"center"} position="static">
+			<Background imageUrl="/images/bg/hamkubby_01.webp" />
 			{isProfileOpen ? (
 				<Stack alignItems={"center"}>
 					<Box className="circle-wrap" marginTop="4" position="relative">
@@ -651,15 +675,17 @@ export default function SongBook({
 			) : null}
 
 			<Stack id="list-container" width="100%" gap={0}>
+				<Box ref={sentinelRef} w="full" h="1px" mt="-1px" />
 				<HStack
 					position="sticky"
 					top="0"
 					left="0"
 					zIndex={3}
 					width="100%"
-					bg={"bg"}
+					bg={isHeaderOnTop ? "bg" : "transparent"}
 					justifyContent={"center"}
 					align={"center"}
+					transition=".25s background-color"
 				>
 					<Stack width={"100%"} gap=".5" borderBottom={"1px solid"} borderColor="gray.border">
 						<Stack width="100%" alignItems={"center"} marginBottom="1" padding="4px">
@@ -717,7 +743,7 @@ export default function SongBook({
 								alignItems: "center",
 							}}
 							position="relative"
-							bg={"bg"}
+							// bg={"bg"}
 						>
 							<Select.Root
 								collection={filterCollection}

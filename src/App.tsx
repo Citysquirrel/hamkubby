@@ -234,7 +234,7 @@ function App() {
 			)}
 			<Cursor />
 			<LoadingCanvas isLoading={isLoading} />
-			<Stack minH="100vh" bg="bg" color="fg" justifyContent={"space-between"}>
+			<Stack minH="100vh" color="fg" justifyContent={"space-between"}>
 				<HStack flexDirection={"row-reverse"} position="fixed" right="8px" top="8px" zIndex={999}>
 					<ColorModeButtonFixed />
 					<SheetButton />
