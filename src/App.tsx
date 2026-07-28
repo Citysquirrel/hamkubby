@@ -425,13 +425,14 @@ function Notice() {
 										</List.Item>
 									</List.Root>
 								</Box>
-								<Box mb={4}>
+								<Box mb={1}>
 									<Badge colorPalette={"teal"}>공식</Badge> 태그는 햄쿠비가 직접 시트에 입력한 곡입니다.
 								</Box>
-								<Box mb={1}>
+								<Box mb={4}>
 									<Badge colorPalette={"red"}>비공식</Badge> 태그는 시트에 없는, 과거에 불렀던 기록 토대로 등록한
-									곡입니다. 신청에 유의해 주세요
+									곡입니다. 신청에 유의해 주세요.
 								</Box>
+								<Box color="grey">[이미지] 노래책 사용법</Box>
 								<ChakraImage mb={12} src="/images/info.png" />
 								{/* <Text marginTop="2">본 사이트는 원본 스프레드 시트 정보를 가져와 사용합니다</Text>
 								<Link variant="underline" href={SONGBOOK_URL} colorPalette="green" target="_blank" mb={12}>
@@ -451,9 +452,12 @@ function Notice() {
 function Footer() {
 	return (
 		<Stack alignItems={"center"} gap="-0.5" padding={1}>
-			<Text fontSize="xs">
-				본 사이트는 공식 사이트가 아닌 햄님메이드 프로젝트입니다. 라이버 및 소속사의 정책에 따라 일부 내용이 변경되거나
-				제공이 중단될 수 있습니다.
+			<Text fontSize="xs" textAlign={"center"}>
+				본 사이트는 공식 사이트가 아닌 햄님메이드 프로젝트입니다.
+				<br />
+				라이버 및 소속사의 정책에 따라 일부 내용이 변경되거나 제공이 중단될 수 있습니다.
+				<br />
+				사이트 내 모든 원작물의 저작권은 소속사 및 라이버에게 있습니다
 			</Text>
 			<HStack alignItems={"center"} marginTop="8px">
 				<Clipboard.Root value="tok1324@naver.com">
@@ -464,8 +468,9 @@ function Footer() {
 						</Link>
 					</Clipboard.Trigger>
 				</Clipboard.Root>
-				<Link href="https://github.com/Citysquirrel/hamkubby" target="_blank" fontSize="sm">
+				<Link href="https://github.com/Citysquirrel/hamkubby" target="_blank" fontSize="xs" gap="2px">
 					<FaGithub />
+					Github repo
 				</Link>
 			</HStack>
 		</Stack>

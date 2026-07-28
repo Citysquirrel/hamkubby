@@ -4,7 +4,8 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "concurrently \"vite\" \"wrangler pages dev functions --port 8788\"",
+		"dev": "vite --open",
+		"dev:wrang": "concurrently \"vite\" \"wrangler pages dev functions --port 8788\"",
 		"build": "vite build",
 		"build:strict": "tsc -b && vite build",
 		"lint": "eslint .",

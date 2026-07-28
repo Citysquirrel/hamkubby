@@ -1,3 +1,4 @@
+//! DEPRECATED: 이제, 내부 서버를 통해 정보를 조작합니다.
 import Papa from "papaparse";
 import { RequestContext } from "../../src/config/types";
 
