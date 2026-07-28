@@ -6,7 +6,8 @@ export const toaster = createToaster({
 	placement: "bottom-end",
 	pauseOnPageIdle: true,
 	duration: 2000,
-	max: 2,
+	max: 3,
+	overlap: true,
 });
 
 export const Toaster = () => {

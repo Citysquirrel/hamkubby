@@ -117,6 +117,7 @@ function App() {
 						}
 					} else {
 						toaster.create({
+							id: "network-error",
 							description: "노래책 데이터 로드 실패: 서버에 문제가 발생했습니다!",
 							type: "error",
 							closable: true,
@@ -125,6 +126,7 @@ function App() {
 				})
 				.catch(() => {
 					toaster.create({
+						id: "network-error",
 						description: "노래책 데이터 로드 실패: 서버에 문제가 발생했습니다!",
 						type: "error",
 						closable: true,
