@@ -1094,7 +1094,9 @@ export default function SongBook({
 						>
 							<Box w="40px" h="4px" bg="gray.300" borderRadius="full" mx="auto" mt={3} mb={1} />
 							<DrawerCloseTrigger position="absolute" top={8} right={4} />
-							<DrawerBody p={0}>{selectedSong && detailViewContent}</DrawerBody>
+							<DrawerBody p={0} bg={"bg"}>
+								{selectedSong && detailViewContent}
+							</DrawerBody>
 						</DrawerContent>
 					</DrawerRoot>
 				)}

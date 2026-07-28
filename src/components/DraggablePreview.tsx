@@ -3,6 +3,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MdDragIndicator } from "react-icons/md";
 import { YoutubePlayer } from "./YoutubePlayer"; // 위에서 만든 컴포넌트
 import { CloseButton } from "./ui/close-button";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 interface DraggablePreviewProps {
 	videoId: string;
@@ -36,6 +37,8 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 	});
 	const [isVolumeChanging, setIsVolumeChanging] = useState(false);
 	const [playerStateText, setPlayerStateText] = useState("준비 중..");
+
+	const isMobile = useIsMobile();
 
 	// 로컬스토리지 자동갱신
 	useEffect(() => {
@@ -329,28 +332,30 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 						<IconButton size="sm" variant="ghost" onClick={toggleMute} disabled={!player}>
 							{isMuted || volume[0] === 0 ? "🔇" : volume[0] < 50 ? "🔉" : "🔊"}
 						</IconButton>
-						<Slider.Root
-							className="chakra-slider"
-							value={[isMuted ? 0 : volume[0]]}
-							onValueChange={handleVolumeChange}
-							onValueChangeEnd={() => {
-								setIsVolumeChanging(false);
-							}}
-							min={0}
-							max={100}
-							step={1}
-							w="100px"
-							disabled={!player}
-						>
-							<Slider.Control>
-								<Slider.Track bg="bg" h="1.5" borderRadius="full">
-									<Slider.Range bg="primary.hover" />
-								</Slider.Track>
-								<Slider.Thumb index={0} boxSize="3" bg="primary.hover" borderRadius="full">
-									{isVolumeChanging && <Slider.ValueText fontSize="xs" transform={"translateY(-12px)"} />}
-								</Slider.Thumb>
-							</Slider.Control>
-						</Slider.Root>
+						{!isMobile ? (
+							<Slider.Root
+								className="chakra-slider"
+								value={[isMuted ? 0 : volume[0]]}
+								onValueChange={handleVolumeChange}
+								onValueChangeEnd={() => {
+									setIsVolumeChanging(false);
+								}}
+								min={0}
+								max={100}
+								step={1}
+								w="100px"
+								disabled={!player}
+							>
+								<Slider.Control>
+									<Slider.Track bg="bg" h="1.5" borderRadius="full">
+										<Slider.Range bg="primary.hover" />
+									</Slider.Track>
+									<Slider.Thumb index={0} boxSize="3" bg="primary.hover" borderRadius="full">
+										{isVolumeChanging && <Slider.ValueText fontSize="xs" transform={"translateY(-12px)"} />}
+									</Slider.Thumb>
+								</Slider.Control>
+							</Slider.Root>
+						) : null}
 					</HStack>
 				</Flex>
 			</Box>
