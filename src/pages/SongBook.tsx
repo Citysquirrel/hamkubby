@@ -74,8 +74,13 @@ const cheeseItems = [
 	{ label: "피토곡", value: "cheese:피토곡" },
 ];
 
+const historyItems = [
+	{ label: "영상 있음", value: "history:yes" },
+	{ label: "영상 없음", value: "history:no" },
+];
+
 const filterCollection = createListCollection({
-	items: [...genreItems, ...officialItems, ...cheeseItems],
+	items: [...genreItems, ...officialItems, ...cheeseItems, ...historyItems],
 });
 
 const COLOR_SCHEME: { [key: string]: string } = {
@@ -292,6 +297,7 @@ export default function SongBook({
 	};
 	// #endregion
 
+	// #region 필터
 	const activeFilters = useMemo(
 		() =>
 			selectedFilters.reduce(
@@ -341,24 +347,24 @@ export default function SongBook({
 
 		const filtered = baseData.filter((song) => {
 			const matchGenre = activeFilters.genre?.length > 0 ? activeFilters.genre.includes(song.genre) : true;
-			const matchLyrics = (() => {
-				const lyricFilters = activeFilters.lyrics;
+			// const matchLyrics = (() => {
+			// 	const lyricFilters = activeFilters.lyrics;
 
-				if (!lyricFilters || lyricFilters.length === 0 || lyricFilters.length === 2) {
-					return true;
-				}
+			// 	if (!lyricFilters || lyricFilters.length === 0 || lyricFilters.length === 2) {
+			// 		return true;
+			// 	}
 
-				const hasLyricText = !!song.lyric && song.lyric.trim() !== "";
+			// 	const hasLyricText = !!song.lyric && song.lyric.trim() !== "";
 
-				if (lyricFilters.includes("yes")) {
-					return hasLyricText;
-				}
-				if (lyricFilters.includes("no")) {
-					return !hasLyricText;
-				}
+			// 	if (lyricFilters.includes("yes")) {
+			// 		return hasLyricText;
+			// 	}
+			// 	if (lyricFilters.includes("no")) {
+			// 		return !hasLyricText;
+			// 	}
 
-				return true;
-			})();
+			// 	return true;
+			// })();
 			const matchOfficial =
 				activeFilters.official?.length > 0 ? activeFilters.official.includes(String(song.isOfficial)) : true;
 			const matchCheese = !song.isOfficial
@@ -367,7 +373,20 @@ export default function SongBook({
 					? activeFilters.cheese.includes(song.cheese)
 					: true;
 
-			return matchGenre && matchLyrics && matchOfficial && matchCheese;
+			const matchHistory = (() => {
+				const historyFilters = activeFilters.history;
+
+				if (!historyFilters || historyFilters.length === 0 || historyFilters.length === 2) return true;
+
+				const hasHistory = song.song_histories && song.song_histories.length > 0;
+
+				if (historyFilters.includes("yes")) return hasHistory;
+				if (historyFilters.includes("no")) return !hasHistory;
+
+				return true;
+			})();
+
+			return matchGenre && matchOfficial && matchCheese && matchHistory;
 		});
 
 		if (selectedSong) {
@@ -394,6 +413,8 @@ export default function SongBook({
 			}
 		});
 	}, [debouncedSearch, sort, data, activeFilters, fuse, selectedSong]);
+
+	// #endregion
 
 	const highlight = (text: string, keyword: string) => {
 		if (!keyword) return text;
@@ -562,6 +583,11 @@ export default function SongBook({
 							{song.cheese}
 						</Badge>
 					) : null}
+					{song.song_histories && song.song_histories.length > 0 ? (
+						<Badge variant="outline" colorPalette={"cyan"}>
+							영상
+						</Badge>
+					) : null}
 				</HStack>
 
 				{/* 메모 */}
@@ -636,10 +662,17 @@ export default function SongBook({
 	}, [isLyricBold, lyricIndex, selectedSong, copiedId]);
 
 	return (
-		<Stack id="songbook" padding="0" margin="0" alignItems={"center"} position="static">
+		<Stack id="songbook" padding="0" margin="0" gap="0" alignItems={"center"} position="static">
 			<Background imageUrl="/images/bg/hamkubby_01.webp" />
 			{isProfileOpen ? (
-				<Stack alignItems={"center"}>
+				<Stack
+					alignItems={"center"}
+					w="100%"
+					bg={isHeaderOnTop ? "bg" : "transparent"}
+					transition=".25s background-color"
+					pt="8"
+					pb="2"
+				>
 					<Box className="circle-wrap" marginTop="4" position="relative">
 						<Image
 							src="https://nng-phinf.pstatic.net/MjAyNTEyMjJfMjE3/MDAxNzY2Mzg2OTg3ODk1.1acZIMhW2shvmGDkv6taba35Ojr75XDqxpCKaUIzSFwg.s4E5tYOZv7eJSZwFELZ_ybV8rztf-z5Nd3Tqd5ucPfgg.PNG/image.png?type=f120_120_na"
@@ -673,7 +706,6 @@ export default function SongBook({
 					</ButtonGroup>
 				</Stack>
 			) : null}
-
 			<Stack id="list-container" width="100%" gap={0}>
 				<Box ref={sentinelRef} w="full" h="1px" mt="-1px" />
 				<HStack
@@ -843,7 +875,20 @@ export default function SongBook({
 											</Select.ItemGroup>
 
 											<Separator orientation="horizontal" w="90%" />
-
+											<Select.ItemGroup mt={0} w="100%">
+												{historyItems.map((item) => (
+													<Select.Item
+														item={item}
+														key={item.value}
+														cursor="pointer"
+														_hover={{ bg: "secondary.lightest" }}
+														_checked={{ bg: "primary.lightest" }}
+													>
+														<Select.ItemText>{item.label}</Select.ItemText>
+														<Select.ItemIndicator>✓</Select.ItemIndicator>
+													</Select.Item>
+												))}
+											</Select.ItemGroup>
 											{/* <Select.ItemGroup mt={0} w="100%">
 												
 
@@ -957,6 +1002,11 @@ export default function SongBook({
 														{!!song.lyric && (
 															<Badge variant="surface" colorPalette={"cyan"}>
 																가사
+															</Badge>
+														)}
+														{song.song_histories && song.song_histories.length > 0 && (
+															<Badge variant="surface" colorPalette={"cyan"}>
+																영상
 															</Badge>
 														)}
 														{song.notes && (
