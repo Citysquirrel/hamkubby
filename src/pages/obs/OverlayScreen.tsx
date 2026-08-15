@@ -10,6 +10,7 @@ export default function OverlayScreen() {
 	const [songList, setSongList] = useState([]);
 
 	useEffect(() => {
+		// roomId가 없으면 동작하지 않음
 		if (!roomId) return;
 
 		const socket = io("http://localhost:3467/ws", {

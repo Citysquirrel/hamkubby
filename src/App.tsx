@@ -34,6 +34,7 @@ import { normalizeKeyword } from "./lib/search";
 import SongBook from "./pages/SongBook";
 import useSongDataStore from "./store/useSongDataStore";
 import useUiStore from "./store/useUiStore";
+import { Outlet } from "react-router-dom";
 
 interface Maintenance {
 	maintenance_mode_hamkubby: boolean;
@@ -46,9 +47,6 @@ const API_BASE_URL = import.meta.env.DEV
 	? "https://localhost:3467"
 	: import.meta.env.VITE_API_URL || "https://api.stelcount.fans";
 
-// isProfileOpen
-// setShowPreview
-// setPreviewVideo
 function App() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [maintenance, setMaintenance] = useState<Maintenance>({
@@ -281,7 +279,7 @@ function App() {
 					</IconButton>
 				</HStack>
 
-				<SongBook />
+				<Outlet />
 			</Stack>
 		</>
 	);

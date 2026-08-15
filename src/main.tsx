@@ -3,6 +3,8 @@ import App from "./App.tsx";
 import { AppProvider } from "./providers/AppProvider.tsx";
 import { Toaster } from "./components/ui/toaster.tsx";
 import { lazy, Suspense } from "react";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router.tsx";
 
 const DevComponents = import.meta.env.DEV
 	? lazy(() =>
@@ -25,7 +27,7 @@ createRoot(document.getElementById("root")!).render(
 				<DevComponents />
 			</Suspense>
 		)}
-		<App />
+		<RouterProvider router={router} />
 	</AppProvider>,
 );
 
