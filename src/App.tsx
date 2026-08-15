@@ -15,22 +15,25 @@ import {
 	Stack,
 	Text,
 } from "@chakra-ui/react";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type SetStateAction } from "react";
 import { FaGithub } from "react-icons/fa";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { MdContentCopy, MdKeyboardDoubleArrowUp, MdOutlineQuestionMark, MdSearch } from "react-icons/md";
 import { PiCheese } from "react-icons/pi";
 import { SiGooglesheets } from "react-icons/si";
+import { useShallow } from "zustand/react/shallow";
 import Cursor from "./components/Cursor";
 import { DraggablePreview } from "./components/DraggablePreview";
 import { ColorModeButton } from "./components/ui/color-mode";
 import { toaster } from "./components/ui/toaster";
 import type { RawSongData, Song } from "./config/types";
 import "./index.css";
+import { confirmOnExit } from "./lib/confirm";
 import { fetch_ } from "./lib/fetch";
 import { normalizeKeyword } from "./lib/search";
-import SongBook, { type PreviewVideo } from "./pages/SongBook";
-import { confirmOnExit } from "./lib/confirm";
+import SongBook from "./pages/SongBook";
+import useSongDataStore from "./store/useSongDataStore";
+import useUiStore from "./store/useUiStore";
 
 interface Maintenance {
 	maintenance_mode_hamkubby: boolean;
@@ -43,20 +46,35 @@ const API_BASE_URL = import.meta.env.DEV
 	? "https://localhost:3467"
 	: import.meta.env.VITE_API_URL || "https://api.stelcount.fans";
 
+// isProfileOpen
+// setShowPreview
+// setPreviewVideo
 function App() {
 	const [isLoading, setIsLoading] = useState(true);
-	const [isSongDataLoading, setIsSongDataLoading] = useState(true);
-	const [isProfileOpen, setIsProfileOpen] = useState(true);
 	const [maintenance, setMaintenance] = useState<Maintenance>({
 		maintenance_mode_hamkubby: false,
 		maintenance_message_hamkubby: "",
 	});
-	const [data, setData] = useState<Song[]>([]);
 	const [scrollY, setScrollY] = useState(0);
 
-	// 비디오 프리뷰 상태
-	const [showPreview, setShowPreview] = useState(false);
-	const [previewVideo, setPreviewVideo] = useState<PreviewVideo>(["", undefined, undefined]);
+	const { setData, isSongDataLoading, startSongDataLoading, stopSongDataLoading } = useSongDataStore(
+		useShallow((state) => ({
+			setData: state.setData,
+			isSongDataLoading: state.isSongDataLoading,
+			startSongDataLoading: state.startSongDataLoading,
+			stopSongDataLoading: state.stopSongDataLoading,
+		})),
+	);
+
+	const { isProfileOpen, setIsProfileOpen, previewVideo, showPreview, closePreview } = useUiStore(
+		useShallow((state) => ({
+			isProfileOpen: state.isProfileOpen,
+			setIsProfileOpen: state.setIsProfileOpen,
+			previewVideo: state.previewVideo,
+			showPreview: state.showPreview,
+			closePreview: state.closePreview,
+		})),
+	);
 
 	const { enableBeforeUnload, disableBeforeUnload } = confirmOnExit();
 
@@ -100,7 +118,7 @@ function App() {
 	useEffect(() => {
 		const fetchSongbookData = (isInitialLoad = false) => {
 			if (isInitialLoad) {
-				setIsSongDataLoading(true);
+				startSongDataLoading;
 			}
 
 			fetch_(`${API_BASE_URL}/api/v2/songbook`)
@@ -134,7 +152,7 @@ function App() {
 				})
 				.finally(() => {
 					if (isInitialLoad) {
-						setIsSongDataLoading(false);
+						stopSongDataLoading;
 					}
 				});
 		};
@@ -230,7 +248,7 @@ function App() {
 					start={previewVideo[1]}
 					end={previewVideo[2]}
 					onClose={() => {
-						setShowPreview(false);
+						closePreview();
 					}}
 				/>
 			)}
@@ -263,15 +281,7 @@ function App() {
 					</IconButton>
 				</HStack>
 
-				<SongBook
-					data={data}
-					isLoading={isSongDataLoading}
-					isProfileOpen={isProfileOpen}
-					setShowPreview={setShowPreview}
-					setPreviewVideo={setPreviewVideo}
-				/>
-
-				{/* <Footer /> */}
+				<SongBook />
 			</Stack>
 		</>
 	);
@@ -318,7 +328,7 @@ function ProfileButton({
 	setIsProfileOpen,
 }: {
 	isProfileOpen: boolean;
-	setIsProfileOpen: Dispatch<SetStateAction<boolean>>;
+	setIsProfileOpen: (action: SetStateAction<boolean>) => void;
 }) {
 	return (
 		<IconButton

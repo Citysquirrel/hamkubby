@@ -54,3 +54,5 @@ interface Env {
 }
 
 export type RequestContext = EventContext<Env, string, Record<string, string>>;
+
+export type SetStateAction<T> = T | ((prevState: T) => T);

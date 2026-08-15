@@ -28,6 +28,10 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 
+		resolve: {
+			tsconfigPaths: true,
+		},
+
 		esbuild: {
 			drop: isProd ? ["console", "debugger"] : [],
 		},

@@ -48,6 +48,9 @@ import type { HamkubbySongHistoryModel, Song, SortType } from "../config/types";
 import { formatDateToYYYYMMDD } from "../lib/date";
 import { getChosung, normalizeKeyword } from "../lib/search";
 import { Background } from "../components/Background";
+import useUiStore from "@/store/useUiStore";
+import { useShallow } from "zustand/react/shallow";
+import useSongDataStore from "@/store/useSongDataStore";
 
 const inko = new Inko();
 
@@ -98,23 +101,20 @@ const HEADER_HEIGHT = 104;
 
 export type PreviewVideo = [string, number | undefined, number | undefined];
 
-export default function SongBook({
-	data,
-	isLoading,
-	isProfileOpen,
-	setShowPreview,
-	setPreviewVideo,
-}: {
-	data: Song[];
-	isLoading: boolean;
-	isProfileOpen: boolean;
-	setShowPreview: Dispatch<SetStateAction<boolean>>;
-	setPreviewVideo: Dispatch<SetStateAction<PreviewVideo>>;
-}) {
+export default function SongBook() {
 	const LOCAL_STORAGE_KEY = "lyric-font-size-index";
 	const LOCAL_STORAGE_BOLD_KEY = "lyric-font-bold";
 	const LYRIC_SIZES = ["xs", "sm", "md", "xl", "2xl"];
 
+	// 전역 상태
+	const { isLoading, data } = useSongDataStore(
+		useShallow((state) => ({ isLoading: state.isSongDataLoading, data: state.data })),
+	);
+	const { isProfileOpen, setPreviewVideo } = useUiStore(
+		useShallow((state) => ({ isProfileOpen: state.isProfileOpen, setPreviewVideo: state.setPreviewVideo })),
+	);
+
+	// MARK: - 상태값
 	const searchRef = useRef<HTMLInputElement>(null);
 	const sentinelRef = useRef<HTMLDivElement>(null);
 	const [search, setSearch] = useState("");
@@ -597,7 +597,7 @@ export default function SongBook({
 					</Box>
 				)}
 
-				<SongHistorySection song={song} setShowPreview={setShowPreview} setPreviewVideo={setPreviewVideo} />
+				<SongHistorySection song={song} setPreviewVideo={setPreviewVideo} />
 
 				{/* 가사 */}
 				<Box position="relative" mt={2} mb={2} p={2} bg="cardBg" borderRadius="lg">
@@ -1107,14 +1107,13 @@ export default function SongBook({
 
 const SongHistorySection = ({
 	song,
-	setShowPreview,
 	setPreviewVideo,
 }: {
 	song: Song;
-	setShowPreview: Dispatch<SetStateAction<boolean>>;
 	setPreviewVideo: Dispatch<SetStateAction<[string, number | undefined, number | undefined]>>;
 }) => {
 	const [open, setOpen] = useState(false);
+	const openPreview = useUiStore((state) => state.openPreview);
 
 	const sortedHistories = useMemo(() => {
 		if (!song.song_histories) return [];
@@ -1150,7 +1149,7 @@ const SongHistorySection = ({
 			onClick={(e) => {
 				e.stopPropagation();
 				if (hist.youtubeVideoId) {
-					setShowPreview(true);
+					openPreview();
 					setPreviewVideo([hist.youtubeVideoId, hist.start || undefined, hist.end || undefined]);
 				} else toaster.create({ description: `등록된 유튜브 링크가 없습니다`, type: "info" });
 			}}
