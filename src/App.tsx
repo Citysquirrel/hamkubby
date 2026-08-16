@@ -21,6 +21,7 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { MdContentCopy, MdKeyboardDoubleArrowUp, MdOutlineQuestionMark, MdSearch } from "react-icons/md";
 import { PiCheese } from "react-icons/pi";
 import { SiGooglesheets } from "react-icons/si";
+import { Outlet } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import Cursor from "./components/Cursor";
 import { DraggablePreview } from "./components/DraggablePreview";
@@ -31,10 +32,9 @@ import "./index.css";
 import { confirmOnExit } from "./lib/confirm";
 import { fetch_ } from "./lib/fetch";
 import { normalizeKeyword } from "./lib/search";
-import SongBook from "./pages/SongBook";
 import useSongDataStore from "./store/useSongDataStore";
 import useUiStore from "./store/useUiStore";
-import { Outlet } from "react-router-dom";
+import { API_BASE_URL } from "./config/base-url";
 
 interface Maintenance {
 	maintenance_mode_hamkubby: boolean;
@@ -42,10 +42,6 @@ interface Maintenance {
 }
 
 const SONGBOOK_URL = "https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE";
-
-const API_BASE_URL = import.meta.env.DEV
-	? "https://localhost:3467"
-	: import.meta.env.VITE_API_URL || "https://api.stelcount.fans";
 
 function App() {
 	const [isLoading, setIsLoading] = useState(true);

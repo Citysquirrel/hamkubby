@@ -4,8 +4,9 @@ import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { OverlayContentView } from "./lib/comp";
 import { useMeta } from "@/hooks/useMeta";
+import { API_BASE_URL } from "@/config/base-url";
 
-const SOCKET_URL = "https://localhost:3467";
+const SOCKET_URL = API_BASE_URL;
 type ConnectionStatus = "loading" | "connected" | "error";
 
 export default function OverlayScreen() {
