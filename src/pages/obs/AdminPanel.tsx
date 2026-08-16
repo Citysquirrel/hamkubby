@@ -1227,29 +1227,33 @@ export default function AdminPanel() {
 									</Text>
 									<Text fontSize="sm" color="gray.700" _dark={{ color: "gray.300" }} lineHeight="tall">
 										• 상단의 <b>[오버레이 복사]</b> 버튼을 누릅니다.
-										<br />• OBS 등 방송 프로그램에서 <b>브라우저 소스</b>를 추가한 뒤 URL에 붙여넣습니다.
+										<br />• OBS에서 <b>브라우저 소스</b>를 추가하고 URL에 붙여넣습니다.
 										<br />
 										<Box
-											mt={2}
-											p={2}
+											mt={3}
+											p={3}
 											bg="blue.50"
 											_dark={{ bg: "blue.900" }}
 											borderRadius="md"
 											borderLeft="3px solid"
 											borderColor="blue.500"
 										>
-											💡 <b>OBS 브라우저 소스 권장 크기 설정</b>
+											💡 <b>OBS 브라우저 소스 권장 크기 (여유 공간 포함)</b>
 											<br />
-											현재 편집기 세팅에 맞춰 속성창에 아래 숫자를 그대로 입력하세요!
-											<br />- 너비 (Width):{" "}
+											편집기 설정값보다 <b>가로/세로를 40px 정도 더 크게</b> 설정해야 그림자가 잘리지 않습니다.
+											<br />
+											<br />- <b>너비(Width) 추천:</b>{" "}
 											<Text as="span" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
-												{settings.global.width}
+												{settings.global.width + 40}px
 											</Text>
-											<br />- 높이 (Height):{" "}
+											<br />- <b>높이(Height) 추천:</b>{" "}
 											<Text as="span" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
-												{settings.global.height === 0
-													? "800 (곡 목록에 맞춰 넉넉하게 적어주세요)"
-													: settings.global.height}
+												{settings.global.height === 0 ? "840px (자동 설정됨)" : `${settings.global.height + 40}px`}
+											</Text>
+											<br />
+											<br />
+											<Text fontSize="xs" color="blue.800" _dark={{ color: "blue.100" }}>
+												* 위젯 자체가 400px이라면 OBS 소스는 440px로 설정하세요.
 											</Text>
 										</Box>
 									</Text>

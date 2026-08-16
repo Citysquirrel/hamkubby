@@ -254,6 +254,14 @@ export const MarqueeText = ({ text, color, fontSize, fontWeight, opacity = 1, sp
 				opacity={opacity}
 			>
 				{text}
+				{isOverflowing && (
+					<>
+						<Box as="span" px={6} opacity={0.3}>
+							•
+						</Box>
+						<span>{text}</span>
+					</>
+				)}
 			</Box>
 		</Box>
 	);
@@ -434,7 +442,7 @@ export const FastTextarea = ({ serverText, onChange }: { serverText: string; onC
 			height="100%"
 			value={localText}
 			onChange={handleChange}
-			placeholder="곡명 - 가수"
+			placeholder={`곡명 - 가수\n곡명 - 가수\n곡명 - 가수`}
 			resize="none"
 			bg="white"
 			_dark={{ bg: "gray.800" }}
