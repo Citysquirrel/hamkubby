@@ -56,3 +56,99 @@ interface Env {
 export type RequestContext = EventContext<Env, string, Record<string, string>>;
 
 export type SetStateAction<T> = T | ((prevState: T) => T);
+
+declare global {
+	namespace Broadcast {
+		interface Song {
+			id: string;
+			title: string;
+			singer: string;
+			status: "waiting" | "playing" | "done";
+		}
+
+		interface Decoration {
+			id: string;
+			imageUrl: string;
+			position: "absolute" | "relative";
+			top?: string;
+			bottom?: string;
+			left?: string;
+			right?: string;
+			width?: string;
+			zIndex?: number;
+		}
+
+		type FontChoice = "inherit" | "Pretendard" | "Gmarket Sans" | "Noto Sans KR" | "Arial" | "Verdana" | (string & {});
+		interface Typo {
+			font: FontChoice;
+			size: number;
+			color: string;
+		}
+
+		interface ShadowSettings {
+			enabled: boolean;
+			x: number;
+			y: number;
+			blur: number;
+			spread: number;
+			color: string;
+		}
+
+		interface Settings {
+			global: {
+				font: FontChoice;
+				width: number;
+				height: number;
+				padding: number;
+				bgColor: string;
+				borderWidth: number;
+				borderColor: string;
+				borderRadius: number;
+				boxShadow: ShadowSettings;
+			};
+			header: { text: string; align: "left" | "center" | "right"; marginB: number; typo: Typo };
+			footer: { text: string; align: "left" | "center" | "right"; marginT: number; typo: Typo };
+			nowPlaying: {
+				layout: "singleLine" | "doubleLine";
+				showNumber: boolean;
+				bgColor: string;
+				highlightColor: string;
+				padding: number;
+				marginB: number;
+				borderRadius: number;
+				boxShadow: ShadowSettings;
+				numTypo: Typo;
+				titleTypo: Typo;
+				singerTypo: Typo;
+				playingText: { text: string; typo: Typo };
+			};
+			waitingList: {
+				layout: "singleLine" | "doubleLine";
+				showNumber: boolean;
+				bgColor: string;
+				padding: number;
+				gap: number;
+				borderRadius: number;
+				numTypo: Typo;
+				titleTypo: Typo;
+				singerTypo: Typo;
+			};
+			listWrapper: {
+				borderWidth: number;
+				borderColor: string;
+				borderRadius: number;
+				maskFadeTop: number;
+				maskFadeBottom: number;
+				scrollSpeed: number;
+				marqueeSpeed: number;
+			};
+		}
+
+		interface DataPayload {
+			roomId?: string;
+			pin: string;
+			songList: Song[];
+			settings: Settings;
+		}
+	}
+}
