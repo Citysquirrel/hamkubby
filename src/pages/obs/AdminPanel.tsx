@@ -1,4 +1,6 @@
 import { toaster } from "@/components/ui/toaster";
+import { API_BASE_URL } from "@/config/base-url";
+import { useMeta } from "@/hooks/useMeta";
 import { generatePin, generateRoomId } from "@/lib/generate";
 import {
 	Badge,
@@ -8,7 +10,6 @@ import {
 	Flex,
 	Group,
 	Heading,
-	IconButton,
 	Input,
 	NativeSelect,
 	Portal,
@@ -21,8 +22,6 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 import { CustomColorPicker, FastTextarea, NumberField, OverlayContentView, TextField, TypoEditor } from "./lib/comp";
-import { useMeta } from "@/hooks/useMeta";
-import { API_BASE_URL } from "@/config/base-url";
 
 const SOCKET_URL = API_BASE_URL;
 
@@ -245,7 +244,6 @@ export default function AdminPanel() {
 			newSettings.waitingList.borderRadius = 10;
 			newSettings.waitingList.titleTypo.color = "#f1f3f5";
 		} else if (type === "obs") {
-			// OBS 텍스트: 완전 투명 배경에 카드만 직각의 반투명 검정색 (투박한 클래식 느낌)
 			newSettings.global.bgColor = "rgba(0, 0, 0, 0)";
 			newSettings.global.borderWidth = 0;
 			newSettings.global.borderRadius = 0;
@@ -474,7 +472,7 @@ export default function AdminPanel() {
 					<Button size="xs" colorPalette="blue" onClick={() => setIsManualOpen(true)} mr={2}>
 						📖 사용설명서
 					</Button>
-					<Button size="xs" variant="outline" onClick={() => setIsEditorOpen(!isEditorOpen)} mr={4}>
+					<Button size="xs" variant="outline" onClick={handleToggleEditor} mr={4}>
 						{isEditorOpen ? "스타일 편집기 접기 ▴" : "스타일 편집기 열기 ▾"}
 					</Button>
 					{saveStatus === "saving" && <Badge colorPalette="yellow">저장 중...</Badge>}

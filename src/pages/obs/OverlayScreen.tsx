@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from "react";
-import { Box, Center, Flex, Spinner, Text, VStack, Badge } from "@chakra-ui/react";
+import { API_BASE_URL } from "@/config/base-url";
+import { useMeta } from "@/hooks/useMeta";
+import { Box, Center, Spinner, Text, VStack } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { OverlayContentView } from "./lib/comp";
-import { useMeta } from "@/hooks/useMeta";
-import { API_BASE_URL } from "@/config/base-url";
 
 const SOCKET_URL = API_BASE_URL;
 type ConnectionStatus = "loading" | "connected" | "error";

@@ -21,7 +21,11 @@ export const OverlayContentView = ({
 	const playingSong = songsWithNum.find((s) => s.status === "playing");
 	const otherSongs = songsWithNum.filter((s) => s.status !== "playing");
 
-	const scrollDuration = wr.scrollSpeed > 0 ? (otherSongs.length * 5) / wr.scrollSpeed : 0;
+	const repeatCount = otherSongs.length > 0 ? Math.max(2, Math.ceil(12 / otherSongs.length)) : 1;
+
+	const scrollList = Array(repeatCount).fill(otherSongs).flat();
+
+	const scrollDuration = Math.max(5, (otherSongs.length * 2) / Math.max(wr.scrollSpeed * 0.2, 0.1));
 
 	return (
 		<Flex
@@ -38,7 +42,10 @@ export const OverlayContentView = ({
 		>
 			<style>{`
             @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-            @keyframes scrollVertical { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+            @keyframes scrollVertical {
+            	0% { transform: translateY(0); }
+            	100% { transform: translateY(-${100 / repeatCount}%); }
+         	}
 				@keyframes songChangeEffect {
                0% { opacity: 0; transform: translateX(-15px) scale(0.98); filter: blur(4px) brightness(1.5); }
                100% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0) brightness(1); }
@@ -150,7 +157,7 @@ export const OverlayContentView = ({
 						otherSongs.length > 3 && scrollDuration > 0 ? `scrollVertical ${scrollDuration}s linear infinite` : "none"
 					}
 				>
-					{[...otherSongs, ...(otherSongs.length > 3 ? otherSongs : [])].map((song, i) => (
+					{scrollList.map((song, i) => (
 						<Flex
 							key={`${song.id}-${i}`}
 							align={wl.layout === "doubleLine" ? "flex-start" : "center"}

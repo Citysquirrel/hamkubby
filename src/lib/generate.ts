@@ -1,4 +1,4 @@
-import { v4 as uuidv4, v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 
 export const generatePin = () => {
 	const array = new Uint32Array(1);
