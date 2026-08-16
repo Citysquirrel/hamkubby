@@ -65,6 +65,11 @@ export default function OverlayScreen() {
 
 	return (
 		<Box w="100vw" h="100vh" bg="transparent" p={6} overflow="hidden">
+			<style>{`
+            html, body, #root {
+               background-color: transparent !important;
+            }
+         `}</style>
 			<OverlayContentView settings={settings!} songList={songList} />
 		</Box>
 	);
