@@ -99,7 +99,9 @@ declare global {
 				font: FontChoice;
 				width: number;
 				height: number;
-				padding: number;
+				padding?: number;
+				paddingX: number;
+				paddingY: number;
 				bgColor: string;
 				borderWidth: number;
 				borderColor: string;
@@ -113,7 +115,9 @@ declare global {
 				showNumber: boolean;
 				bgColor: string;
 				highlightColor: string;
-				padding: number;
+				padding?: number;
+				paddingX: number;
+				paddingY: number;
 				marginB: number;
 				borderRadius: number;
 				boxShadow: ShadowSettings;
@@ -126,7 +130,9 @@ declare global {
 				layout: "singleLine" | "doubleLine";
 				showNumber: boolean;
 				bgColor: string;
-				padding: number;
+				padding?: number;
+				paddingX: number;
+				paddingY: number;
 				gap: number;
 				borderRadius: number;
 				numTypo: Typo;

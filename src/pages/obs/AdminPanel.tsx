@@ -43,7 +43,8 @@ export default function AdminPanel() {
 	const location = useLocation();
 
 	const [socket, setSocket] = useState<Socket | null>(null);
-	const [pin, setPin] = useState("");
+	const [pin, setPin] = useState(localStorage.getItem(`obs_pin_${roomId}`) || "");
+	const [tempPin, setTempPin] = useState("");
 	const [serverText, setServerText] = useState("");
 	const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 	const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -265,6 +266,13 @@ export default function AdminPanel() {
 	};
 
 	// MARK: - 핸들러
+	const handlePinSubmit = () => {
+		if (!tempPin.trim()) return;
+		localStorage.setItem(`obs_pin_${roomId}`, tempPin);
+		setPin(tempPin);
+		window.location.reload();
+	};
+
 	const handleToggleEditor = () => {
 		const nextState = !isEditorOpen;
 		setIsEditorOpen(nextState);
@@ -388,14 +396,49 @@ export default function AdminPanel() {
 
 	if (isAuthorized === false) {
 		return (
-			<Center h="100vh" flexDir="column" bg="gray.50" _dark={{ bg: "gray.900" }}>
+			<Center h="100vh" flexDir="column" bg="gray.50" _dark={{ bg: "gray.900" }} p={4}>
 				<Heading color="red.500" mb={4}>
 					권한이 없습니다
 				</Heading>
-				<Text mb={6}>존재하는 방이지만, 로컬스토리지에 일치하는 PIN 번호가 없습니다.</Text>
-				<Button colorPalette="blue" onClick={() => navigate(`/obs/admin/${generateRoomId()}`)}>
-					새 방 생성하기
-				</Button>
+				<Text mb={6} textAlign="center" color="gray.600" _dark={{ color: "gray.400" }}>
+					존재하는 방이지만, 접속 권한(PIN)이 일치하지 않습니다.
+					<br />
+					PIN 번호를 알고 계신다면 아래에 입력해 주세요.
+				</Text>
+
+				<Flex gap={2} mb={8} w="full" maxW="300px">
+					<Input
+						type="password"
+						placeholder="PIN 번호"
+						value={tempPin}
+						onChange={(e) => setTempPin(e.target.value)}
+						onKeyDown={(e) => e.key === "Enter" && handlePinSubmit()}
+						bg="white"
+						_dark={{ bg: "gray.800" }}
+						textAlign="center"
+						letterSpacing="widest"
+					/>
+					<Button colorPalette="green" onClick={handlePinSubmit}>
+						접속
+					</Button>
+				</Flex>
+
+				<Box
+					w="full"
+					maxW="300px"
+					borderTop="1px solid"
+					borderColor="gray.300"
+					_dark={{ borderColor: "gray.700" }}
+					pt={6}
+					textAlign="center"
+				>
+					<Text fontSize="sm" color="gray.500" mb={3}>
+						처음 오셨거나 방을 새로 만들고 싶으신가요?
+					</Text>
+					<Button colorPalette="blue" w="full" onClick={() => navigate(`/obs/admin/${generateRoomId()}`)}>
+						새 오버레이 방 생성하기
+					</Button>
+				</Box>
 			</Center>
 		);
 	}
@@ -619,9 +662,14 @@ export default function AdminPanel() {
 										onChange={(v: any) => handleNestedSetting("global", "height", v)}
 									/>
 									<NumberField
-										label="안쪽 여백"
-										value={settings.global.padding}
-										onChange={(v: any) => handleNestedSetting("global", "padding", v)}
+										label="안쪽 가로 여백(X)"
+										value={settings.global.paddingX ?? settings.global.padding ?? 16}
+										onChange={(v: any) => handleNestedSetting("global", "paddingX", v)}
+									/>
+									<NumberField
+										label="안쪽 세로 여백(Y)"
+										value={settings.global.paddingY ?? settings.global.padding ?? 16}
+										onChange={(v: any) => handleNestedSetting("global", "paddingY", v)}
 									/>
 									<NumberField
 										label="모서리 둥글기"
@@ -812,9 +860,14 @@ export default function AdminPanel() {
 
 								<Flex flexWrap="wrap" gap={3} mb={4}>
 									<NumberField
-										label="카드 안쪽 여백"
-										value={settings.nowPlaying.padding}
-										onChange={(v: any) => handleNestedSetting("nowPlaying", "padding", v)}
+										label="카드 안쪽 가로 여백(X)"
+										value={settings.nowPlaying.paddingX ?? settings.nowPlaying.padding ?? 16}
+										onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingX", v)}
+									/>
+									<NumberField
+										label="카드 안쪽 세로 여백(Y)"
+										value={settings.nowPlaying.paddingY ?? settings.nowPlaying.padding ?? 16}
+										onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingY", v)}
 									/>
 									<NumberField
 										label="카드 둥글기"
@@ -903,7 +956,7 @@ export default function AdminPanel() {
 
 									<Box p={3} borderWidth="1px" borderRadius="md" bg="blue.50" _dark={{ bg: "blue.900" }}>
 										<TextField
-											label="[재생 중 텍스트] (비우면 사라짐)"
+											label="[재생 중 텍스트] (비우면 숨김)"
 											value={settings.nowPlaying.playingText.text}
 											onChange={(v: any) =>
 												handleNestedSetting("nowPlaying", "playingText", {
@@ -967,9 +1020,14 @@ export default function AdminPanel() {
 
 								<Flex flexWrap="wrap" gap={3} mb={4}>
 									<NumberField
-										label="안쪽 여백"
-										value={settings.waitingList.padding}
-										onChange={(v: any) => handleNestedSetting("waitingList", "padding", v)}
+										label="안쪽 가로 여백(X)"
+										value={settings.waitingList.paddingX ?? settings.waitingList.padding ?? 12}
+										onChange={(v: any) => handleNestedSetting("waitingList", "paddingX", v)}
+									/>
+									<NumberField
+										label="안쪽 세로 여백(Y)"
+										value={settings.waitingList.paddingY ?? settings.waitingList.padding ?? 12}
+										onChange={(v: any) => handleNestedSetting("waitingList", "paddingY", v)}
 									/>
 									<NumberField
 										label="모서리 곡률"
@@ -1230,6 +1288,8 @@ export default function AdminPanel() {
 										<br />• OBS에서 <b>브라우저 소스</b>를 추가하고 URL에 붙여넣습니다.
 										<br />
 										<Box
+											as="span"
+											display="block"
 											mt={3}
 											p={3}
 											bg="blue.50"
@@ -1240,7 +1300,7 @@ export default function AdminPanel() {
 										>
 											💡 <b>OBS 브라우저 소스 권장 크기 (여유 공간 포함)</b>
 											<br />
-											편집기 설정값보다 <b>가로/세로를 40px 정도 더 크게</b> 설정해야 그림자가 잘리지 않습니다.
+											설정하신 편집기 설정값보다 <b>가로/세로를 40px 정도 더 크게</b> 설정해야 그림자가 잘리지 않습니다.
 											<br />
 											<br />- <b>너비(Width) 추천:</b>{" "}
 											<Text as="span" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
@@ -1248,11 +1308,11 @@ export default function AdminPanel() {
 											</Text>
 											<br />- <b>높이(Height) 추천:</b>{" "}
 											<Text as="span" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
-												{settings.global.height === 0 ? "840px (자동 설정됨)" : `${settings.global.height + 40}px`}
+												{settings.global.height === 0 ? "원하는 높이로 지정" : `${settings.global.height + 40}px`}
 											</Text>
 											<br />
 											<br />
-											<Text fontSize="xs" color="blue.800" _dark={{ color: "blue.100" }}>
+											<Text as="span" fontSize="xs" color="blue.800" _dark={{ color: "blue.100" }}>
 												* 위젯 자체가 400px이라면 OBS 소스는 440px로 설정하세요.
 											</Text>
 										</Box>

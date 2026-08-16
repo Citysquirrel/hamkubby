@@ -1,7 +1,7 @@
-import { Box, ColorPicker, Flex, HStack, Input, NativeSelect, Portal, Text, Textarea } from "@chakra-ui/react";
+import { Box, ColorPicker, Flex, HStack, Input, Marquee, NativeSelect, Portal, Text, Textarea } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
-import { getMask, getShadow, safeParseColor } from "./func";
 import { FONT_OPTIONS } from "../AdminPanel";
+import { getMask, getShadow, safeParseColor } from "./func";
 
 export const OverlayContentView = ({
 	settings,
@@ -21,17 +21,91 @@ export const OverlayContentView = ({
 	const playingSong = songsWithNum.find((s) => s.status === "playing");
 	const otherSongs = songsWithNum.filter((s) => s.status !== "playing");
 
-	const repeatCount = otherSongs.length > 0 ? Math.max(2, Math.ceil(12 / otherSongs.length)) : 1;
+	const listContainerRef = useRef<HTMLDivElement>(null);
+	const originalSetRef = useRef<HTMLDivElement>(null);
+	const [isListOverflowing, setIsListOverflowing] = useState(false);
 
-	const scrollList = Array(repeatCount).fill(otherSongs).flat();
+	useEffect(() => {
+		if (!listContainerRef.current || !originalSetRef.current) return;
 
+		const observer = new ResizeObserver(() => {
+			if (listContainerRef.current && originalSetRef.current) {
+				setIsListOverflowing(originalSetRef.current.scrollHeight > listContainerRef.current.clientHeight);
+			}
+		});
+
+		observer.observe(listContainerRef.current);
+		observer.observe(originalSetRef.current);
+		return () => observer.disconnect();
+	}, [otherSongs.length, settings]);
+
+	// 스크롤 속도
 	const scrollDuration = Math.max(5, (otherSongs.length * 2) / Math.max(wr.scrollSpeed * 0.2, 0.1));
+
+	// 대기열 아이템 렌더
+	const renderSongItem = (song: any, i: number, prefix: string) => (
+		<Flex
+			key={`${prefix}-${song.id}-${i}`}
+			align={wl.layout === "doubleLine" ? "flex-start" : "center"}
+			px={`${wl.paddingX ?? wl.padding ?? 12}px`}
+			py={`${wl.paddingY ?? wl.padding ?? 12}px`}
+			mb={`${wl.gap}px`}
+			bg={wl.bgColor || "transparent"}
+			borderRadius={`${wl.borderRadius}px`}
+			gap={3}
+		>
+			{wl.showNumber && (
+				<Text
+					color={wl.numTypo.color}
+					fontSize={`${wl.numTypo.size}px`}
+					fontFamily={wl.numTypo.font}
+					fontWeight="bold"
+					flexShrink={0}
+				>
+					{song.num}
+				</Text>
+			)}
+			<Flex
+				direction={wl.layout === "doubleLine" ? "column" : "row"}
+				flex={1}
+				overflow="hidden"
+				gap={wl.layout === "doubleLine" ? 0 : 2}
+				align={wl.layout === "singleLine" ? "center" : "flex-start"}
+			>
+				<MarqueeText
+					text={song.title}
+					color={wl.titleTypo.color}
+					fontSize={`${wl.titleTypo.size}px`}
+					fontFamily={wl.titleTypo.font}
+					fontWeight="600"
+					speed={wr.marqueeSpeed}
+				/>
+				{song.singer && (
+					<>
+						{wl.layout === "singleLine" && (
+							<Text color={wl.singerTypo.color} opacity={0.3}>
+								-
+							</Text>
+						)}
+						<MarqueeText
+							text={song.singer}
+							color={wl.singerTypo.color}
+							fontSize={`${wl.singerTypo.size}px`}
+							fontFamily={wl.singerTypo.font}
+							speed={wr.marqueeSpeed}
+						/>
+					</>
+				)}
+			</Flex>
+		</Flex>
+	);
 
 	return (
 		<Flex
 			direction="column"
 			style={{ width: g.width ? `${g.width}px` : "100%", height: g.height ? `${g.height}px` : "100%" }}
-			p={`${g.padding ?? 16}px`}
+			px={`${g.paddingX ?? g.padding ?? 16}px`}
+			py={`${g.paddingY ?? g.padding ?? 16}px`}
 			bg={g.bgColor}
 			border={`${g.borderWidth || 0}px solid ${g.borderColor || "transparent"}`}
 			borderRadius={`${g.borderRadius || 0}px`}
@@ -42,10 +116,7 @@ export const OverlayContentView = ({
 		>
 			<style>{`
             @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-            @keyframes scrollVertical {
-            	0% { transform: translateY(0); }
-            	100% { transform: translateY(-${100 / repeatCount}%); }
-         	}
+            @keyframes scrollVertical { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
 				@keyframes songChangeEffect {
                0% { opacity: 0; transform: translateX(-15px) scale(0.98); filter: blur(4px) brightness(1.5); }
                100% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0) brightness(1); }
@@ -67,7 +138,8 @@ export const OverlayContentView = ({
 			{playingSong && (
 				<Flex
 					key={`playing-card-${playingSong.id}`}
-					p={`${np.padding}px`}
+					px={`${np.paddingX ?? np.padding ?? 16}px`}
+					py={`${np.paddingY ?? np.padding ?? 16}px`}
 					mb={`${np.marginB}px`}
 					bg={np.bgColor}
 					borderRadius={`${np.borderRadius}px`}
@@ -148,70 +220,21 @@ export const OverlayContentView = ({
 				flex={1}
 				overflow="hidden"
 				position="relative"
+				ref={listContainerRef}
 				style={{ maskImage: getMask(wr.maskFadeTop, wr.maskFadeBottom) }}
 				borderRadius={`${wr.borderRadius}px`}
 				border={`${wr.borderWidth}px solid ${wr.borderColor}`}
 			>
 				<Box
 					animation={
-						otherSongs.length > 3 && scrollDuration > 0 ? `scrollVertical ${scrollDuration}s linear infinite` : "none"
+						isListOverflowing && wr.scrollSpeed > 0 ? `scrollVertical ${scrollDuration}s linear infinite` : "none"
 					}
 				>
-					{scrollList.map((song, i) => (
-						<Flex
-							key={`${song.id}-${i}`}
-							align={wl.layout === "doubleLine" ? "flex-start" : "center"}
-							p={`${wl.padding}px`}
-							mb={`${wl.gap}px`}
-							bg={wl.bgColor}
-							borderRadius={`${wl.borderRadius}px`}
-							gap={3}
-						>
-							{wl.showNumber && (
-								<Text
-									color={wl.numTypo.color}
-									fontSize={`${wl.numTypo.size}px`}
-									fontFamily={wl.numTypo.font}
-									fontWeight="bold"
-									flexShrink={0}
-								>
-									{song.num}
-								</Text>
-							)}
-							<Flex
-								direction={wl.layout === "doubleLine" ? "column" : "row"}
-								flex={1}
-								overflow="hidden"
-								gap={wl.layout === "doubleLine" ? 0 : 2}
-								align={wl.layout === "singleLine" ? "center" : "flex-start"}
-							>
-								<MarqueeText
-									text={song.title}
-									color={wl.titleTypo.color}
-									fontSize={`${wl.titleTypo.size}px`}
-									fontFamily={wl.titleTypo.font}
-									fontWeight="600"
-									speed={wr.marqueeSpeed}
-								/>
-								{song.singer && (
-									<>
-										{wl.layout === "singleLine" && (
-											<Text color={wl.singerTypo.color} opacity={0.3}>
-												-
-											</Text>
-										)}
-										<MarqueeText
-											text={song.singer}
-											color={wl.singerTypo.color}
-											fontSize={`${wl.singerTypo.size}px`}
-											fontFamily={wl.singerTypo.font}
-											speed={wr.marqueeSpeed}
-										/>
-									</>
-								)}
-							</Flex>
-						</Flex>
-					))}
+					{/* 첫 번째 원본 세트 (높이 측정) */}
+					<Box ref={originalSetRef}>{otherSongs.map((song, i) => renderSongItem(song, i, "orig"))}</Box>
+
+					{/* 공간이 넘칠 때만 발동하는 복제 세트 */}
+					{isListOverflowing && <Box>{otherSongs.map((song, i) => renderSongItem(song, i, "dup"))}</Box>}
 				</Box>
 			</Box>
 
@@ -230,39 +253,76 @@ export const OverlayContentView = ({
 	);
 };
 
-export const MarqueeText = ({ text, color, fontSize, fontWeight, opacity = 1, speed = 10 }: any) => {
+export const MarqueeText = ({ text, color, fontSize, fontFamily, fontWeight = "normal", speed = 10 }: any) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const textRef = useRef<HTMLDivElement>(null);
 	const [isOverflowing, setIsOverflowing] = useState(false);
 
+	// 진짜 글자 길이를 측정하여 스크롤 여부 결정
 	useEffect(() => {
-		if (containerRef.current && textRef.current) {
-			setIsOverflowing(textRef.current.scrollWidth > containerRef.current.clientWidth);
-		}
-	}, [text]);
+		const checkOverflow = () => {
+			if (containerRef.current && textRef.current) {
+				setIsOverflowing(textRef.current.clientWidth > containerRef.current.clientWidth);
+			}
+		};
+
+		checkOverflow(); // 텍스트 변경 시 즉시 확인
+
+		// 상자 크기가 변할 때(브라우저 리사이징 등)도 재측정
+		const observer = new ResizeObserver(checkOverflow);
+		if (containerRef.current) observer.observe(containerRef.current);
+		return () => observer.disconnect();
+	}, [text, fontSize, fontFamily]);
+
+	// 설정값으로 부터 속도 변환
+	const chakraSpeed = speed * 5;
+	const shouldScroll = isOverflowing && speed > 0;
 
 	return (
-		<Box ref={containerRef} overflow="hidden" whiteSpace="nowrap" w="full">
+		<Box ref={containerRef} w="full" overflow="hidden" position="relative" display="flex" alignItems="center">
+			{/* 길이 측정용 투명 텍스트 */}
 			<Box
 				ref={textRef}
-				display={isOverflowing ? "inline-block" : "block"}
-				animation={isOverflowing ? `marquee ${speed}s linear infinite` : "none"}
-				pl={isOverflowing ? "100%" : "0"}
-				color={color}
+				position="absolute"
+				visibility="hidden"
+				whiteSpace="nowrap"
+				w="max-content"
 				fontSize={fontSize}
+				fontFamily={fontFamily}
 				fontWeight={fontWeight}
-				opacity={opacity}
 			>
 				{text}
-				{isOverflowing && (
-					<>
-						<Box as="span" px={6} opacity={0.3}>
-							•
-						</Box>
-						<span>{text}</span>
-					</>
-				)}
 			</Box>
+
+			{shouldScroll ? (
+				<Marquee.Root speed={chakraSpeed} w="full">
+					<Marquee.Viewport>
+						<Marquee.Content>
+							<Text
+								pr={10}
+								color={color}
+								fontSize={fontSize}
+								fontFamily={fontFamily}
+								fontWeight={fontWeight}
+								whiteSpace="nowrap"
+							>
+								{text}
+							</Text>
+						</Marquee.Content>
+					</Marquee.Viewport>
+				</Marquee.Root>
+			) : (
+				<Text
+					color={color}
+					fontSize={fontSize}
+					fontFamily={fontFamily}
+					fontWeight={fontWeight}
+					whiteSpace="nowrap"
+					truncate
+				>
+					{text}
+				</Text>
+			)}
 		</Box>
 	);
 };

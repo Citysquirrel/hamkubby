@@ -40,7 +40,8 @@ const defaultSettings: Broadcast.Settings = {
 		font: "Pretendard",
 		width: 400,
 		height: 0,
-		padding: 16,
+		paddingX: 16,
+		paddingY: 16,
 		bgColor: "rgba(10, 11, 14, 0.4)", // 반투명 다크 틴트
 		borderWidth: 1,
 		borderColor: "rgba(0, 255, 163, 0.15)",
@@ -54,7 +55,8 @@ const defaultSettings: Broadcast.Settings = {
 		showNumber: true,
 		bgColor: "rgba(24, 25, 28, 0.9)",
 		highlightColor: "#00ffa3",
-		padding: 16,
+		paddingX: 16,
+		paddingY: 16,
 		marginB: 16,
 		borderRadius: 12,
 		boxShadow: chzzkShadow,
@@ -67,7 +69,8 @@ const defaultSettings: Broadcast.Settings = {
 		layout: "singleLine",
 		showNumber: true,
 		bgColor: "rgba(24, 25, 28, 0.6)",
-		padding: 12,
+		paddingX: 12,
+		paddingY: 12,
 		gap: 8,
 		borderRadius: 8,
 		numTypo: { font: "inherit", size: 14, color: "#888888" },
@@ -113,7 +116,7 @@ export const useBroadcastStore = create<BroadcastState>((set) => ({
 	setSongList: (list) => set({ songList: list }),
 	updateSettings: (newSettings) =>
 		set((state) => {
-			const newPast = [...state.pastSettings, state.settings].slice(-50);
+			const newPast = [...state.pastSettings, state.settings].slice(-100);
 			return { settings: newSettings, pastSettings: newPast, futureSettings: [] } as Partial<BroadcastState>;
 		}),
 	syncFromServer: (data) => {
