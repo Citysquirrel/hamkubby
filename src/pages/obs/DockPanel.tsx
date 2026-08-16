@@ -91,8 +91,8 @@ export default function DockPanel() {
 
 	return (
 		<Flex direction="column" h="100vh" w="100vw" bg="gray.900" color="white" overflow="hidden" p={2} gap={2}>
-			<Box bg="gray.800" p={3} borderRadius="md" borderWidth="1px" borderColor="gray.700" flexShrink={0}>
-				<Flex justify="space-between" align="center" mb={2}>
+			<Box bg="gray.800" p={2} borderRadius="md" borderWidth="1px" borderColor="gray.700" flexShrink={0}>
+				<Flex justify="space-between" align="center" mb={1}>
 					<Text fontSize="xs" fontWeight="bold" color="blue.400">
 						현재 재생 곡
 					</Text>
@@ -103,7 +103,7 @@ export default function DockPanel() {
 				{playingSong ? (
 					<Flex align="center" gap={1}>
 						<Text fontWeight="bold" fontSize="md" truncate>
-							{playingSong.title}
+							{Number(playingSong.id.split("-")[1]) + 1}. {playingSong.title}
 						</Text>
 						{playingSong.singer && (
 							<Text fontSize="sm" color="gray.400" truncate>
@@ -118,7 +118,7 @@ export default function DockPanel() {
 				)}
 			</Box>
 
-			<Box flex={1} overflowY="auto" bg="gray.800" borderRadius="md" borderWidth="1px" borderColor="gray.700" p={2}>
+			<Box flex={3} overflowY="auto" bg="gray.800" borderRadius="md" borderWidth="1px" borderColor="gray.700" p={2}>
 				<Flex direction="column" gap={1}>
 					{songList.map((song, idx) => (
 						<Flex
@@ -152,7 +152,7 @@ export default function DockPanel() {
 				</Flex>
 			</Box>
 
-			<Flex direction="column" h="30%" minH="120px" flexShrink={0}>
+			<Flex direction="column" h="30%" minH="120px" flex={2}>
 				<Text fontSize="xs" fontWeight="bold" color="gray.400" mb={1}>
 					곡 목록 일괄 입력
 				</Text>
