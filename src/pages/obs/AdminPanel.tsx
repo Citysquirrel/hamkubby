@@ -1403,26 +1403,34 @@ export default function AdminPanel() {
 									</Flex>
 
 									<Flex flexWrap="wrap" gap={3} mb={4}>
-										<NumberField
-											label="위젯 너비"
-											value={settings.nowWidget.width}
-											onChange={(v: any) => handleNestedSetting("nowWidget", "width", v)}
-										/>
-										<NumberField
-											label="위젯 높이 (0=Auto)"
-											value={settings.nowWidget.height}
-											onChange={(v: any) => handleNestedSetting("nowWidget", "height", v)}
-										/>
-										<NumberField
-											label="가로 여백(X)"
-											value={settings.nowWidget.paddingX}
-											onChange={(v: any) => handleNestedSetting("nowWidget", "paddingX", v)}
-										/>
-										<NumberField
-											label="세로 여백(Y)"
-											value={settings.nowWidget.paddingY}
-											onChange={(v: any) => handleNestedSetting("nowWidget", "paddingY", v)}
-										/>
+										<Flex gap={1}>
+											<NumberField
+												flex={1}
+												label="위젯 너비"
+												value={settings.nowWidget.width}
+												onChange={(v: any) => handleNestedSetting("nowWidget", "width", v)}
+											/>
+											<NumberField
+												flex={1}
+												label="위젯 높이 (0=Auto)"
+												value={settings.nowWidget.height}
+												onChange={(v: any) => handleNestedSetting("nowWidget", "height", v)}
+											/>
+										</Flex>
+										<Flex gap={1}>
+											<NumberField
+												flex={1}
+												label="가로 여백(X)"
+												value={settings.nowWidget.paddingX}
+												onChange={(v: any) => handleNestedSetting("nowWidget", "paddingX", v)}
+											/>
+											<NumberField
+												flex={1}
+												label="세로 여백(Y)"
+												value={settings.nowWidget.paddingY}
+												onChange={(v: any) => handleNestedSetting("nowWidget", "paddingY", v)}
+											/>
+										</Flex>
 										<NumberField
 											label="모서리 둥글기"
 											value={settings.nowWidget.borderRadius}
