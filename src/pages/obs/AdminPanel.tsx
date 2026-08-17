@@ -178,6 +178,15 @@ export default function AdminPanel() {
 
 		newSocket.on("saved", () => setSaveStatus("saved"));
 
+		newSocket.on("saveError", (msg) => {
+			setSaveStatus("idle");
+			toaster.create({
+				title: "저장 실패",
+				description: msg || "서버에 데이터를 저장하지 못했습니다.",
+				type: "error",
+			});
+		});
+
 		return () => {
 			newSocket.disconnect();
 		};
