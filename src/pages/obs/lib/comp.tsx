@@ -40,15 +40,29 @@ export const OverlayContentView = ({
 	useEffect(() => {
 		if (!listContainerRef.current || !originalSetRef.current) return;
 
+		let timer: any;
 		const observer = new ResizeObserver(() => {
-			if (listContainerRef.current && originalSetRef.current) {
-				setIsListOverflowing(originalSetRef.current.scrollHeight > listContainerRef.current.clientHeight);
-			}
+			clearTimeout(timer);
+			timer = setTimeout(() => {
+				if (listContainerRef.current && originalSetRef.current) {
+					const parentH = listContainerRef.current.clientHeight;
+					const contentH = originalSetRef.current.scrollHeight;
+
+					// 2px 높이 버퍼를 주어 리스트 추가/삭제 시 발생하는 무한루프 차단
+					setIsListOverflowing((prev) => {
+						const isOver = contentH > parentH + 2;
+						return prev !== isOver ? isOver : prev;
+					});
+				}
+			}, 100);
 		});
 
 		observer.observe(listContainerRef.current);
 		observer.observe(originalSetRef.current);
-		return () => observer.disconnect();
+		return () => {
+			clearTimeout(timer);
+			observer.disconnect();
+		};
 	}, [otherSongs.length, settings]);
 
 	// 스크롤 속도
@@ -73,6 +87,7 @@ export const OverlayContentView = ({
 					fontFamily={wl.numTypo.font}
 					fontWeight="bold"
 					flexShrink={0}
+					alignSelf="center"
 				>
 					{song.num}
 				</Text>
@@ -140,6 +155,7 @@ export const OverlayContentView = ({
 						fontWeight="bold"
 						flexShrink={0}
 						pl={2}
+						alignSelf={"center"}
 					>
 						{playingSong.num}
 					</Text>
@@ -280,16 +296,29 @@ export const MarqueeText = ({ text, color, fontSize, fontFamily, fontWeight = "n
 	useEffect(() => {
 		const checkOverflow = () => {
 			if (containerRef.current && textRef.current) {
-				setIsOverflowing(textRef.current.clientWidth > containerRef.current.clientWidth);
+				const parentW = containerRef.current.clientWidth;
+				const textW = textRef.current.clientWidth;
+				// [최적화] 2px의 여유 버퍼를 주어 Sub-pixel 계산 오차로 인한 무한 렌더링 방지
+				setIsOverflowing((prev) => {
+					const isOver = textW > parentW + 2;
+					return prev !== isOver ? isOver : prev;
+				});
 			}
 		};
 
 		checkOverflow(); // 텍스트 변경 시 즉시 확인
 
 		// 상자 크기가 변할 때(브라우저 리사이징 등)도 재측정
-		const observer = new ResizeObserver(checkOverflow);
+		let timer: any;
+		const observer = new ResizeObserver(() => {
+			clearTimeout(timer);
+			timer = setTimeout(checkOverflow, 100);
+		});
 		if (containerRef.current) observer.observe(containerRef.current);
-		return () => observer.disconnect();
+		return () => {
+			clearTimeout(timer);
+			observer.disconnect();
+		};
 	}, [text, fontSize, fontFamily]);
 
 	// 설정값으로 부터 속도 변환

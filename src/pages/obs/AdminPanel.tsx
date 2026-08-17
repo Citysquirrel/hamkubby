@@ -139,13 +139,24 @@ export default function AdminPanel() {
 	useEffect(() => {
 		if (!roomId || !pin) return;
 
-		const newSocket = io(SOCKET_URL, { path: "/ws/", query: { roomId } });
+		const newSocket = io(SOCKET_URL, {
+			path: "/ws/",
+			query: { roomId },
+			transports: ["websocket"],
+			reconnectionAttempts: 10,
+		});
 		setSocket(newSocket);
 
 		// 소켓이 연결되면 무조건 서버에 권한(PIN) 확인부터 요청
-		newSocket.on("connect", () => {
+		const authenticate = () => {
 			newSocket.emit("authRoom", { roomId, pin });
-		});
+		};
+		authenticate();
+
+		// 이벤트 생성 전에 이미 소켓이 연결된 경우
+		newSocket.on("connect", authenticate);
+		if (newSocket.connected) {
+		}
 
 		// 서버가 권한을 승인했을 때만 패널 오픈
 		newSocket.on("authSuccess", () => {
@@ -312,6 +323,9 @@ export default function AdminPanel() {
 	};
 
 	const handleTextChange = (val: string) => {
+		// 루프 차단
+		if (val === serverText) return;
+
 		setServerText(val);
 		setSaveStatus("saving");
 
