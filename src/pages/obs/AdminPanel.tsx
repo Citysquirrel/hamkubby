@@ -1611,7 +1611,7 @@ export default function AdminPanel() {
 									colorPalette="pink"
 									onClick={() => handlePreviewModeChange("widget")}
 								>
-									단독 재생 위젯
+									현재 재생 위젯
 								</Button>
 							</Group>
 							{/* 단독 위젯 모드일 때만 URL 복사 버튼 노출 */}
@@ -1622,7 +1622,7 @@ export default function AdminPanel() {
 									variant="surface"
 									onClick={() => handleCopy(`${window.location.origin}/obs/nowplaying/${roomId}`, "단독 위젯 주소")}
 								>
-									단독 위젯 URL 복사
+									현재 재생 위젯 URL 복사
 								</Button>
 							)}
 						</Flex>

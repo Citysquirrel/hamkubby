@@ -361,6 +361,7 @@ export const NowPlayingWidgetView = ({
 					fontWeight="bold"
 					flexShrink={0}
 					pl={2}
+					alignSelf="center"
 				>
 					{playingSong.num}
 				</Text>
