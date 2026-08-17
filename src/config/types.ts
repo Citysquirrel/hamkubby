@@ -149,6 +149,27 @@ declare global {
 				scrollSpeed: number;
 				marqueeSpeed: number;
 			};
+			nowWidget: NowWidgetSettings;
+		}
+
+		interface NowWidgetSettings {
+			width: number;
+			height: number;
+			visibility: "hide" | "showEmpty"; // 곡이 없을 때 숨길지 텍스트 띄울지
+			emptyText: string;
+			animation: "none" | "fade" | "slideUp" | "slideDown" | "slideLeft" | "pop";
+			layout: "singleLine" | "doubleLine";
+			showNumber: boolean;
+			bgColor: string;
+			highlightColor: string;
+			paddingX: number;
+			paddingY: number;
+			borderRadius: number;
+			boxShadow: ShadowSettings;
+			numTypo: Typo;
+			titleTypo: Typo;
+			singerTypo: Typo;
+			playingText: { text: string; typo: Typo };
 		}
 
 		interface DataPayload {

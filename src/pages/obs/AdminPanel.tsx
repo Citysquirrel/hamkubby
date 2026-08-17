@@ -25,6 +25,7 @@ import {
 	CustomColorPicker,
 	FastTextarea,
 	FontAutocomplete,
+	NowPlayingWidgetView,
 	NumberField,
 	OverlayContentView,
 	TextField,
@@ -70,6 +71,8 @@ export default function AdminPanel() {
 		return saved !== null ? JSON.parse(saved) : true;
 	});
 	const [isManualOpen, setIsManualOpen] = useState(false);
+	const [previewMode, setPreviewMode] = useState<"overlay" | "widget">("overlay");
+	const [activeTab, setActiveTab] = useState<string>("global");
 
 	const emitTimerRef = useRef<number | null>(null);
 
@@ -297,7 +300,51 @@ export default function AdminPanel() {
 		if (socket && roomId) socket.emit("updateData", { roomId, pin, songList, settings: newSettings });
 	};
 
+	const applyWidgetPreset = (type: "chzzk" | "darkModern" | "obs") => {
+		const newSettings = JSON.parse(JSON.stringify(settings)) as Broadcast.Settings;
+		if (type === "chzzk") {
+			newSettings.nowWidget.bgColor = "rgba(24, 25, 28, 0.9)";
+			newSettings.nowWidget.highlightColor = "#00ffa3";
+			newSettings.nowWidget.borderRadius = 12;
+			newSettings.nowWidget.boxShadow = {
+				enabled: true,
+				x: 0,
+				y: 0,
+				blur: 15,
+				spread: 0,
+				color: "rgba(0, 255, 163, 0.4)",
+			};
+			newSettings.nowWidget.numTypo.color = "#00ffa3";
+			newSettings.nowWidget.titleTypo.color = "#ffffff";
+			newSettings.nowWidget.playingText.typo.color = "#00ffa3";
+		} else if (type === "darkModern") {
+			newSettings.nowWidget.bgColor = "rgba(25, 27, 33, 0.95)";
+			newSettings.nowWidget.highlightColor = "#339af0";
+			newSettings.nowWidget.borderRadius = 12;
+			newSettings.nowWidget.boxShadow = { enabled: true, x: 0, y: 6, blur: 20, spread: 0, color: "rgba(0, 0, 0, 0.6)" };
+			newSettings.nowWidget.numTypo.color = "#339af0";
+			newSettings.nowWidget.titleTypo.color = "#ffffff";
+			newSettings.nowWidget.playingText.typo.color = "#339af0";
+		} else if (type === "obs") {
+			newSettings.nowWidget.bgColor = "rgba(0, 0, 0, 0.7)";
+			newSettings.nowWidget.highlightColor = "#ffffff";
+			newSettings.nowWidget.borderRadius = 0;
+			newSettings.nowWidget.boxShadow.enabled = false;
+			newSettings.nowWidget.numTypo.color = "#ffffff";
+			newSettings.nowWidget.titleTypo.color = "#ffffff";
+			newSettings.nowWidget.playingText.typo.color = "#ffffff";
+		}
+		setSaveStatus("saving");
+		updateSettings(newSettings);
+		debouncedEmit(songList, newSettings);
+	};
+
 	// MARK: - 핸들러
+	const handlePreviewModeChange = (mode: "overlay" | "widget") => {
+		setPreviewMode(mode);
+		setActiveTab(mode === "overlay" ? "global" : "widgetBasic");
+	};
+
 	const handlePinSubmit = () => {
 		if (!tempPin.trim()) return;
 		localStorage.setItem(`obs_pin_${roomId}`, tempPin);
@@ -382,7 +429,11 @@ export default function AdminPanel() {
 	};
 
 	// 그림자 설정 핸들러
-	const handleShadowSetting = (section: "global" | "nowPlaying", key: keyof Broadcast.ShadowSettings, value: any) => {
+	const handleShadowSetting = (
+		section: "global" | "nowPlaying" | "nowWidget",
+		key: keyof Broadcast.ShadowSettings,
+		value: any,
+	) => {
 		setSaveStatus("saving");
 		const newSettings = {
 			...settings,
@@ -643,567 +694,844 @@ export default function AdminPanel() {
 						overflowY="auto"
 						borderWidth="1px"
 					>
-						<Tabs.Root defaultValue="global" size="sm" variant="line" colorPalette="blue">
-							<Tabs.List bg="white" _dark={{ bg: "gray.900" }} position="sticky" top={0} zIndex={10} px={2}>
-								<Tabs.Trigger value="global">전체/배경</Tabs.Trigger>
-								<Tabs.Trigger value="header">헤더/푸터</Tabs.Trigger>
-								<Tabs.Trigger value="nowPlaying">재생 곡</Tabs.Trigger>
-								<Tabs.Trigger value="waiting">대기 곡</Tabs.Trigger>
-								<Tabs.Trigger value="wrapper">틀/애니메이션</Tabs.Trigger>
-								<Flex gap={1} ml="auto" marginBlock="auto">
-									<Button size="2xs" onClick={handleUndo} disabled={pastSettings.length === 0} variant="outline" px={2}>
-										↩️ 취소
-									</Button>
-									<Button
-										size="2xs"
-										onClick={handleRedo}
-										disabled={futureSettings.length === 0}
-										variant="outline"
-										px={2}
-									>
-										↪️ 복구
-									</Button>
-									<Button size="2xs" colorPalette="green" onClick={() => applyPreset("chzzk")}>
-										치지직
-									</Button>
-									<Button size="2xs" colorPalette="blue" onClick={() => applyPreset("darkModern")}>
-										다크 모던
-									</Button>
-									<Button size="2xs" colorPalette="gray" variant="outline" onClick={() => applyPreset("obs")}>
-										OBS
-									</Button>
-								</Flex>
-							</Tabs.List>
-
-							<Tabs.Content value="global" p={4}>
-								<Box mb={4} w="200px">
-									<Text fontSize="xs" fontWeight="bold" mb={1}>
-										기본 전체 폰트
-									</Text>
-									<FontAutocomplete
-										value={settings.global.font}
-										onChange={(fontName) => handleNestedSetting("global", "font", fontName)}
-										allowInherit={false}
-										size="sm"
-									/>
-								</Box>
-								<Flex flexWrap="wrap" gap={3} mb={3}>
-									<Flex gap={1}>
-										<NumberField
-											flex={1}
-											label="전체 너비"
-											value={settings.global.width}
-											onChange={(v: any) => handleNestedSetting("global", "width", v)}
-										/>
-										<NumberField
-											flex={1}
-											label="전체 높이 (0=Auto)"
-											value={settings.global.height}
-											onChange={(v: any) => handleNestedSetting("global", "height", v)}
-										/>
+						{previewMode === "overlay" ? (
+							<Tabs.Root
+								value={activeTab}
+								onValueChange={(e) => setActiveTab(e.value)}
+								defaultValue="global"
+								size="sm"
+								variant="line"
+								colorPalette="blue"
+							>
+								<Tabs.List bg="white" _dark={{ bg: "gray.900" }} position="sticky" top={0} zIndex={10} px={2}>
+									<Tabs.Trigger value="global">전체/배경</Tabs.Trigger>
+									<Tabs.Trigger value="header">헤더/푸터</Tabs.Trigger>
+									<Tabs.Trigger value="nowPlaying">재생 곡</Tabs.Trigger>
+									<Tabs.Trigger value="waiting">대기 곡</Tabs.Trigger>
+									<Tabs.Trigger value="wrapper">틀/애니메이션</Tabs.Trigger>
+									<Flex gap={1} ml="auto" marginBlock="auto">
+										<Button
+											size="2xs"
+											onClick={handleUndo}
+											disabled={pastSettings.length === 0}
+											variant="outline"
+											px={2}
+										>
+											↩️ 취소
+										</Button>
+										<Button
+											size="2xs"
+											onClick={handleRedo}
+											disabled={futureSettings.length === 0}
+											variant="outline"
+											px={2}
+										>
+											↪️ 복구
+										</Button>
+										<Button size="2xs" colorPalette="green" onClick={() => applyPreset("chzzk")}>
+											치지직
+										</Button>
+										<Button size="2xs" colorPalette="blue" onClick={() => applyPreset("darkModern")}>
+											다크 모던
+										</Button>
+										<Button size="2xs" colorPalette="gray" variant="outline" onClick={() => applyPreset("obs")}>
+											OBS
+										</Button>
 									</Flex>
-									<Flex gap={1}>
-										<NumberField
-											flex={1}
-											label="안쪽 가로 여백(X)"
-											value={settings.global.paddingX ?? settings.global.padding ?? 16}
-											onChange={(v: any) => handleNestedSetting("global", "paddingX", v)}
-										/>
-										<NumberField
-											flex={1}
-											label="안쪽 세로 여백(Y)"
-											value={settings.global.paddingY ?? settings.global.padding ?? 16}
-											onChange={(v: any) => handleNestedSetting("global", "paddingY", v)}
-										/>
-									</Flex>
-									<Flex>
-										<NumberField
-											flex={1}
-											label="모서리 둥글기"
-											value={settings.global.borderRadius}
-											onChange={(v: any) => handleNestedSetting("global", "borderRadius", v)}
-										/>
-										<Box flex={3} />
-									</Flex>
-								</Flex>
-								<Flex flexWrap="wrap" gap={3} mb={4}>
-									<CustomColorPicker
-										label="배경색"
-										value={settings.global.bgColor}
-										onChange={(v: any) => handleNestedSetting("global", "bgColor", v)}
-									/>
-									<CustomColorPicker
-										label="테두리색"
-										value={settings.global.borderColor}
-										onChange={(v: any) => handleNestedSetting("global", "borderColor", v)}
-									/>
-									<Box flex={1}>
-										<NumberField
-											label="테두리 굵기"
-											value={settings.global.borderWidth}
-											onChange={(v: any) => handleNestedSetting("global", "borderWidth", v)}
-										/>
-									</Box>
-								</Flex>
-								<Box p={3} bg="gray.100" _dark={{ bg: "gray.700" }} borderRadius="md">
-									<Switch.Root
-										checked={settings.global.boxShadow.enabled}
-										onCheckedChange={(e) => handleShadowSetting("global", "enabled", e.checked)}
-										mb={2}
-									>
-										<Switch.HiddenInput />
-										<Switch.Control />
-										<Switch.Label fontSize="sm" fontWeight="bold">
-											전체 그림자 켜기
-										</Switch.Label>
-									</Switch.Root>
-									{settings.global.boxShadow.enabled && (
-										<Flex gap={2} align="center">
-											<NumberField
-												label="가로위치(X)"
-												value={settings.global.boxShadow.x}
-												onChange={(v: any) => handleShadowSetting("global", "x", v)}
-											/>
-											<NumberField
-												label="세로위치(Y)"
-												value={settings.global.boxShadow.y}
-												onChange={(v: any) => handleShadowSetting("global", "y", v)}
-											/>
-											<NumberField
-												label="흐림(Blur)"
-												value={settings.global.boxShadow.blur}
-												onChange={(v: any) => handleShadowSetting("global", "blur", v)}
-											/>
-											<NumberField
-												label="크기(Spread)"
-												value={settings.global.boxShadow.spread}
-												onChange={(v: any) => handleShadowSetting("global", "spread", v)}
-											/>
-											<CustomColorPicker
-												label="그림자색"
-												value={settings.global.boxShadow.color}
-												onChange={(v: any) => handleShadowSetting("global", "color", v)}
-											/>
-										</Flex>
-									)}
-								</Box>
-							</Tabs.Content>
+								</Tabs.List>
 
-							<Tabs.Content value="header" p={4}>
-								<Flex gap={6} direction="column">
-									<Box>
-										<Text fontSize="md" fontWeight="bold" mb={2}>
-											헤더 (상단 텍스트)
-										</Text>
-										<TextField
-											label="내용 입력 (비우면 숨김)"
-											value={settings.header.text}
-											onChange={(v: any) => handleNestedSetting("header", "text", v)}
-										/>
-										<Flex gap={3} mt={2} mb={3}>
-											<Box w="full">
-												<Text fontSize="xs" fontWeight="bold" mb={1}>
-													정렬
-												</Text>
-												<NativeSelect.Root size="sm">
-													<NativeSelect.Field
-														bg="white"
-														_dark={{ bg: "gray.700" }}
-														value={settings.header.align}
-														onChange={(e) => handleNestedSetting("header", "align", e.target.value)}
-													>
-														<option value="left">왼쪽</option>
-														<option value="center">가운데</option>
-														<option value="right">오른쪽</option>
-													</NativeSelect.Field>
-												</NativeSelect.Root>
-											</Box>
-											<NumberField
-												label="아래 간격"
-												value={settings.header.marginB}
-												onChange={(v: any) => handleNestedSetting("header", "marginB", v)}
-											/>
-										</Flex>
-										<TypoEditor
-											label="헤더 폰트 스타일"
-											typo={settings.header.typo}
-											onChange={(t) => handleNestedSetting("header", "typo", t)}
-										/>
-									</Box>
-									<Box borderTop="1px solid gray" pt={4}>
-										<Text fontSize="md" fontWeight="bold" mb={2}>
-											푸터 (하단 텍스트)
-										</Text>
-										<TextField
-											label="내용 입력 (비우면 숨김)"
-											value={settings.footer.text}
-											onChange={(v: any) => handleNestedSetting("footer", "text", v)}
-										/>
-										<Flex gap={3} mt={2} mb={3}>
-											<Box w="full">
-												<Text fontSize="xs" fontWeight="bold" mb={1}>
-													정렬
-												</Text>
-												<NativeSelect.Root size="sm">
-													<NativeSelect.Field
-														bg="white"
-														_dark={{ bg: "gray.700" }}
-														value={settings.footer.align}
-														onChange={(e) => handleNestedSetting("footer", "align", e.target.value)}
-													>
-														<option value="left">왼쪽</option>
-														<option value="center">가운데</option>
-														<option value="right">오른쪽</option>
-													</NativeSelect.Field>
-												</NativeSelect.Root>
-											</Box>
-											<NumberField
-												label="위쪽 간격"
-												value={settings.footer.marginT}
-												onChange={(v: any) => handleNestedSetting("footer", "marginT", v)}
-											/>
-										</Flex>
-										<TypoEditor
-											label="푸터 폰트 스타일"
-											typo={settings.footer.typo}
-											onChange={(t) => handleNestedSetting("footer", "typo", t)}
-										/>
-									</Box>
-								</Flex>
-							</Tabs.Content>
-
-							<Tabs.Content value="nowPlaying" p={4}>
-								<Flex gap={4} mb={4} align="center">
-									<Box>
+								<Tabs.Content value="global" p={4}>
+									<Box mb={4} w="200px">
 										<Text fontSize="xs" fontWeight="bold" mb={1}>
-											배열 구조
+											기본 전체 폰트
 										</Text>
-										<Group attached>
-											<Button
-												size="sm"
-												variant={settings.nowPlaying.layout === "singleLine" ? "solid" : "outline"}
-												onClick={() => handleNestedSetting("nowPlaying", "layout", "singleLine")}
-											>
-												1줄 배열
-											</Button>
-											<Button
-												size="sm"
-												variant={settings.nowPlaying.layout === "doubleLine" ? "solid" : "outline"}
-												onClick={() => handleNestedSetting("nowPlaying", "layout", "doubleLine")}
-											>
-												2줄 배열
-											</Button>
-										</Group>
+										<FontAutocomplete
+											value={settings.global.font}
+											onChange={(fontName) => handleNestedSetting("global", "font", fontName)}
+											allowInherit={false}
+											size="sm"
+										/>
 									</Box>
-									<Box pt={5}>
-										<Switch.Root
-											checked={settings.nowPlaying.showNumber}
-											onCheckedChange={(e) => handleNestedSetting("nowPlaying", "showNumber", e.checked)}
-										>
-											<Switch.HiddenInput />
-											<Switch.Control />
-											<Switch.Label fontSize="sm" fontWeight="bold">
-												번호 표시
-											</Switch.Label>
-										</Switch.Root>
-									</Box>
-									<Box pt={5}>
-										<Switch.Root
-											checked={settings.nowPlaying.placeBelow}
-											onCheckedChange={(e) => handleNestedSetting("nowPlaying", "placeBelow", e.checked)}
-										>
-											<Switch.HiddenInput />
-											<Switch.Control />
-											<Switch.Label fontSize="sm" fontWeight="bold">
-												하단 배치
-											</Switch.Label>
-										</Switch.Root>
-									</Box>
-								</Flex>
-
-								<Flex flexWrap="wrap" gap={3} mb={4}>
-									<Flex gap={1}>
-										<NumberField
-											label="카드 안쪽 가로 여백(X)"
-											value={settings.nowPlaying.paddingX ?? settings.nowPlaying.padding ?? 16}
-											onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingX", v)}
-										/>
-										<NumberField
-											label="카드 안쪽 세로 여백(Y)"
-											value={settings.nowPlaying.paddingY ?? settings.nowPlaying.padding ?? 16}
-											onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingY", v)}
-										/>
-									</Flex>
-									<Flex gap={1}>
-										<NumberField
-											label="모서리 둥글기"
-											value={settings.nowPlaying.borderRadius}
-											onChange={(v: any) => handleNestedSetting("nowPlaying", "borderRadius", v)}
-										/>
-										<NumberField
-											label="대기곡과의 간격"
-											value={settings.nowPlaying.marginB}
-											onChange={(v: any) => handleNestedSetting("nowPlaying", "marginB", v)}
-										/>
-									</Flex>
-								</Flex>
-
-								<Flex flexWrap="wrap" gap={3} mb={4}>
-									<CustomColorPicker
-										label="카드 배경색"
-										value={settings.nowPlaying.bgColor}
-										onChange={(v: any) => handleNestedSetting("nowPlaying", "bgColor", v)}
-									/>
-									<CustomColorPicker
-										label="강조 포인트색"
-										value={settings.nowPlaying.highlightColor}
-										onChange={(v: any) => handleNestedSetting("nowPlaying", "highlightColor", v)}
-									/>
-								</Flex>
-
-								<Box p={3} bg="gray.100" _dark={{ bg: "gray.700" }} borderRadius="md" mb={4}>
-									<Switch.Root
-										checked={settings.nowPlaying.boxShadow.enabled}
-										onCheckedChange={(e) => handleShadowSetting("nowPlaying", "enabled", e.checked)}
-										mb={2}
-									>
-										<Switch.HiddenInput />
-										<Switch.Control />
-										<Switch.Label fontSize="sm" fontWeight="bold">
-											빛번짐/네온효과 켜기
-										</Switch.Label>
-									</Switch.Root>
-									{settings.nowPlaying.boxShadow.enabled && (
-										<Flex gap={2} align="center">
+									<Flex flexWrap="wrap" gap={3} mb={3}>
+										<Flex gap={1}>
 											<NumberField
-												label="가로위치(X)"
-												value={settings.nowPlaying.boxShadow.x}
-												onChange={(v: any) => handleShadowSetting("nowPlaying", "x", v)}
+												flex={1}
+												label="전체 너비"
+												value={settings.global.width}
+												onChange={(v: any) => handleNestedSetting("global", "width", v)}
 											/>
 											<NumberField
-												label="세로위치(Y)"
-												value={settings.nowPlaying.boxShadow.y}
-												onChange={(v: any) => handleShadowSetting("nowPlaying", "y", v)}
-											/>
-											<NumberField
-												label="흐림(Blur)"
-												value={settings.nowPlaying.boxShadow.blur}
-												onChange={(v: any) => handleShadowSetting("nowPlaying", "blur", v)}
-											/>
-											<NumberField
-												label="크기(Spread)"
-												value={settings.nowPlaying.boxShadow.spread}
-												onChange={(v: any) => handleShadowSetting("nowPlaying", "spread", v)}
-											/>
-											<CustomColorPicker
-												label="그림자색"
-												value={settings.nowPlaying.boxShadow.color}
-												onChange={(v: any) => handleShadowSetting("nowPlaying", "color", v)}
+												flex={1}
+												label="전체 높이 (0=Auto)"
+												value={settings.global.height}
+												onChange={(v: any) => handleNestedSetting("global", "height", v)}
 											/>
 										</Flex>
-									)}
-								</Box>
-
-								<Flex direction="column" gap={3}>
-									<TypoEditor
-										label="[번호] 스타일"
-										typo={settings.nowPlaying.numTypo}
-										onChange={(t) => handleNestedSetting("nowPlaying", "numTypo", t)}
-									/>
-									<TypoEditor
-										label="[곡명] 스타일"
-										typo={settings.nowPlaying.titleTypo}
-										onChange={(t) => handleNestedSetting("nowPlaying", "titleTypo", t)}
-									/>
-									<TypoEditor
-										label="[가수] 스타일"
-										typo={settings.nowPlaying.singerTypo}
-										onChange={(t) => handleNestedSetting("nowPlaying", "singerTypo", t)}
-									/>
-
-									<Box p={3} borderWidth="1px" borderRadius="md" bg="blue.50" _dark={{ bg: "blue.900" }}>
-										<TextField
-											label="[재생 중 텍스트] (비우면 숨김)"
-											value={settings.nowPlaying.playingText.text}
-											onChange={(v: any) =>
-												handleNestedSetting("nowPlaying", "playingText", {
-													...settings.nowPlaying.playingText,
-													text: v,
-												})
-											}
+										<Flex gap={1}>
+											<NumberField
+												flex={1}
+												label="안쪽 가로 여백(X)"
+												value={settings.global.paddingX ?? settings.global.padding ?? 16}
+												onChange={(v: any) => handleNestedSetting("global", "paddingX", v)}
+											/>
+											<NumberField
+												flex={1}
+												label="안쪽 세로 여백(Y)"
+												value={settings.global.paddingY ?? settings.global.padding ?? 16}
+												onChange={(v: any) => handleNestedSetting("global", "paddingY", v)}
+											/>
+										</Flex>
+										<Flex>
+											<NumberField
+												flex={1}
+												label="모서리 둥글기"
+												value={settings.global.borderRadius}
+												onChange={(v: any) => handleNestedSetting("global", "borderRadius", v)}
+											/>
+											<Box flex={3} />
+										</Flex>
+									</Flex>
+									<Flex flexWrap="wrap" gap={3} mb={4}>
+										<CustomColorPicker
+											label="배경색"
+											value={settings.global.bgColor}
+											onChange={(v: any) => handleNestedSetting("global", "bgColor", v)}
 										/>
-										<Box mt={2}>
+										<CustomColorPicker
+											label="테두리색"
+											value={settings.global.borderColor}
+											onChange={(v: any) => handleNestedSetting("global", "borderColor", v)}
+										/>
+										<Box flex={1}>
+											<NumberField
+												label="테두리 굵기"
+												value={settings.global.borderWidth}
+												onChange={(v: any) => handleNestedSetting("global", "borderWidth", v)}
+											/>
+										</Box>
+									</Flex>
+									<Box p={3} bg="gray.100" _dark={{ bg: "gray.700" }} borderRadius="md">
+										<Switch.Root
+											checked={settings.global.boxShadow.enabled}
+											onCheckedChange={(e) => handleShadowSetting("global", "enabled", e.checked)}
+											mb={2}
+										>
+											<Switch.HiddenInput />
+											<Switch.Control />
+											<Switch.Label fontSize="sm" fontWeight="bold">
+												전체 그림자 켜기
+											</Switch.Label>
+										</Switch.Root>
+										{settings.global.boxShadow.enabled && (
+											<Flex gap={2} align="center">
+												<NumberField
+													label="가로위치(X)"
+													value={settings.global.boxShadow.x}
+													onChange={(v: any) => handleShadowSetting("global", "x", v)}
+												/>
+												<NumberField
+													label="세로위치(Y)"
+													value={settings.global.boxShadow.y}
+													onChange={(v: any) => handleShadowSetting("global", "y", v)}
+												/>
+												<NumberField
+													label="흐림(Blur)"
+													value={settings.global.boxShadow.blur}
+													onChange={(v: any) => handleShadowSetting("global", "blur", v)}
+												/>
+												<NumberField
+													label="크기(Spread)"
+													value={settings.global.boxShadow.spread}
+													onChange={(v: any) => handleShadowSetting("global", "spread", v)}
+												/>
+												<CustomColorPicker
+													label="그림자색"
+													value={settings.global.boxShadow.color}
+													onChange={(v: any) => handleShadowSetting("global", "color", v)}
+												/>
+											</Flex>
+										)}
+									</Box>
+								</Tabs.Content>
+
+								<Tabs.Content value="header" p={4}>
+									<Flex gap={6} direction="column">
+										<Box>
+											<Text fontSize="md" fontWeight="bold" mb={2}>
+												헤더 (상단 텍스트)
+											</Text>
+											<TextField
+												label="내용 입력 (비우면 숨김)"
+												value={settings.header.text}
+												onChange={(v: any) => handleNestedSetting("header", "text", v)}
+											/>
+											<Flex gap={3} mt={2} mb={3}>
+												<Box w="full">
+													<Text fontSize="xs" fontWeight="bold" mb={1}>
+														정렬
+													</Text>
+													<NativeSelect.Root size="sm">
+														<NativeSelect.Field
+															bg="white"
+															_dark={{ bg: "gray.700" }}
+															value={settings.header.align}
+															onChange={(e) => handleNestedSetting("header", "align", e.target.value)}
+														>
+															<option value="left">왼쪽</option>
+															<option value="center">가운데</option>
+															<option value="right">오른쪽</option>
+														</NativeSelect.Field>
+													</NativeSelect.Root>
+												</Box>
+												<NumberField
+													label="아래 간격"
+													value={settings.header.marginB}
+													onChange={(v: any) => handleNestedSetting("header", "marginB", v)}
+												/>
+											</Flex>
 											<TypoEditor
-												label="텍스트 스타일"
-												typo={settings.nowPlaying.playingText.typo}
-												onChange={(t) =>
+												label="헤더 폰트 스타일"
+												typo={settings.header.typo}
+												onChange={(t) => handleNestedSetting("header", "typo", t)}
+											/>
+										</Box>
+										<Box borderTop="1px solid gray" pt={4}>
+											<Text fontSize="md" fontWeight="bold" mb={2}>
+												푸터 (하단 텍스트)
+											</Text>
+											<TextField
+												label="내용 입력 (비우면 숨김)"
+												value={settings.footer.text}
+												onChange={(v: any) => handleNestedSetting("footer", "text", v)}
+											/>
+											<Flex gap={3} mt={2} mb={3}>
+												<Box w="full">
+													<Text fontSize="xs" fontWeight="bold" mb={1}>
+														정렬
+													</Text>
+													<NativeSelect.Root size="sm">
+														<NativeSelect.Field
+															bg="white"
+															_dark={{ bg: "gray.700" }}
+															value={settings.footer.align}
+															onChange={(e) => handleNestedSetting("footer", "align", e.target.value)}
+														>
+															<option value="left">왼쪽</option>
+															<option value="center">가운데</option>
+															<option value="right">오른쪽</option>
+														</NativeSelect.Field>
+													</NativeSelect.Root>
+												</Box>
+												<NumberField
+													label="위쪽 간격"
+													value={settings.footer.marginT}
+													onChange={(v: any) => handleNestedSetting("footer", "marginT", v)}
+												/>
+											</Flex>
+											<TypoEditor
+												label="푸터 폰트 스타일"
+												typo={settings.footer.typo}
+												onChange={(t) => handleNestedSetting("footer", "typo", t)}
+											/>
+										</Box>
+									</Flex>
+								</Tabs.Content>
+
+								<Tabs.Content value="nowPlaying" p={4}>
+									<Flex gap={4} mb={4} align="center">
+										<Box>
+											<Text fontSize="xs" fontWeight="bold" mb={1}>
+												배열 구조
+											</Text>
+											<Group attached>
+												<Button
+													size="sm"
+													variant={settings.nowPlaying.layout === "singleLine" ? "solid" : "outline"}
+													onClick={() => handleNestedSetting("nowPlaying", "layout", "singleLine")}
+												>
+													1줄 배열
+												</Button>
+												<Button
+													size="sm"
+													variant={settings.nowPlaying.layout === "doubleLine" ? "solid" : "outline"}
+													onClick={() => handleNestedSetting("nowPlaying", "layout", "doubleLine")}
+												>
+													2줄 배열
+												</Button>
+											</Group>
+										</Box>
+										<Box pt={5}>
+											<Switch.Root
+												checked={settings.nowPlaying.showNumber}
+												onCheckedChange={(e) => handleNestedSetting("nowPlaying", "showNumber", e.checked)}
+											>
+												<Switch.HiddenInput />
+												<Switch.Control />
+												<Switch.Label fontSize="sm" fontWeight="bold">
+													번호 표시
+												</Switch.Label>
+											</Switch.Root>
+										</Box>
+										<Box pt={5}>
+											<Switch.Root
+												checked={settings.nowPlaying.placeBelow}
+												onCheckedChange={(e) => handleNestedSetting("nowPlaying", "placeBelow", e.checked)}
+											>
+												<Switch.HiddenInput />
+												<Switch.Control />
+												<Switch.Label fontSize="sm" fontWeight="bold">
+													하단 배치
+												</Switch.Label>
+											</Switch.Root>
+										</Box>
+									</Flex>
+
+									<Flex flexWrap="wrap" gap={3} mb={4}>
+										<Flex gap={1}>
+											<NumberField
+												label="카드 안쪽 가로 여백(X)"
+												value={settings.nowPlaying.paddingX ?? settings.nowPlaying.padding ?? 16}
+												onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingX", v)}
+											/>
+											<NumberField
+												label="카드 안쪽 세로 여백(Y)"
+												value={settings.nowPlaying.paddingY ?? settings.nowPlaying.padding ?? 16}
+												onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingY", v)}
+											/>
+										</Flex>
+										<Flex gap={1}>
+											<NumberField
+												label="모서리 둥글기"
+												value={settings.nowPlaying.borderRadius}
+												onChange={(v: any) => handleNestedSetting("nowPlaying", "borderRadius", v)}
+											/>
+											<NumberField
+												label="대기곡과의 간격"
+												value={settings.nowPlaying.marginB}
+												onChange={(v: any) => handleNestedSetting("nowPlaying", "marginB", v)}
+											/>
+										</Flex>
+									</Flex>
+
+									<Flex flexWrap="wrap" gap={3} mb={4}>
+										<CustomColorPicker
+											label="카드 배경색"
+											value={settings.nowPlaying.bgColor}
+											onChange={(v: any) => handleNestedSetting("nowPlaying", "bgColor", v)}
+										/>
+										<CustomColorPicker
+											label="강조 포인트색"
+											value={settings.nowPlaying.highlightColor}
+											onChange={(v: any) => handleNestedSetting("nowPlaying", "highlightColor", v)}
+										/>
+									</Flex>
+
+									<Box p={3} bg="gray.100" _dark={{ bg: "gray.700" }} borderRadius="md" mb={4}>
+										<Switch.Root
+											checked={settings.nowPlaying.boxShadow.enabled}
+											onCheckedChange={(e) => handleShadowSetting("nowPlaying", "enabled", e.checked)}
+											mb={2}
+										>
+											<Switch.HiddenInput />
+											<Switch.Control />
+											<Switch.Label fontSize="sm" fontWeight="bold">
+												빛번짐/네온효과 켜기
+											</Switch.Label>
+										</Switch.Root>
+										{settings.nowPlaying.boxShadow.enabled && (
+											<Flex gap={2} align="center">
+												<NumberField
+													label="가로위치(X)"
+													value={settings.nowPlaying.boxShadow.x}
+													onChange={(v: any) => handleShadowSetting("nowPlaying", "x", v)}
+												/>
+												<NumberField
+													label="세로위치(Y)"
+													value={settings.nowPlaying.boxShadow.y}
+													onChange={(v: any) => handleShadowSetting("nowPlaying", "y", v)}
+												/>
+												<NumberField
+													label="흐림(Blur)"
+													value={settings.nowPlaying.boxShadow.blur}
+													onChange={(v: any) => handleShadowSetting("nowPlaying", "blur", v)}
+												/>
+												<NumberField
+													label="크기(Spread)"
+													value={settings.nowPlaying.boxShadow.spread}
+													onChange={(v: any) => handleShadowSetting("nowPlaying", "spread", v)}
+												/>
+												<CustomColorPicker
+													label="그림자색"
+													value={settings.nowPlaying.boxShadow.color}
+													onChange={(v: any) => handleShadowSetting("nowPlaying", "color", v)}
+												/>
+											</Flex>
+										)}
+									</Box>
+
+									<Flex direction="column" gap={3}>
+										<TypoEditor
+											label="[번호] 스타일"
+											typo={settings.nowPlaying.numTypo}
+											onChange={(t) => handleNestedSetting("nowPlaying", "numTypo", t)}
+										/>
+										<TypoEditor
+											label="[곡명] 스타일"
+											typo={settings.nowPlaying.titleTypo}
+											onChange={(t) => handleNestedSetting("nowPlaying", "titleTypo", t)}
+										/>
+										<TypoEditor
+											label="[가수] 스타일"
+											typo={settings.nowPlaying.singerTypo}
+											onChange={(t) => handleNestedSetting("nowPlaying", "singerTypo", t)}
+										/>
+
+										<Box p={3} borderWidth="1px" borderRadius="md" bg="blue.50" _dark={{ bg: "blue.900" }}>
+											<TextField
+												label="[재생 중 텍스트] (비우면 숨김)"
+												value={settings.nowPlaying.playingText.text}
+												onChange={(v: any) =>
 													handleNestedSetting("nowPlaying", "playingText", {
 														...settings.nowPlaying.playingText,
-														typo: t,
+														text: v,
 													})
 												}
 											/>
+											<Box mt={2}>
+												<TypoEditor
+													label="텍스트 스타일"
+													typo={settings.nowPlaying.playingText.typo}
+													onChange={(t) =>
+														handleNestedSetting("nowPlaying", "playingText", {
+															...settings.nowPlaying.playingText,
+															typo: t,
+														})
+													}
+												/>
+											</Box>
 										</Box>
-									</Box>
-								</Flex>
-							</Tabs.Content>
+									</Flex>
+								</Tabs.Content>
 
-							<Tabs.Content value="waiting" p={4}>
-								<Flex gap={4} mb={4} align="center">
-									<Box>
-										<Text fontSize="xs" fontWeight="bold" mb={1}>
-											배열 구조
+								<Tabs.Content value="waiting" p={4}>
+									<Flex gap={4} mb={4} align="center">
+										<Box>
+											<Text fontSize="xs" fontWeight="bold" mb={1}>
+												배열 구조
+											</Text>
+											<Group attached>
+												<Button
+													size="sm"
+													variant={settings.waitingList.layout === "singleLine" ? "solid" : "outline"}
+													onClick={() => handleNestedSetting("waitingList", "layout", "singleLine")}
+												>
+													1줄 배열
+												</Button>
+												<Button
+													size="sm"
+													variant={settings.waitingList.layout === "doubleLine" ? "solid" : "outline"}
+													onClick={() => handleNestedSetting("waitingList", "layout", "doubleLine")}
+												>
+													2줄 배열
+												</Button>
+											</Group>
+										</Box>
+										<Box pt={5}>
+											<Switch.Root
+												checked={settings.waitingList.showNumber}
+												onCheckedChange={(e) => handleNestedSetting("waitingList", "showNumber", e.checked)}
+											>
+												<Switch.HiddenInput />
+												<Switch.Control />
+												<Switch.Label fontSize="sm" fontWeight="bold">
+													번호 표시
+												</Switch.Label>
+											</Switch.Root>
+										</Box>
+									</Flex>
+
+									<Flex flexWrap="wrap" gap={3} mb={4}>
+										<Flex gap={1}>
+											<NumberField
+												label="안쪽 가로 여백(X)"
+												value={settings.waitingList.paddingX ?? settings.waitingList.padding ?? 12}
+												onChange={(v: any) => handleNestedSetting("waitingList", "paddingX", v)}
+											/>
+											<NumberField
+												label="안쪽 세로 여백(Y)"
+												value={settings.waitingList.paddingY ?? settings.waitingList.padding ?? 12}
+												onChange={(v: any) => handleNestedSetting("waitingList", "paddingY", v)}
+											/>
+										</Flex>
+										<Flex gap={1}>
+											<NumberField
+												label="모서리 둥글기"
+												value={settings.waitingList.borderRadius}
+												onChange={(v: any) => handleNestedSetting("waitingList", "borderRadius", v)}
+											/>
+											<NumberField
+												label="곡 사이 간격"
+												value={settings.waitingList.gap}
+												onChange={(v: any) => handleNestedSetting("waitingList", "gap", v)}
+											/>
+										</Flex>
+									</Flex>
+
+									<Flex flexWrap="wrap" gap={3} mb={4}>
+										<CustomColorPicker
+											label="대기곡 배경색"
+											value={settings.waitingList.bgColor}
+											onChange={(v: any) => handleNestedSetting("waitingList", "bgColor", v)}
+										/>
+									</Flex>
+
+									<Flex direction="column" gap={3}>
+										<TypoEditor
+											label="[번호] 스타일"
+											typo={settings.waitingList.numTypo}
+											onChange={(t) => handleNestedSetting("waitingList", "numTypo", t)}
+										/>
+										<TypoEditor
+											label="[곡명] 스타일"
+											typo={settings.waitingList.titleTypo}
+											onChange={(t) => handleNestedSetting("waitingList", "titleTypo", t)}
+										/>
+										<TypoEditor
+											label="[가수] 스타일"
+											typo={settings.waitingList.singerTypo}
+											onChange={(t) => handleNestedSetting("waitingList", "singerTypo", t)}
+										/>
+									</Flex>
+								</Tabs.Content>
+
+								<Tabs.Content value="wrapper" p={4}>
+									<Box mb={6} p={3} bg="blue.50" _dark={{ bg: "blue.900" }} borderRadius="md">
+										<Text fontWeight="bold" fontSize="md" mb={2}>
+											애니메이션 속도 (0 = 정지)
 										</Text>
-										<Group attached>
+										<Flex gap={4}>
+											<NumberField
+												label="스크롤 속도 (숫자가 클수록 빠름)"
+												value={settings.listWrapper.scrollSpeed}
+												min={0}
+												onChange={(v: any) => handleNestedSetting("listWrapper", "scrollSpeed", v)}
+											/>
+											<NumberField
+												label="전광판 속도 (글자가 길 때)"
+												value={settings.listWrapper.marqueeSpeed}
+												min={0}
+												onChange={(v: any) => handleNestedSetting("listWrapper", "marqueeSpeed", v)}
+											/>
+										</Flex>
+									</Box>
+									<Box mb={6}>
+										<Text fontWeight="bold" fontSize="md" mb={2}>
+											위아래 자연스러운 마스크 페이드 (%)
+										</Text>
+										<Flex gap={4}>
+											<NumberField
+												label="위쪽 흐려짐 (%)"
+												min={0}
+												max={50}
+												value={settings.listWrapper.maskFadeTop}
+												onChange={(v: any) => handleNestedSetting("listWrapper", "maskFadeTop", v)}
+											/>
+											<NumberField
+												label="아래쪽 흐려짐 (%)"
+												min={0}
+												max={50}
+												value={settings.listWrapper.maskFadeBottom}
+												onChange={(v: any) => handleNestedSetting("listWrapper", "maskFadeBottom", v)}
+											/>
+										</Flex>
+									</Box>
+									<Box>
+										<Text fontWeight="bold" fontSize="md" mb={2}>
+											목록 바깥 테두리
+										</Text>
+										<Flex gap={4}>
+											<CustomColorPicker
+												label="테두리색"
+												value={settings.listWrapper.borderColor}
+												onChange={(v: any) => handleNestedSetting("listWrapper", "borderColor", v)}
+											/>
+											<NumberField
+												label="테두리 굵기"
+												value={settings.listWrapper.borderWidth}
+												onChange={(v: any) => handleNestedSetting("listWrapper", "borderWidth", v)}
+											/>
+											<NumberField
+												label="테두리 모서리 둥글기"
+												value={settings.listWrapper.borderRadius}
+												onChange={(v: any) => handleNestedSetting("listWrapper", "borderRadius", v)}
+											/>
+										</Flex>
+									</Box>
+								</Tabs.Content>
+							</Tabs.Root>
+						) : (
+							<Tabs.Root
+								value={activeTab}
+								onValueChange={(e) => setActiveTab(e.value)}
+								defaultValue="widgetBasic"
+								size="sm"
+								variant="line"
+								colorPalette="pink"
+							>
+								<Tabs.List bg="white" _dark={{ bg: "gray.900" }} position="sticky" top={0} zIndex={10} px={2}>
+									<Tabs.Trigger value="widgetBasic">위젯 기본/상태</Tabs.Trigger>
+									<Tabs.Trigger value="widgetTypo">위젯 디자인</Tabs.Trigger>
+									<Flex gap={1} ml="auto" marginBlock="auto">
+										<Button
+											size="2xs"
+											onClick={handleUndo}
+											disabled={pastSettings.length === 0}
+											variant="outline"
+											px={2}
+										>
+											↩️ 취소
+										</Button>
+										<Button
+											size="2xs"
+											onClick={handleRedo}
+											disabled={futureSettings.length === 0}
+											variant="outline"
+											px={2}
+										>
+											↪️ 복구
+										</Button>
+										<Flex gap={1} ml="auto" marginBlock="auto">
+											<Button size="2xs" colorPalette="green" onClick={() => applyWidgetPreset("chzzk")}>
+												치지직
+											</Button>
+											<Button size="2xs" colorPalette="blue" onClick={() => applyWidgetPreset("darkModern")}>
+												다크 모던
+											</Button>
+											<Button size="2xs" colorPalette="gray" variant="outline" onClick={() => applyWidgetPreset("obs")}>
+												OBS
+											</Button>
+										</Flex>
+									</Flex>
+								</Tabs.List>
+
+								<Tabs.Content value="widgetBasic" p={4}>
+									{/* 곡 상태 및 애니메이션 */}
+									<Box mb={5} p={3} bg="pink.50" _dark={{ bg: "pink.900/30" }} borderRadius="md">
+										<Text fontWeight="bold" fontSize="sm" mb={2}>
+											대기 상태 (곡이 없을 때)
+										</Text>
+										<Group attached mb={3}>
 											<Button
 												size="sm"
-												variant={settings.waitingList.layout === "singleLine" ? "solid" : "outline"}
-												onClick={() => handleNestedSetting("waitingList", "layout", "singleLine")}
+												variant={settings.nowWidget.visibility === "hide" ? "solid" : "outline"}
+												onClick={() => handleNestedSetting("nowWidget", "visibility", "hide")}
 											>
-												1줄 배열
+												아예 숨기기 (투명)
 											</Button>
 											<Button
 												size="sm"
-												variant={settings.waitingList.layout === "doubleLine" ? "solid" : "outline"}
-												onClick={() => handleNestedSetting("waitingList", "layout", "doubleLine")}
+												variant={settings.nowWidget.visibility === "showEmpty" ? "solid" : "outline"}
+												onClick={() => handleNestedSetting("nowWidget", "visibility", "showEmpty")}
 											>
-												2줄 배열
+												기본 텍스트 띄우기
 											</Button>
 										</Group>
+										{settings.nowWidget.visibility === "showEmpty" && (
+											<TextField
+												label="기본 텍스트 내용"
+												value={settings.nowWidget.emptyText}
+												onChange={(v: any) => handleNestedSetting("nowWidget", "emptyText", v)}
+											/>
+										)}
+
+										<Box mt={3} pt={3} borderTop="1px solid" borderColor="pink.200" _dark={{ borderColor: "pink.800" }}>
+											<Text fontWeight="bold" fontSize="sm" mb={2}>
+												등장 애니메이션
+											</Text>
+											<NativeSelect.Root size="sm" w="full" maxW="200px">
+												<NativeSelect.Field
+													bg="white"
+													_dark={{ bg: "gray.800" }}
+													value={settings.nowWidget.animation}
+													onChange={(e) => handleNestedSetting("nowWidget", "animation", e.target.value)}
+												>
+													<option value="none">없음 (딱딱하게)</option>
+													<option value="fade">스르륵 나타나기 (Fade)</option>
+													<option value="slideLeft">오른쪽에서 밀고 들어오기</option>
+													<option value="slideUp">아래에서 솟아오르기</option>
+													<option value="slideDown">위에서 떨어지기</option>
+													<option value="pop">통통 튀어오르기 (Pop)</option>
+												</NativeSelect.Field>
+											</NativeSelect.Root>
+										</Box>
 									</Box>
-									<Box pt={5}>
+
+									<Flex gap={4} mb={4} align="center">
+										<Box>
+											<Text fontSize="xs" fontWeight="bold" mb={1}>
+												배열 구조
+											</Text>
+											<Group attached>
+												<Button
+													size="sm"
+													variant={settings.nowWidget.layout === "singleLine" ? "solid" : "outline"}
+													onClick={() => handleNestedSetting("nowWidget", "layout", "singleLine")}
+												>
+													1줄 배열
+												</Button>
+												<Button
+													size="sm"
+													variant={settings.nowWidget.layout === "doubleLine" ? "solid" : "outline"}
+													onClick={() => handleNestedSetting("nowWidget", "layout", "doubleLine")}
+												>
+													2줄 배열
+												</Button>
+											</Group>
+										</Box>
+										<Box pt={5}>
+											<Switch.Root
+												checked={settings.nowWidget.showNumber}
+												onCheckedChange={(e) => handleNestedSetting("nowWidget", "showNumber", e.checked)}
+											>
+												<Switch.HiddenInput />
+												<Switch.Control />
+												<Switch.Label fontSize="sm" fontWeight="bold">
+													번호 표시
+												</Switch.Label>
+											</Switch.Root>
+										</Box>
+									</Flex>
+
+									<Flex flexWrap="wrap" gap={3} mb={4}>
+										<NumberField
+											label="위젯 너비"
+											value={settings.nowWidget.width}
+											onChange={(v: any) => handleNestedSetting("nowWidget", "width", v)}
+										/>
+										<NumberField
+											label="위젯 높이 (0=Auto)"
+											value={settings.nowWidget.height}
+											onChange={(v: any) => handleNestedSetting("nowWidget", "height", v)}
+										/>
+										<NumberField
+											label="가로 여백(X)"
+											value={settings.nowWidget.paddingX}
+											onChange={(v: any) => handleNestedSetting("nowWidget", "paddingX", v)}
+										/>
+										<NumberField
+											label="세로 여백(Y)"
+											value={settings.nowWidget.paddingY}
+											onChange={(v: any) => handleNestedSetting("nowWidget", "paddingY", v)}
+										/>
+										<NumberField
+											label="모서리 둥글기"
+											value={settings.nowWidget.borderRadius}
+											onChange={(v: any) => handleNestedSetting("nowWidget", "borderRadius", v)}
+										/>
+									</Flex>
+
+									<Flex flexWrap="wrap" gap={3} mb={4}>
+										<CustomColorPicker
+											label="카드 배경색"
+											value={settings.nowWidget.bgColor}
+											onChange={(v: any) => handleNestedSetting("nowWidget", "bgColor", v)}
+										/>
+										<CustomColorPicker
+											label="강조 포인트색"
+											value={settings.nowWidget.highlightColor}
+											onChange={(v: any) => handleNestedSetting("nowWidget", "highlightColor", v)}
+										/>
+									</Flex>
+
+									<Box p={3} bg="gray.100" _dark={{ bg: "gray.700" }} borderRadius="md" mb={4}>
 										<Switch.Root
-											checked={settings.waitingList.showNumber}
-											onCheckedChange={(e) => handleNestedSetting("waitingList", "showNumber", e.checked)}
+											checked={settings.nowWidget.boxShadow.enabled}
+											onCheckedChange={(e) => handleShadowSetting("nowWidget", "enabled", e.checked)}
+											mb={2}
 										>
 											<Switch.HiddenInput />
 											<Switch.Control />
 											<Switch.Label fontSize="sm" fontWeight="bold">
-												번호 표시
+												그림자/네온효과 켜기
 											</Switch.Label>
 										</Switch.Root>
+										{settings.nowWidget.boxShadow.enabled && (
+											<Flex gap={2} align="center">
+												<NumberField
+													label="가로(X)"
+													value={settings.nowWidget.boxShadow.x}
+													onChange={(v: any) => handleShadowSetting("nowWidget", "x", v)}
+												/>
+												<NumberField
+													label="세로(Y)"
+													value={settings.nowWidget.boxShadow.y}
+													onChange={(v: any) => handleShadowSetting("nowWidget", "y", v)}
+												/>
+												<NumberField
+													label="흐림(Blur)"
+													value={settings.nowWidget.boxShadow.blur}
+													onChange={(v: any) => handleShadowSetting("nowWidget", "blur", v)}
+												/>
+												<NumberField
+													label="크기(Spread)"
+													value={settings.nowWidget.boxShadow.spread}
+													onChange={(v: any) => handleShadowSetting("nowWidget", "spread", v)}
+												/>
+												<CustomColorPicker
+													label="색상"
+													value={settings.nowWidget.boxShadow.color}
+													onChange={(v: any) => handleShadowSetting("nowWidget", "color", v)}
+												/>
+											</Flex>
+										)}
 									</Box>
-								</Flex>
+								</Tabs.Content>
 
-								<Flex flexWrap="wrap" gap={3} mb={4}>
-									<Flex gap={1}>
-										<NumberField
-											label="안쪽 가로 여백(X)"
-											value={settings.waitingList.paddingX ?? settings.waitingList.padding ?? 12}
-											onChange={(v: any) => handleNestedSetting("waitingList", "paddingX", v)}
+								<Tabs.Content value="widgetTypo" p={4}>
+									<Flex direction="column" gap={3}>
+										<TypoEditor
+											label="[번호] 스타일"
+											typo={settings.nowWidget.numTypo}
+											onChange={(t) => handleNestedSetting("nowWidget", "numTypo", t)}
 										/>
-										<NumberField
-											label="안쪽 세로 여백(Y)"
-											value={settings.waitingList.paddingY ?? settings.waitingList.padding ?? 12}
-											onChange={(v: any) => handleNestedSetting("waitingList", "paddingY", v)}
+										<TypoEditor
+											label="[곡명] 스타일"
+											typo={settings.nowWidget.titleTypo}
+											onChange={(t) => handleNestedSetting("nowWidget", "titleTypo", t)}
 										/>
+										<TypoEditor
+											label="[가수] 스타일"
+											typo={settings.nowWidget.singerTypo}
+											onChange={(t) => handleNestedSetting("nowWidget", "singerTypo", t)}
+										/>
+										<Box p={3} borderWidth="1px" borderRadius="md" bg="pink.50" _dark={{ bg: "pink.900/20" }}>
+											<TextField
+												label="[재생 중 텍스트] (비우면 숨김)"
+												value={settings.nowWidget.playingText.text}
+												onChange={(v: any) =>
+													handleNestedSetting("nowWidget", "playingText", {
+														...settings.nowWidget.playingText,
+														text: v,
+													})
+												}
+											/>
+											<Box mt={2}>
+												<TypoEditor
+													label="텍스트 스타일"
+													typo={settings.nowWidget.playingText.typo}
+													onChange={(t) =>
+														handleNestedSetting("nowWidget", "playingText", {
+															...settings.nowWidget.playingText,
+															typo: t,
+														})
+													}
+												/>
+											</Box>
+										</Box>
 									</Flex>
-									<Flex gap={1}>
-										<NumberField
-											label="모서리 둥글기"
-											value={settings.waitingList.borderRadius}
-											onChange={(v: any) => handleNestedSetting("waitingList", "borderRadius", v)}
-										/>
-										<NumberField
-											label="곡 사이 간격"
-											value={settings.waitingList.gap}
-											onChange={(v: any) => handleNestedSetting("waitingList", "gap", v)}
-										/>
-									</Flex>
-								</Flex>
-
-								<Flex flexWrap="wrap" gap={3} mb={4}>
-									<CustomColorPicker
-										label="대기곡 배경색"
-										value={settings.waitingList.bgColor}
-										onChange={(v: any) => handleNestedSetting("waitingList", "bgColor", v)}
-									/>
-								</Flex>
-
-								<Flex direction="column" gap={3}>
-									<TypoEditor
-										label="[번호] 스타일"
-										typo={settings.waitingList.numTypo}
-										onChange={(t) => handleNestedSetting("waitingList", "numTypo", t)}
-									/>
-									<TypoEditor
-										label="[곡명] 스타일"
-										typo={settings.waitingList.titleTypo}
-										onChange={(t) => handleNestedSetting("waitingList", "titleTypo", t)}
-									/>
-									<TypoEditor
-										label="[가수] 스타일"
-										typo={settings.waitingList.singerTypo}
-										onChange={(t) => handleNestedSetting("waitingList", "singerTypo", t)}
-									/>
-								</Flex>
-							</Tabs.Content>
-
-							<Tabs.Content value="wrapper" p={4}>
-								<Box mb={6} p={3} bg="blue.50" _dark={{ bg: "blue.900" }} borderRadius="md">
-									<Text fontWeight="bold" fontSize="md" mb={2}>
-										애니메이션 속도 (0 = 정지)
-									</Text>
-									<Flex gap={4}>
-										<NumberField
-											label="스크롤 속도 (숫자가 클수록 빠름)"
-											value={settings.listWrapper.scrollSpeed}
-											min={0}
-											onChange={(v: any) => handleNestedSetting("listWrapper", "scrollSpeed", v)}
-										/>
-										<NumberField
-											label="전광판 속도 (글자가 길 때)"
-											value={settings.listWrapper.marqueeSpeed}
-											min={0}
-											onChange={(v: any) => handleNestedSetting("listWrapper", "marqueeSpeed", v)}
-										/>
-									</Flex>
-								</Box>
-								<Box mb={6}>
-									<Text fontWeight="bold" fontSize="md" mb={2}>
-										위아래 자연스러운 마스크 페이드 (%)
-									</Text>
-									<Flex gap={4}>
-										<NumberField
-											label="위쪽 흐려짐 (%)"
-											min={0}
-											max={50}
-											value={settings.listWrapper.maskFadeTop}
-											onChange={(v: any) => handleNestedSetting("listWrapper", "maskFadeTop", v)}
-										/>
-										<NumberField
-											label="아래쪽 흐려짐 (%)"
-											min={0}
-											max={50}
-											value={settings.listWrapper.maskFadeBottom}
-											onChange={(v: any) => handleNestedSetting("listWrapper", "maskFadeBottom", v)}
-										/>
-									</Flex>
-								</Box>
-								<Box>
-									<Text fontWeight="bold" fontSize="md" mb={2}>
-										목록 바깥 테두리
-									</Text>
-									<Flex gap={4}>
-										<CustomColorPicker
-											label="테두리색"
-											value={settings.listWrapper.borderColor}
-											onChange={(v: any) => handleNestedSetting("listWrapper", "borderColor", v)}
-										/>
-										<NumberField
-											label="테두리 굵기"
-											value={settings.listWrapper.borderWidth}
-											onChange={(v: any) => handleNestedSetting("listWrapper", "borderWidth", v)}
-										/>
-										<NumberField
-											label="테두리 모서리 둥글기"
-											value={settings.listWrapper.borderRadius}
-											onChange={(v: any) => handleNestedSetting("listWrapper", "borderRadius", v)}
-										/>
-									</Flex>
-								</Box>
-							</Tabs.Content>
-						</Tabs.Root>
+								</Tabs.Content>
+							</Tabs.Root>
+						)}
 					</Box>
 					<Flex display={isListEditorOpen ? "flex" : "none"} gap={4} flex={1} minH="250px">
 						<Box display="flex" flexDirection="column" flex={2}>
@@ -1264,11 +1592,40 @@ export default function AdminPanel() {
 					</Flex>
 				</Flex>
 
+				{/* 미리보기 영역 */}
 				<Flex direction="column" flex={1} bg="gray.900" borderRadius="md" p={4} overflow="hidden">
 					<Flex justify="space-between" align="center" mb={4}>
-						<Text color="white" fontWeight="bold">
-							오버레이 미리보기
-						</Text>
+						<Flex align="center" gap={4}>
+							<Group attached>
+								<Button
+									size="sm"
+									variant={previewMode === "overlay" ? "solid" : "outline"}
+									colorPalette="blue"
+									onClick={() => handlePreviewModeChange("overlay")}
+								>
+									전체 오버레이
+								</Button>
+								<Button
+									size="sm"
+									variant={previewMode === "widget" ? "solid" : "outline"}
+									colorPalette="pink"
+									onClick={() => handlePreviewModeChange("widget")}
+								>
+									단독 재생 위젯
+								</Button>
+							</Group>
+							{/* 단독 위젯 모드일 때만 URL 복사 버튼 노출 */}
+							{previewMode === "widget" && (
+								<Button
+									size="xs"
+									colorPalette="pink"
+									variant="surface"
+									onClick={() => handleCopy(`${window.location.origin}/obs/nowplaying/${roomId}`, "단독 위젯 주소")}
+								>
+									단독 위젯 URL 복사
+								</Button>
+							)}
+						</Flex>
 						<Button size="sm" onClick={() => setIsFullscreen(true)}>
 							전체화면
 						</Button>
@@ -1281,7 +1638,12 @@ export default function AdminPanel() {
 						bgPos="0 0, 0 10px, 10px -10px, -10px 0px"
 						borderRadius="md"
 					>
-						{previewSettings && <OverlayContentView settings={previewSettings} songList={previewSongList} />}
+						{previewSettings && previewMode === "overlay" && (
+							<OverlayContentView settings={previewSettings} songList={previewSongList} />
+						)}
+						{previewSettings && previewMode === "widget" && (
+							<NowPlayingWidgetView settings={previewSettings} songList={previewSongList} />
+						)}
 					</Center>
 				</Flex>
 			</Flex>
@@ -1300,7 +1662,11 @@ export default function AdminPanel() {
 							닫기 (ESC)
 						</Button>
 						<Center w="full" h="full">
-							<OverlayContentView settings={previewSettings} songList={previewSongList} />
+							{previewMode === "overlay" ? (
+								<OverlayContentView settings={previewSettings} songList={previewSongList} />
+							) : (
+								<NowPlayingWidgetView settings={previewSettings} songList={previewSongList} />
+							)}
 						</Center>
 					</Box>
 				</Portal>

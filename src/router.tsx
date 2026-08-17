@@ -5,6 +5,7 @@ import App from "./App";
 import { generateRoomId, isValidRoomId } from "./lib/generate";
 import SongBook from "./pages/SongBook";
 import DockPanel from "./pages/obs/DockPanel";
+import NowPlayingWidgetScreen from "./pages/obs/NowPlayingWidgetScreen";
 
 const findLastManagedRoom = () => {
 	for (let i = 0; i < localStorage.length; i++) {
@@ -46,13 +47,17 @@ export const router = createBrowserRouter([
 					if (!isValidRoomId(params.roomId)) {
 						return redirectToRoom();
 					}
-					return null; // 정상 통과
+					return null;
 				},
 				element: <AdminPanel />,
 			},
 			{
 				path: "overlay/:roomId",
 				element: <OverlayScreen />,
+			},
+			{
+				path: "nowplaying/:roomId",
+				element: <NowPlayingWidgetScreen />,
 			},
 			{
 				path: "dock/:roomId",

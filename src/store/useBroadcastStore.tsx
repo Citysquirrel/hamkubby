@@ -87,6 +87,25 @@ const defaultSettings: Broadcast.Settings = {
 		scrollSpeed: 5,
 		marqueeSpeed: 10,
 	},
+	nowWidget: {
+		width: 400,
+		height: 0,
+		visibility: "hide",
+		emptyText: "재생 중인 곡이 없습니다",
+		animation: "slideLeft",
+		layout: "singleLine",
+		showNumber: true,
+		bgColor: "rgba(24, 25, 28, 0.9)",
+		highlightColor: "#00ffa3",
+		paddingX: 16,
+		paddingY: 16,
+		borderRadius: 12,
+		boxShadow: { enabled: true, x: 0, y: 0, blur: 15, spread: 0, color: "rgba(0, 255, 163, 0.4)" },
+		numTypo: { font: "inherit", size: 16, color: "#00ffa3" },
+		titleTypo: { font: "inherit", size: 22, color: "#ffffff" },
+		singerTypo: { font: "inherit", size: 15, color: "#aaaaaa" },
+		playingText: { text: "ON AIR", typo: { font: "inherit", size: 12, color: "#00ffa3" } },
+	},
 };
 
 export const useBroadcastStore = create<BroadcastState>((set) => ({
@@ -128,6 +147,7 @@ export const useBroadcastStore = create<BroadcastState>((set) => ({
 			nowPlaying: { ...defaultSettings.nowPlaying, ...(data.settings?.nowPlaying || {}) },
 			waitingList: { ...defaultSettings.waitingList, ...(data.settings?.waitingList || {}) },
 			listWrapper: { ...defaultSettings.listWrapper, ...(data.settings?.listWrapper || {}) },
+			nowWidget: { ...defaultSettings.nowWidget, ...(data.settings?.nowWidget || {}) },
 		};
 		set({ songList: data.songList, settings: mergedSettings });
 	},

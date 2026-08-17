@@ -1,3 +1,4 @@
+import { toaster } from "@/components/ui/toaster";
 import {
 	Box,
 	Button,
@@ -13,7 +14,6 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getMask, getShadow, safeParseColor } from "./func";
-import { toaster } from "@/components/ui/toaster";
 
 export const OverlayContentView = ({
 	settings,
@@ -100,6 +100,7 @@ export const OverlayContentView = ({
 				align={wl.layout === "singleLine" ? "center" : "flex-start"}
 			>
 				<MarqueeText
+					flex={3}
 					text={song.title}
 					color={wl.titleTypo.color}
 					fontSize={`${wl.titleTypo.size}px`}
@@ -115,6 +116,7 @@ export const OverlayContentView = ({
 							</Text>
 						)}
 						<MarqueeText
+							flex={2}
 							text={song.singer}
 							color={wl.singerTypo.color}
 							fontSize={`${wl.singerTypo.size}px`}
@@ -170,6 +172,7 @@ export const OverlayContentView = ({
 					pl={np.showNumber ? 0 : 2}
 				>
 					<MarqueeText
+						flex={3}
 						text={playingSong.title}
 						color={np.titleTypo.color}
 						fontSize={`${np.titleTypo.size}px`}
@@ -185,6 +188,7 @@ export const OverlayContentView = ({
 								</Text>
 							)}
 							<MarqueeText
+								flex={2}
 								text={playingSong.singer}
 								color={np.singerTypo.color}
 								fontSize={`${np.singerTypo.size}px`}
@@ -248,6 +252,7 @@ export const OverlayContentView = ({
 
 			{!np.placeBelow && renderNowPlaying()}
 
+			{/* 세트리스트 */}
 			<Box
 				flex={1}
 				overflow="hidden"
@@ -287,7 +292,143 @@ export const OverlayContentView = ({
 	);
 };
 
-export const MarqueeText = ({ text, color, fontSize, fontFamily, fontWeight = "normal", speed = 10 }: any) => {
+export const NowPlayingWidgetView = ({
+	settings,
+	songList,
+}: {
+	settings: Broadcast.Settings;
+	songList: Broadcast.Song[];
+}) => {
+	const nw = settings.nowWidget;
+	console.log(nw.width);
+	const playingSong = songList.map((s, idx) => ({ ...s, num: idx + 1 })).find((s) => s.status === "playing");
+
+	if (!playingSong && nw.visibility === "hide") {
+		return null;
+	}
+
+	const titleText = playingSong ? playingSong.title : nw.emptyText;
+	const singerText = playingSong ? playingSong.singer : "";
+
+	const getAnimation = (type: string) => {
+		switch (type) {
+			case "fade":
+				return "fadeIn 0.5s ease forwards";
+			case "slideLeft":
+				return "slideLeft 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards";
+			case "slideUp":
+				return "slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards";
+			case "slideDown":
+				return "slideDown 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards";
+			case "pop":
+				return "pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards";
+			default:
+				return "none";
+		}
+	};
+
+	return (
+		<Flex
+			key={playingSong ? `widget-${playingSong.id}` : "widget-empty"}
+			animation={getAnimation(nw.animation)}
+			w={nw.width ? `${nw.width}px` : "full"}
+			h={nw.height ? `${nw.height}px` : "auto"}
+			px={`${nw.paddingX}px`}
+			py={`${nw.paddingY}px`}
+			bg={nw.bgColor}
+			borderRadius={`${nw.borderRadius}px`}
+			boxShadow={getShadow(nw.boxShadow)}
+			align={nw.layout === "doubleLine" ? "flex-start" : "center"}
+			gap={3}
+			position="relative"
+			overflow="hidden"
+			fontFamily="inherit"
+		>
+			<style>{`
+            @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+            @keyframes slideLeft { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
+            @keyframes slideUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+            @keyframes slideDown { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+            @keyframes pop { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+         `}</style>
+			<Box position="absolute" left={0} top={0} bottom={0} w="4px" bg={nw.highlightColor} />
+
+			{nw.showNumber && playingSong && (
+				<Text
+					color={nw.numTypo.color}
+					fontSize={`${nw.numTypo.size}px`}
+					fontFamily={nw.numTypo.font}
+					fontWeight="bold"
+					flexShrink={0}
+					pl={2}
+				>
+					{playingSong.num}
+				</Text>
+			)}
+
+			<Flex
+				direction={nw.layout === "doubleLine" ? "column" : "row"}
+				flex={1}
+				overflow="hidden"
+				gap={nw.layout === "doubleLine" ? 0 : 2}
+				align={nw.layout === "singleLine" ? "center" : "flex-start"}
+				pl={nw.showNumber && playingSong ? 0 : 2}
+			>
+				<MarqueeText
+					flex={3}
+					text={titleText}
+					color={nw.titleTypo.color}
+					fontSize={`${nw.titleTypo.size}px`}
+					fontFamily={nw.titleTypo.font}
+					fontWeight="800"
+					speed={10}
+				/>
+
+				{singerText && (
+					<>
+						{nw.layout === "singleLine" && (
+							<Text color={nw.singerTypo.color} opacity={0.5}>
+								|
+							</Text>
+						)}
+						<MarqueeText
+							flex={2}
+							text={singerText}
+							color={nw.singerTypo.color}
+							fontSize={`${nw.singerTypo.size}px`}
+							fontFamily={nw.singerTypo.font}
+							speed={10}
+						/>
+					</>
+				)}
+			</Flex>
+
+			{nw.playingText.text && (
+				<Text
+					ml="auto"
+					flexShrink={0}
+					pr={2}
+					color={nw.playingText.typo.color}
+					fontSize={`${nw.playingText.typo.size}px`}
+					fontFamily={nw.playingText.typo.font}
+					fontWeight="bold"
+				>
+					{nw.playingText.text}
+				</Text>
+			)}
+		</Flex>
+	);
+};
+
+export const MarqueeText = ({
+	text,
+	color,
+	fontSize,
+	fontFamily,
+	fontWeight = "normal",
+	speed = 10,
+	...props
+}: any) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const textRef = useRef<HTMLDivElement>(null);
 	const [isOverflowing, setIsOverflowing] = useState(false);
@@ -326,7 +467,15 @@ export const MarqueeText = ({ text, color, fontSize, fontFamily, fontWeight = "n
 	const shouldScroll = isOverflowing && speed > 0;
 
 	return (
-		<Box ref={containerRef} w="full" overflow="hidden" position="relative" display="flex" alignItems="center">
+		<Box
+			ref={containerRef}
+			w="full"
+			overflow="hidden"
+			position="relative"
+			display="flex"
+			alignItems="center"
+			{...props}
+		>
 			{/* 길이 측정용 투명 텍스트 */}
 			<Box
 				ref={textRef}
