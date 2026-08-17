@@ -6,11 +6,13 @@ import {
 	Clipboard,
 	CloseButton,
 	Dialog,
+	Flex,
 	Heading,
 	HStack,
 	IconButton,
 	Link,
 	List,
+	Menu,
 	Portal,
 	Stack,
 	Text,
@@ -21,6 +23,7 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { MdContentCopy, MdKeyboardDoubleArrowUp, MdOutlineQuestionMark, MdSearch } from "react-icons/md";
 import { PiCheese } from "react-icons/pi";
 import { SiGooglesheets } from "react-icons/si";
+import { FiCast, FiEdit, FiMenu, FiShare2, FiTrash2 } from "react-icons/fi";
 import { Outlet } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 import Cursor from "./components/Cursor";
@@ -80,7 +83,7 @@ function App() {
 
 	const parseRawData = (rawData: RawSongData[]): Song[] => {
 		return rawData
-			.filter((song) => song.isActive) // isActive true 필터
+			.filter((song) => song.isActive)
 			.map((song) => {
 				const { synonyms, isActive, ...restSong } = song;
 
@@ -249,12 +252,14 @@ function App() {
 			<Cursor />
 			<LoadingCanvas isLoading={isLoading} />
 			<Stack minH="100vh" color="fg" justifyContent={"space-between"}>
+				{/* 우측 상단 버튼바 */}
 				<HStack flexDirection={"row-reverse"} position="fixed" right="8px" top="8px" zIndex={999}>
+					<HamburgerDropdown />
 					<ColorModeButtonFixed />
-					<SheetButton />
 					<ProfileButton isProfileOpen={isProfileOpen} setIsProfileOpen={setIsProfileOpen} />
 				</HStack>
 
+				{/* 우측 하단 버튼바 */}
 				<HStack flexDirection={"row-reverse"} position="fixed" right="8px" bottom="8px" zIndex={999}>
 					<Notice />
 					<IconButton
@@ -346,6 +351,84 @@ function ProfileButton({
 		>
 			{isProfileOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
 		</IconButton>
+	);
+}
+
+function HamburgerDropdown() {
+	return (
+		<Box>
+			<style>{`
+            @keyframes slideDownFade {
+               0% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+               100% { opacity: 1; transform: translateY(0) scale(1); }
+            }
+         `}</style>
+
+			<Menu.Root positioning={{ placement: "bottom-end", offset: { mainAxis: 8 } }}>
+				<Menu.Trigger asChild>
+					<IconButton
+						variant="outline"
+						aria-label="open menu"
+						size="xs"
+						borderRadius="full"
+						css={{
+							_icon: {
+								width: "3.5",
+								height: "3.5",
+							},
+						}}
+					>
+						<FiMenu />
+					</IconButton>
+				</Menu.Trigger>
+
+				{/* 드롭다운 내용 */}
+				<Portal>
+					<Menu.Positioner>
+						<Menu.Content
+							animation="slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+							transformOrigin="top right"
+							minW="140px"
+							p={1.5}
+							bg="white"
+							_dark={{ bg: "gray.800", borderColor: "gray.700" }}
+							borderRadius="md"
+							boxShadow="lg"
+							borderWidth="1px"
+						>
+							<Menu.Item
+								value="edit"
+								cursor="pointer"
+								p={2}
+								borderRadius="sm"
+								_hover={{ bg: "gray.100", _dark: { bg: "gray.700" } }}
+								onClick={() => {
+									window.open(SONGBOOK_URL, "_blank");
+								}}
+							>
+								<Flex gap={2} align="center">
+									<SiGooglesheets size={14} />
+									<Text fontSize="sm">시트 열기</Text>
+								</Flex>
+							</Menu.Item>
+							<Menu.Item
+								value="edit"
+								cursor="pointer"
+								p={2}
+								borderRadius="sm"
+								_hover={{ bg: "gray.100", _dark: { bg: "gray.700" } }}
+								onClick={() => window.open("/obs/admin", "_blank")}
+							>
+								<Flex gap={2} align="center">
+									<FiCast size={14} />
+									<Text fontSize="sm">오버레이 관리</Text>
+								</Flex>
+							</Menu.Item>
+						</Menu.Content>
+					</Menu.Positioner>
+				</Portal>
+			</Menu.Root>
+		</Box>
 	);
 }
 
