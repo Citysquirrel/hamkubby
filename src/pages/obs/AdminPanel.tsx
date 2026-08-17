@@ -61,8 +61,12 @@ export default function AdminPanel() {
 	const [isRoomInfoOpen, setIsRoomInfoOpen] = useState(false);
 	const [previewSettings, setPreviewSettings] = useState<Broadcast.Settings | null>(null);
 	const [previewSongList, setPreviewSongList] = useState<Broadcast.Song[]>([]);
-	const [isEditorOpen, setIsEditorOpen] = useState<boolean>(() => {
+	const [isStyleEditorOpen, setIsStyleEditorOpen] = useState<boolean>(() => {
 		const saved = localStorage.getItem("style_editor_open");
+		return saved !== null ? JSON.parse(saved) : true;
+	});
+	const [isListEditorOpen, setIsListEditorOpen] = useState<boolean>(() => {
+		const saved = localStorage.getItem("list_editor_open");
 		return saved !== null ? JSON.parse(saved) : true;
 	});
 	const [isManualOpen, setIsManualOpen] = useState(false);
@@ -281,10 +285,16 @@ export default function AdminPanel() {
 		window.location.reload();
 	};
 
-	const handleToggleEditor = () => {
-		const nextState = !isEditorOpen;
-		setIsEditorOpen(nextState);
+	const handleToggleStyleEditor = () => {
+		const nextState = !isStyleEditorOpen;
+		setIsStyleEditorOpen(nextState);
 		localStorage.setItem("style_editor_open", JSON.stringify(nextState));
+	};
+
+	const handleToggleListEditor = () => {
+		const nextState = !isListEditorOpen;
+		setIsListEditorOpen(nextState);
+		localStorage.setItem("list_editor_open", JSON.stringify(nextState));
 	};
 
 	const handleUndo = () => {
@@ -471,6 +481,7 @@ export default function AdminPanel() {
 					<Flex gap={2}>
 						<Group attached flex={1}>
 							<Input
+								w="100px"
 								size="xs"
 								readOnly
 								type="text"
@@ -488,6 +499,7 @@ export default function AdminPanel() {
 						</Group>
 						<Group attached flex={1}>
 							<Input
+								w="100px"
 								size="xs"
 								readOnly
 								type="password"
@@ -505,6 +517,7 @@ export default function AdminPanel() {
 						</Group>
 						<Group attached flex={1}>
 							<Input
+								w="100px"
 								size="xs"
 								readOnly
 								type="text"
@@ -523,8 +536,11 @@ export default function AdminPanel() {
 					<Button size="xs" colorPalette="blue" onClick={() => setIsManualOpen(true)} mr={2}>
 						📖 사용설명서
 					</Button>
-					<Button size="xs" variant="outline" onClick={handleToggleEditor} mr={4}>
-						{isEditorOpen ? "스타일 편집기 접기 ▴" : "스타일 편집기 열기 ▾"}
+					<Button size="xs" variant="outline" onClick={handleToggleStyleEditor}>
+						{isStyleEditorOpen ? "스타일 편집기 접기 ▴" : "스타일 편집기 열기 ▾"}
+					</Button>
+					<Button size="xs" variant="outline" onClick={handleToggleListEditor} mr={4}>
+						{isListEditorOpen ? "곡 편집기 접기 ▴" : "곡 편집기 열기 ▾"}
 					</Button>
 					{saveStatus === "saving" && <Badge colorPalette="yellow">저장 중...</Badge>}
 					{saveStatus === "saved" && <Badge colorPalette="green">변경사항 저장됨</Badge>}
@@ -595,7 +611,8 @@ export default function AdminPanel() {
 			<Flex gap={4} direction={{ base: "column", lg: "row" }} flex={1} overflow="hidden">
 				<Flex direction="column" flex={1} gap={4} overflowY="auto" pr={2}>
 					<Box
-						display={isEditorOpen ? "block" : "none"}
+						flex={1}
+						display={isStyleEditorOpen ? "block" : "none"}
 						bg="gray.50"
 						_dark={{ bg: "gray.800" }}
 						borderRadius="md"
@@ -1165,7 +1182,7 @@ export default function AdminPanel() {
 							</Tabs.Content>
 						</Tabs.Root>
 					</Box>
-					<Flex gap={4} flex={1} minH="250px">
+					<Flex display={isListEditorOpen ? "flex" : "none"} gap={4} flex={1} minH="250px">
 						<Box display="flex" flexDirection="column" flex={2}>
 							<Text mb={2} fontWeight="bold" fontSize="sm">
 								곡 목록 일괄 입력
