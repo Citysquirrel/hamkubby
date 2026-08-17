@@ -53,6 +53,7 @@ const defaultSettings: Broadcast.Settings = {
 	nowPlaying: {
 		layout: "singleLine",
 		showNumber: true,
+		placeBelow: false,
 		bgColor: "rgba(24, 25, 28, 0.9)",
 		highlightColor: "#00ffa3",
 		paddingX: 16,

@@ -112,6 +112,89 @@ export const OverlayContentView = ({
 		</Flex>
 	);
 
+	const renderNowPlaying = () =>
+		playingSong && (
+			<Flex
+				key={`playing-card-${playingSong.id}`}
+				px={`${np.paddingX ?? np.padding ?? 16}px`}
+				py={`${np.paddingY ?? np.padding ?? 16}px`}
+				mb={!np.placeBelow ? `${np.marginB}px` : undefined}
+				mt={np.placeBelow ? `${np.marginB}px` : undefined}
+				bg={np.bgColor}
+				borderRadius={`${np.borderRadius}px`}
+				boxShadow={getShadow(np.boxShadow)}
+				align={np.layout === "doubleLine" ? "flex-start" : "center"}
+				gap={3}
+				w="full"
+				position="relative"
+				animation="songChangeEffect 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards"
+				overflow="hidden"
+			>
+				<Box position="absolute" left={0} top={0} bottom={0} w="4px" bg={np.highlightColor} />
+
+				{np.showNumber && (
+					<Text
+						color={np.numTypo.color}
+						fontSize={`${np.numTypo.size}px`}
+						fontFamily={np.numTypo.font}
+						fontWeight="bold"
+						flexShrink={0}
+						pl={2}
+					>
+						{playingSong.num}
+					</Text>
+				)}
+
+				<Flex
+					direction={np.layout === "doubleLine" ? "column" : "row"}
+					flex={1}
+					overflow="hidden"
+					gap={np.layout === "doubleLine" ? 0 : 2}
+					align={np.layout === "singleLine" ? "center" : "flex-start"}
+					pl={np.showNumber ? 0 : 2}
+				>
+					<MarqueeText
+						text={playingSong.title}
+						color={np.titleTypo.color}
+						fontSize={`${np.titleTypo.size}px`}
+						fontFamily={np.titleTypo.font}
+						fontWeight="800"
+						speed={wr.marqueeSpeed}
+					/>
+					{playingSong.singer && (
+						<>
+							{np.layout === "singleLine" && (
+								<Text color={np.singerTypo.color} opacity={0.5}>
+									|
+								</Text>
+							)}
+							<MarqueeText
+								text={playingSong.singer}
+								color={np.singerTypo.color}
+								fontSize={`${np.singerTypo.size}px`}
+								fontFamily={np.singerTypo.font}
+								speed={wr.marqueeSpeed}
+							/>
+						</>
+					)}
+				</Flex>
+
+				{np.playingText.text && (
+					<Text
+						ml="auto"
+						flexShrink={0}
+						pr={2}
+						color={np.playingText.typo.color}
+						fontSize={`${np.playingText.typo.size}px`}
+						fontFamily={np.playingText.typo.font}
+						fontWeight="bold"
+					>
+						{np.playingText.text}
+					</Text>
+				)}
+			</Flex>
+		);
+
 	return (
 		<Flex
 			direction="column"
@@ -147,86 +230,7 @@ export const OverlayContentView = ({
 				</Text>
 			)}
 
-			{playingSong && (
-				<Flex
-					key={`playing-card-${playingSong.id}`}
-					px={`${np.paddingX ?? np.padding ?? 16}px`}
-					py={`${np.paddingY ?? np.padding ?? 16}px`}
-					mb={`${np.marginB}px`}
-					bg={np.bgColor}
-					borderRadius={`${np.borderRadius}px`}
-					boxShadow={getShadow(np.boxShadow)}
-					align={np.layout === "doubleLine" ? "flex-start" : "center"}
-					gap={3}
-					w="full"
-					position="relative"
-					animation="songChangeEffect 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards"
-					overflow="hidden"
-				>
-					<Box position="absolute" left={0} top={0} bottom={0} w="4px" bg={np.highlightColor} />
-
-					{np.showNumber && (
-						<Text
-							color={np.numTypo.color}
-							fontSize={`${np.numTypo.size}px`}
-							fontFamily={np.numTypo.font}
-							fontWeight="bold"
-							flexShrink={0}
-							pl={2}
-						>
-							{playingSong.num}
-						</Text>
-					)}
-
-					<Flex
-						direction={np.layout === "doubleLine" ? "column" : "row"}
-						flex={1}
-						overflow="hidden"
-						gap={np.layout === "doubleLine" ? 0 : 2}
-						align={np.layout === "singleLine" ? "center" : "flex-start"}
-						pl={np.showNumber ? 0 : 2}
-					>
-						<MarqueeText
-							text={playingSong.title}
-							color={np.titleTypo.color}
-							fontSize={`${np.titleTypo.size}px`}
-							fontFamily={np.titleTypo.font}
-							fontWeight="800"
-							speed={wr.marqueeSpeed}
-						/>
-						{playingSong.singer && (
-							<>
-								{np.layout === "singleLine" && (
-									<Text color={np.singerTypo.color} opacity={0.5}>
-										|
-									</Text>
-								)}
-								<MarqueeText
-									text={playingSong.singer}
-									color={np.singerTypo.color}
-									fontSize={`${np.singerTypo.size}px`}
-									fontFamily={np.singerTypo.font}
-									speed={wr.marqueeSpeed}
-								/>
-							</>
-						)}
-					</Flex>
-
-					{np.playingText.text && (
-						<Text
-							ml="auto"
-							flexShrink={0}
-							pr={2}
-							color={np.playingText.typo.color}
-							fontSize={`${np.playingText.typo.size}px`}
-							fontFamily={np.playingText.typo.font}
-							fontWeight="bold"
-						>
-							{np.playingText.text}
-						</Text>
-					)}
-				</Flex>
-			)}
+			{!np.placeBelow && renderNowPlaying()}
 
 			<Box
 				flex={1}
@@ -249,6 +253,8 @@ export const OverlayContentView = ({
 					{isListOverflowing && <Box>{otherSongs.map((song, i) => renderSongItem(song, i, "dup"))}</Box>}
 				</Box>
 			</Box>
+
+			{np.placeBelow && renderNowPlaying()}
 
 			{f.text && (
 				<Text

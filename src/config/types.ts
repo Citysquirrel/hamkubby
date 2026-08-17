@@ -113,6 +113,7 @@ declare global {
 			nowPlaying: {
 				layout: "singleLine" | "doubleLine";
 				showNumber: boolean;
+				placeBelow: boolean;
 				bgColor: string;
 				highlightColor: string;
 				padding?: number;

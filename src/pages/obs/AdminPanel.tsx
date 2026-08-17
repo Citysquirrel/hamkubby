@@ -490,19 +490,6 @@ export default function AdminPanel() {
 							<Input
 								size="xs"
 								readOnly
-								type="text"
-								value={`${window.location.origin}/obs/overlay/${roomId}`}
-								bg="white"
-								_dark={{ bg: "gray.700" }}
-							/>
-							<Button size="xs" colorPalette="red" onClick={() => handleCopy(window.location.href, "관리자 주소")}>
-								관리자 URL 복사
-							</Button>
-						</Group>
-						<Group attached flex={1}>
-							<Input
-								size="xs"
-								readOnly
 								type="password"
 								value={`${window.location.origin}/obs/dock/${roomId}?pin=${pin}`}
 								bg="white"
@@ -514,6 +501,19 @@ export default function AdminPanel() {
 								onClick={() => handleCopy(`${window.location.origin}/obs/dock/${roomId}?pin=${pin}`, "OBS 독 주소")}
 							>
 								OBS 독 주소 복사
+							</Button>
+						</Group>
+						<Group attached flex={1}>
+							<Input
+								size="xs"
+								readOnly
+								type="text"
+								value={`${window.location.origin}/obs/overlay/${roomId}`}
+								bg="white"
+								_dark={{ bg: "gray.700" }}
+							/>
+							<Button size="xs" colorPalette="red" onClick={() => handleCopy(window.location.href, "관리자 주소")}>
+								관리자 URL 복사
 							</Button>
 						</Group>
 					</Flex>
@@ -648,31 +648,43 @@ export default function AdminPanel() {
 									/>
 								</Box>
 								<Flex flexWrap="wrap" gap={3} mb={3}>
-									<NumberField
-										label="전체 너비"
-										value={settings.global.width}
-										onChange={(v: any) => handleNestedSetting("global", "width", v)}
-									/>
-									<NumberField
-										label="전체 높이 (0=Auto)"
-										value={settings.global.height}
-										onChange={(v: any) => handleNestedSetting("global", "height", v)}
-									/>
-									<NumberField
-										label="안쪽 가로 여백(X)"
-										value={settings.global.paddingX ?? settings.global.padding ?? 16}
-										onChange={(v: any) => handleNestedSetting("global", "paddingX", v)}
-									/>
-									<NumberField
-										label="안쪽 세로 여백(Y)"
-										value={settings.global.paddingY ?? settings.global.padding ?? 16}
-										onChange={(v: any) => handleNestedSetting("global", "paddingY", v)}
-									/>
-									<NumberField
-										label="모서리 둥글기"
-										value={settings.global.borderRadius}
-										onChange={(v: any) => handleNestedSetting("global", "borderRadius", v)}
-									/>
+									<Flex gap={1}>
+										<NumberField
+											flex={1}
+											label="전체 너비"
+											value={settings.global.width}
+											onChange={(v: any) => handleNestedSetting("global", "width", v)}
+										/>
+										<NumberField
+											flex={1}
+											label="전체 높이 (0=Auto)"
+											value={settings.global.height}
+											onChange={(v: any) => handleNestedSetting("global", "height", v)}
+										/>
+									</Flex>
+									<Flex gap={1}>
+										<NumberField
+											flex={1}
+											label="안쪽 가로 여백(X)"
+											value={settings.global.paddingX ?? settings.global.padding ?? 16}
+											onChange={(v: any) => handleNestedSetting("global", "paddingX", v)}
+										/>
+										<NumberField
+											flex={1}
+											label="안쪽 세로 여백(Y)"
+											value={settings.global.paddingY ?? settings.global.padding ?? 16}
+											onChange={(v: any) => handleNestedSetting("global", "paddingY", v)}
+										/>
+									</Flex>
+									<Flex>
+										<NumberField
+											flex={1}
+											label="모서리 둥글기"
+											value={settings.global.borderRadius}
+											onChange={(v: any) => handleNestedSetting("global", "borderRadius", v)}
+										/>
+										<Box flex={3} />
+									</Flex>
 								</Flex>
 								<Flex flexWrap="wrap" gap={3} mb={4}>
 									<CustomColorPicker
@@ -685,11 +697,13 @@ export default function AdminPanel() {
 										value={settings.global.borderColor}
 										onChange={(v: any) => handleNestedSetting("global", "borderColor", v)}
 									/>
-									<NumberField
-										label="테두리 굵기"
-										value={settings.global.borderWidth}
-										onChange={(v: any) => handleNestedSetting("global", "borderWidth", v)}
-									/>
+									<Box flex={1}>
+										<NumberField
+											label="테두리 굵기"
+											value={settings.global.borderWidth}
+											onChange={(v: any) => handleNestedSetting("global", "borderWidth", v)}
+										/>
+									</Box>
 								</Flex>
 								<Box p={3} bg="gray.100" _dark={{ bg: "gray.700" }} borderRadius="md">
 									<Switch.Root
@@ -853,29 +867,45 @@ export default function AdminPanel() {
 											</Switch.Label>
 										</Switch.Root>
 									</Box>
+									<Box pt={5}>
+										<Switch.Root
+											checked={settings.nowPlaying.placeBelow}
+											onCheckedChange={(e) => handleNestedSetting("nowPlaying", "placeBelow", e.checked)}
+										>
+											<Switch.HiddenInput />
+											<Switch.Control />
+											<Switch.Label fontSize="sm" fontWeight="bold">
+												하단 배치
+											</Switch.Label>
+										</Switch.Root>
+									</Box>
 								</Flex>
 
 								<Flex flexWrap="wrap" gap={3} mb={4}>
-									<NumberField
-										label="카드 안쪽 가로 여백(X)"
-										value={settings.nowPlaying.paddingX ?? settings.nowPlaying.padding ?? 16}
-										onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingX", v)}
-									/>
-									<NumberField
-										label="카드 안쪽 세로 여백(Y)"
-										value={settings.nowPlaying.paddingY ?? settings.nowPlaying.padding ?? 16}
-										onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingY", v)}
-									/>
-									<NumberField
-										label="카드 둥글기"
-										value={settings.nowPlaying.borderRadius}
-										onChange={(v: any) => handleNestedSetting("nowPlaying", "borderRadius", v)}
-									/>
-									<NumberField
-										label="대기곡과의 간격"
-										value={settings.nowPlaying.marginB}
-										onChange={(v: any) => handleNestedSetting("nowPlaying", "marginB", v)}
-									/>
+									<Flex gap={1}>
+										<NumberField
+											label="카드 안쪽 가로 여백(X)"
+											value={settings.nowPlaying.paddingX ?? settings.nowPlaying.padding ?? 16}
+											onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingX", v)}
+										/>
+										<NumberField
+											label="카드 안쪽 세로 여백(Y)"
+											value={settings.nowPlaying.paddingY ?? settings.nowPlaying.padding ?? 16}
+											onChange={(v: any) => handleNestedSetting("nowPlaying", "paddingY", v)}
+										/>
+									</Flex>
+									<Flex gap={1}>
+										<NumberField
+											label="모서리 둥글기"
+											value={settings.nowPlaying.borderRadius}
+											onChange={(v: any) => handleNestedSetting("nowPlaying", "borderRadius", v)}
+										/>
+										<NumberField
+											label="대기곡과의 간격"
+											value={settings.nowPlaying.marginB}
+											onChange={(v: any) => handleNestedSetting("nowPlaying", "marginB", v)}
+										/>
+									</Flex>
 								</Flex>
 
 								<Flex flexWrap="wrap" gap={3} mb={4}>
@@ -1016,26 +1046,30 @@ export default function AdminPanel() {
 								</Flex>
 
 								<Flex flexWrap="wrap" gap={3} mb={4}>
-									<NumberField
-										label="안쪽 가로 여백(X)"
-										value={settings.waitingList.paddingX ?? settings.waitingList.padding ?? 12}
-										onChange={(v: any) => handleNestedSetting("waitingList", "paddingX", v)}
-									/>
-									<NumberField
-										label="안쪽 세로 여백(Y)"
-										value={settings.waitingList.paddingY ?? settings.waitingList.padding ?? 12}
-										onChange={(v: any) => handleNestedSetting("waitingList", "paddingY", v)}
-									/>
-									<NumberField
-										label="모서리 곡률"
-										value={settings.waitingList.borderRadius}
-										onChange={(v: any) => handleNestedSetting("waitingList", "borderRadius", v)}
-									/>
-									<NumberField
-										label="곡 사이 간격"
-										value={settings.waitingList.gap}
-										onChange={(v: any) => handleNestedSetting("waitingList", "gap", v)}
-									/>
+									<Flex gap={1}>
+										<NumberField
+											label="안쪽 가로 여백(X)"
+											value={settings.waitingList.paddingX ?? settings.waitingList.padding ?? 12}
+											onChange={(v: any) => handleNestedSetting("waitingList", "paddingX", v)}
+										/>
+										<NumberField
+											label="안쪽 세로 여백(Y)"
+											value={settings.waitingList.paddingY ?? settings.waitingList.padding ?? 12}
+											onChange={(v: any) => handleNestedSetting("waitingList", "paddingY", v)}
+										/>
+									</Flex>
+									<Flex gap={1}>
+										<NumberField
+											label="모서리 둥글기"
+											value={settings.waitingList.borderRadius}
+											onChange={(v: any) => handleNestedSetting("waitingList", "borderRadius", v)}
+										/>
+										<NumberField
+											label="곡 사이 간격"
+											value={settings.waitingList.gap}
+											onChange={(v: any) => handleNestedSetting("waitingList", "gap", v)}
+										/>
+									</Flex>
 								</Flex>
 
 								<Flex flexWrap="wrap" gap={3} mb={4}>
