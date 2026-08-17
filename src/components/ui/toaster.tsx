@@ -5,7 +5,7 @@ import { Toaster as ChakraToaster, Portal, Spinner, Stack, Toast, createToaster 
 export const toaster = createToaster({
 	placement: "bottom-end",
 	pauseOnPageIdle: true,
-	duration: 2000,
+	duration: 3250,
 	max: 3,
 	overlap: true,
 });

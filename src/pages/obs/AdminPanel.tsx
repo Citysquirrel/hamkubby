@@ -21,7 +21,15 @@ import { useBroadcastStore } from "@store/useBroadcastStore";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
-import { CustomColorPicker, FastTextarea, NumberField, OverlayContentView, TextField, TypoEditor } from "./lib/comp";
+import {
+	CustomColorPicker,
+	FastTextarea,
+	FontAutocomplete,
+	NumberField,
+	OverlayContentView,
+	TextField,
+	TypoEditor,
+} from "./lib/comp";
 
 const SOCKET_URL = API_BASE_URL;
 
@@ -632,23 +640,12 @@ export default function AdminPanel() {
 									<Text fontSize="xs" fontWeight="bold" mb={1}>
 										기본 전체 폰트
 									</Text>
-									<NativeSelect.Root size="sm">
-										<NativeSelect.Field
-											bg="white"
-											_dark={{ bg: "gray.700" }}
-											value={settings.global.font}
-											onChange={(e) => handleNestedSetting("global", "font", e.target.value as Broadcast.FontChoice)}
-										>
-											{FONT_OPTIONS.map((opt) => {
-												if (opt.value === "inherit") return null;
-												return (
-													<option key={opt.value} value={opt.value}>
-														{opt.label}
-													</option>
-												);
-											})}
-										</NativeSelect.Field>
-									</NativeSelect.Root>
+									<FontAutocomplete
+										value={settings.global.font}
+										onChange={(fontName) => handleNestedSetting("global", "font", fontName)}
+										allowInherit={false}
+										size="sm"
+									/>
 								</Box>
 								<Flex flexWrap="wrap" gap={3} mb={3}>
 									<NumberField

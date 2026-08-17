@@ -1,7 +1,19 @@
-import { Box, ColorPicker, Flex, HStack, Input, Marquee, NativeSelect, Portal, Text, Textarea } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
-import { FONT_OPTIONS } from "../AdminPanel";
+import {
+	Box,
+	Button,
+	ColorPicker,
+	Flex,
+	HStack,
+	Input,
+	Marquee,
+	Portal,
+	Spinner,
+	Text,
+	Textarea,
+} from "@chakra-ui/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getMask, getShadow, safeParseColor } from "./func";
+import { toaster } from "@/components/ui/toaster";
 
 export const OverlayContentView = ({
 	settings,
@@ -514,35 +526,28 @@ export const TypoEditor = ({
 	label,
 	typo,
 	onChange,
+	allowInherit = true,
 }: {
 	label: string;
 	typo: Broadcast.Typo;
 	onChange: (t: Broadcast.Typo) => void;
+	allowInherit?: boolean;
 }) => (
 	<Box p={3} borderWidth="1px" borderRadius="md" bg="gray.100" _dark={{ bg: "gray.700" }}>
 		<Text fontSize="sm" fontWeight="800" color="blue.500" mb={2}>
 			{label}
 		</Text>
 		<Flex gap={2} align="flex-end">
-			<Box flex={1}>
-				<Text fontSize="xs" fontWeight="bold" mb={1}>
+			<Box flex={1} minW="160px">
+				<Text fontSize="2xs" color="gray.500" mb={1}>
 					폰트
 				</Text>
-				<NativeSelect.Root size="sm">
-					{/* 안전한 타입 단언을 통해 onChange 오류 해결 */}
-					<NativeSelect.Field
-						bg="white"
-						_dark={{ bg: "gray.800" }}
-						value={typo.font}
-						onChange={(e) => onChange({ ...typo, font: e.target.value as Broadcast.FontChoice })}
-					>
-						{FONT_OPTIONS.map((opt) => (
-							<option key={opt.value} value={opt.value}>
-								{opt.label}
-							</option>
-						))}
-					</NativeSelect.Field>
-				</NativeSelect.Root>
+				<FontAutocomplete
+					value={typo.font}
+					onChange={(fontName) => onChange({ ...typo, font: fontName })}
+					allowInherit={allowInherit}
+					size="sm"
+				/>
 			</Box>
 			<Box w="70px">
 				<NumberField label="크기" value={typo.size} onChange={(v: number) => onChange({ ...typo, size: v })} />
@@ -553,3 +558,309 @@ export const TypoEditor = ({
 		</Flex>
 	</Box>
 );
+
+export const DEFAULT_WEB_FONTS = [
+	"Pretendard",
+	"Gmarket Sans",
+	"Noto Sans KR",
+	"Arial",
+	"Verdana",
+	"Impact",
+	"Comic Sans MS",
+	"Trebuchet MS",
+	"Courier New",
+	"Georgia",
+	"Times New Roman",
+];
+
+interface FontAutocompleteProps {
+	value: string;
+	onChange: (fontName: string) => void;
+	allowInherit?: boolean;
+	size?: "xs" | "sm" | "md";
+}
+
+export const FontAutocomplete: React.FC<FontAutocompleteProps> = ({
+	value,
+	onChange,
+	allowInherit = true,
+	size = "sm",
+}) => {
+	const [isOpen, setIsOpen] = useState(false);
+	const [inputValue, setInputValue] = useState("");
+	const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+	const [localFonts, setLocalFonts] = useState<string[]>(() => {
+		const saved = localStorage.getItem("obs_cached_local_fonts");
+		return saved ? JSON.parse(saved) : [];
+	});
+	const [isLoadingFonts, setIsLoadingFonts] = useState(false);
+
+	const containerRef = useRef<HTMLDivElement>(null);
+	const listRef = useRef<HTMLDivElement>(null);
+	const inputValueRef = useRef(inputValue);
+
+	useEffect(() => {
+		inputValueRef.current = inputValue;
+	}, [inputValue]);
+
+	useEffect(() => {
+		if (!isOpen) {
+			setInputValue(value === "inherit" ? "상속 (글로벌)" : value || "");
+		}
+	}, [value, isOpen]);
+
+	useEffect(() => {
+		const handleClickOutside = (e: MouseEvent) => {
+			if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+				setIsOpen(false);
+				const currentInput = inputValueRef.current.trim();
+				if (currentInput !== "" && currentInput !== value && currentInput !== "상속 (글로벌)") {
+					onChange(currentInput);
+				}
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, [value, onChange]);
+
+	const handleLoadLocalFonts = async () => {
+		if (!("queryLocalFonts" in window)) {
+			toaster.create({ title: "미지원 브라우저", description: "Chrome, Edge 등에서만 지원됩니다.", type: "error" });
+			return;
+		}
+		setIsLoadingFonts(true);
+		try {
+			const fonts = await (window as any).queryLocalFonts();
+			const fontFamilies = Array.from(new Set(fonts.map((f: any) => f.family))).sort() as string[];
+			setLocalFonts(fontFamilies);
+			localStorage.setItem("obs_cached_local_fonts", JSON.stringify(fontFamilies));
+			toaster.create({
+				title: "폰트 로드 완료",
+				description: `${fontFamilies.length}개의 폰트 발견!`,
+				type: "success",
+			});
+		} catch (err) {
+			toaster.create({ title: "권한 거부됨", description: "글꼴 접근 권한을 허용해주세요.", type: "error" });
+		} finally {
+			setIsLoadingFonts(false);
+		}
+	};
+
+	const allFonts = useMemo(() => Array.from(new Set([...DEFAULT_WEB_FONTS, ...localFonts])), [localFonts]);
+	const selectableItems = useMemo(
+		() => (allowInherit ? ["상속 (글로벌)", ...allFonts] : allFonts),
+		[allowInherit, allFonts],
+	);
+
+	useEffect(() => {
+		if (isOpen) {
+			if (inputValue.trim() !== "") {
+				const lowerQuery = inputValue.toLowerCase().trim();
+				const matchIdx = selectableItems.findIndex(
+					(f) => f !== "상속 (글로벌)" && f.toLowerCase().includes(lowerQuery),
+				);
+				setFocusedIndex(matchIdx);
+			} else {
+				const currentFontLabel = value === "inherit" ? "상속 (글로벌)" : value;
+				const idx = selectableItems.indexOf(currentFontLabel);
+				setFocusedIndex(idx !== -1 ? idx : 0);
+			}
+		}
+	}, [inputValue, isOpen, selectableItems, value]);
+
+	useEffect(() => {
+		if (isOpen && focusedIndex >= 0 && listRef.current) {
+			const el = document.getElementById(`font-item-${focusedIndex}`);
+			if (el) {
+				el.scrollIntoView({ block: "nearest" });
+			}
+		}
+	}, [focusedIndex, isOpen]);
+
+	const handleSelectFont = (fontName: string) => {
+		const finalVal = fontName === "상속 (글로벌)" ? "inherit" : fontName;
+		onChange(finalVal);
+		setInputValue(fontName);
+		setIsOpen(false);
+	};
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setInputValue(e.target.value);
+		if (!isOpen) setIsOpen(true);
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "ArrowDown") {
+			e.preventDefault();
+			if (!isOpen) {
+				setIsOpen(true);
+				return;
+			}
+			setFocusedIndex((prev) => Math.min(prev + 1, selectableItems.length - 1));
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			if (!isOpen) return;
+			setFocusedIndex((prev) => Math.max(prev - 1, 0));
+		} else if (e.key === "Enter") {
+			e.preventDefault();
+			if (isOpen && focusedIndex >= 0 && focusedIndex < selectableItems.length) {
+				handleSelectFont(selectableItems[focusedIndex]);
+			} else {
+				const currentInput = inputValue.trim();
+				if (currentInput !== "") {
+					handleSelectFont(currentInput);
+				}
+			}
+		} else if (e.key === "Escape") {
+			setIsOpen(false);
+		}
+	};
+
+	return (
+		<Box w="240px">
+			<Box position="relative" ref={containerRef}>
+				<Flex align="center" position="relative">
+					<Input
+						size={size}
+						value={inputValue}
+						onChange={handleInputChange}
+						onKeyDown={handleKeyDown}
+						onFocus={() => setIsOpen(true)}
+						placeholder="글꼴 검색 또는 직접 입력..."
+						bg="white"
+						_dark={{ bg: "gray.700" }}
+						pr="28px"
+						style={{ fontFamily: value !== "inherit" ? value : "inherit" }}
+					/>
+					<Button
+						size="xs"
+						variant="ghost"
+						position="absolute"
+						right={1}
+						onClick={() => setIsOpen(!isOpen)}
+						p={1}
+						h="auto"
+						minW="20px"
+						color="gray.400"
+					>
+						{isOpen ? "▴" : "▾"}
+					</Button>
+				</Flex>
+
+				{/* 드롭다운 박스 */}
+				{isOpen && (
+					<Box
+						ref={listRef}
+						position="absolute"
+						top="calc(100% + 4px)"
+						left={0}
+						w="full"
+						maxH="200px"
+						overflowY="auto"
+						bg="white"
+						_dark={{ bg: "gray.800", borderColor: "gray.700" }}
+						borderWidth="1px"
+						borderRadius="md"
+						boxShadow="xl"
+						zIndex={1000}
+						p={1}
+					>
+						{selectableItems.map((fontLabel, idx) => {
+							const isInherit = fontLabel === "상속 (글로벌)";
+							const fontValue = isInherit ? "inherit" : fontLabel;
+							const isSelected = value === fontValue;
+							const isFocused = focusedIndex === idx;
+							const isMatch =
+								!isInherit &&
+								inputValue.trim() !== "" &&
+								fontLabel.toLowerCase().includes(inputValue.toLowerCase().trim());
+
+							let bg = "transparent";
+							let darkBg = "transparent";
+
+							if (isSelected) {
+								bg = "blue.500";
+								darkBg = "blue.600";
+							} else if (isFocused) {
+								bg = "gray.200";
+								darkBg = "gray.600";
+							} else if (isMatch) {
+								bg = "blue.50";
+								darkBg = "blue.900";
+							}
+
+							return (
+								<Flex
+									key={fontValue}
+									id={`font-item-${idx}`}
+									justify="space-between"
+									align="center"
+									p={2}
+									borderRadius="sm"
+									cursor="pointer"
+									bg={bg}
+									_dark={{ bg: darkBg }}
+									color={isSelected ? "white" : "inherit"}
+									_hover={{
+										bg: isSelected ? "blue.600" : "gray.300",
+										_dark: { bg: isSelected ? "blue.600" : "gray.500" },
+									}}
+									onClick={() => handleSelectFont(fontLabel)}
+								>
+									<Text
+										fontSize={isInherit ? "xs" : "sm"}
+										fontWeight={isInherit ? "bold" : "normal"}
+										style={{ fontFamily: isInherit ? "inherit" : fontLabel }}
+										truncate
+									>
+										{fontLabel}
+									</Text>
+									{!isInherit && localFonts.includes(fontLabel) && (
+										<Text fontSize="2xs" opacity={0.5} ml={2} flexShrink={0}>
+											로컬
+										</Text>
+									)}
+								</Flex>
+							);
+						})}
+
+						{/* 목록에 없는 폰트를 입력했을 때 제공하는 엔터 유도 박스 */}
+						{focusedIndex === -1 && inputValue.trim() !== "" && (
+							<Box
+								p={2}
+								borderRadius="sm"
+								cursor="pointer"
+								mt={1}
+								bg="blue.50"
+								_dark={{ bg: "blue.900" }}
+								_hover={{ bg: "blue.100", _dark: { bg: "blue.800" } }}
+								onClick={() => handleSelectFont(inputValue.trim())}
+							>
+								<Text fontSize="xs" color="blue.500" _dark={{ color: "blue.300" }} fontWeight="bold">
+									"{inputValue.trim()}" 폰트 직접 사용 (Enter)
+								</Text>
+							</Box>
+						)}
+					</Box>
+				)}
+			</Box>
+
+			<Flex justify="space-between" align="center" mt={1} px={1}>
+				<Text fontSize="2xs" color="gray.500">
+					{localFonts.length > 0 ? `PC 폰트 ${localFonts.length}개 로드됨` : "기본 폰트 사용 중"}
+				</Text>
+				<Button
+					size="xs"
+					variant="ghost"
+					colorPalette="blue"
+					h="16px"
+					px={1}
+					onClick={handleLoadLocalFonts}
+					disabled={isLoadingFonts}
+				>
+					{isLoadingFonts ? <Spinner size="xs" /> : "🖥️ 내 PC 폰트 불러오기"}
+				</Button>
+			</Flex>
+		</Box>
+	);
+};
