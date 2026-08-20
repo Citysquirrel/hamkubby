@@ -230,7 +230,7 @@ function App() {
 			<>
 				<Cursor />
 				<LoadingCanvas isLoading={isLoading} />
-				<Stack minH="100vh" bg="bg" color="fg" alignItems={"center"} justifyContent={"center"}>
+				<Stack minH="100vh" bg="sqBg" color="fg" alignItems={"center"} justifyContent={"center"}>
 					<Heading size="4xl">사이트 점검중</Heading>
 					<Text textStyle="xl">{maintenance.maintenance_message_hamkubby}</Text>
 					<SheetButton />
@@ -313,7 +313,7 @@ function LoadingCanvas({ isLoading }: { isLoading: boolean }) {
 			position="fixed"
 			width="100vw"
 			height="100vh"
-			bg="bg"
+			bg="sqBg"
 			zIndex={65536}
 			opacity={isLoading ? 1 : 0}
 			transition="opacity 0.3s"
@@ -483,7 +483,7 @@ function Notice() {
 			<Portal>
 				<Dialog.Backdrop />
 				<Dialog.Positioner>
-					<Dialog.Content bg="bg">
+					<Dialog.Content bg="sqBg">
 						<Dialog.Header justifyContent={"center"} padding="4">
 							<Dialog.Title>노래책 설명서</Dialog.Title>
 							<Dialog.CloseTrigger asChild>

@@ -36,15 +36,6 @@ const SOCKET_URL = API_BASE_URL;
 
 type SaveStatus = "idle" | "saving" | "saved";
 
-export const FONT_OPTIONS = [
-	{ label: "상속 (글로벌)", value: "inherit" },
-	{ label: "Pretendard", value: "Pretendard" },
-	{ label: "Gmarket Sans", value: "Gmarket Sans" },
-	{ label: "Noto Sans KR", value: "Noto Sans KR" },
-	{ label: "Arial", value: "Arial" },
-	{ label: "Verdana", value: "Verdana" },
-];
-
 export default function AdminPanel() {
 	useMeta({ title: "세트리스트 오버레이 관리자" });
 	const { roomId } = useParams<{ roomId: string }>();
@@ -186,6 +177,15 @@ export default function AdminPanel() {
 			toaster.create({
 				title: "저장 실패",
 				description: msg || "서버에 데이터를 저장하지 못했습니다.",
+				type: "error",
+			});
+		});
+
+		newSocket.on("systemError", (msg) => {
+			setSaveStatus("idle");
+			toaster.create({
+				title: "에러 발생",
+				description: `${msg || "서버에 데이터를 저장하지 못했습니다."}: 새로고침 후 이용해주세요.`,
 				type: "error",
 			});
 		});
@@ -938,7 +938,7 @@ export default function AdminPanel() {
 								</Tabs.Content>
 
 								<Tabs.Content value="nowPlaying" p={4}>
-									<Flex gap={4} mb={4} align="center">
+									<Flex gap={4} mb={4} align="center" p={3} bg="gray.100" _dark={{ bg: "gray.700" }} borderRadius="md">
 										<Box>
 											<Text fontSize="xs" fontWeight="bold" mb={1}>
 												배열 구조
@@ -976,6 +976,7 @@ export default function AdminPanel() {
 											<Switch.Root
 												checked={settings.nowPlaying.placeBelow}
 												onCheckedChange={(e) => handleNestedSetting("nowPlaying", "placeBelow", e.checked)}
+												disabled={settings.nowPlaying.placeOrigin}
 											>
 												<Switch.HiddenInput />
 												<Switch.Control />
@@ -984,6 +985,18 @@ export default function AdminPanel() {
 												</Switch.Label>
 											</Switch.Root>
 										</Box>
+										{/* <Box pt={5}>
+											<Switch.Root
+												checked={settings.nowPlaying.placeOrigin}
+												onCheckedChange={(e) => handleNestedSetting("nowPlaying", "placeOrigin", e.checked)}
+											>
+												<Switch.HiddenInput />
+												<Switch.Control />
+												<Switch.Label fontSize="sm" fontWeight="bold">
+													원래 자리에 배치
+												</Switch.Label>
+											</Switch.Root>
+										</Box> */}
 									</Flex>
 
 									<Flex flexWrap="wrap" gap={3} mb={4}>

@@ -23,7 +23,7 @@ const config = defineConfig({
 		},
 		semanticTokens: {
 			colors: {
-				bg: {
+				sqBg: {
 					value: {
 						_light: "#fff",
 						_dark: "#141517",

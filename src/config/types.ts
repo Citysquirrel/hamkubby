@@ -114,6 +114,7 @@ declare global {
 				layout: "singleLine" | "doubleLine";
 				showNumber: boolean;
 				placeBelow: boolean;
+				placeOrigin: boolean;
 				bgColor: string;
 				highlightColor: string;
 				padding?: number;

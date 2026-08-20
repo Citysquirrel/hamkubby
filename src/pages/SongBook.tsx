@@ -668,7 +668,7 @@ export default function SongBook() {
 				<Stack
 					alignItems={"center"}
 					w="100%"
-					bg={isHeaderOnTop ? "bg" : "transparent"}
+					bg={isHeaderOnTop ? "sqBg" : "transparent"}
 					transition=".25s background-color"
 					pt="8"
 					pb="2"
@@ -714,7 +714,7 @@ export default function SongBook() {
 					left="0"
 					zIndex={3}
 					width="100%"
-					bg={isHeaderOnTop ? "bg" : "transparent"}
+					bg={isHeaderOnTop ? "sqBg" : "transparent"}
 					justifyContent={"center"}
 					align={"center"}
 					transition=".25s background-color"
@@ -775,7 +775,7 @@ export default function SongBook() {
 								alignItems: "center",
 							}}
 							position="relative"
-							// bg={"bg"}
+							// bg={"sqBg"}
 						>
 							<Select.Root
 								collection={filterCollection}
@@ -817,7 +817,7 @@ export default function SongBook() {
 								</Select.Control>
 
 								<Select.Positioner>
-									<Select.Content bg={"bg"} flexDirection={"row"} w="100%" position="absolute" zIndex="popover">
+									<Select.Content bg={"sqBg"} flexDirection={"row"} w="100%" position="absolute" zIndex="popover">
 										<VStack w="100%">
 											<Select.ItemGroup w="100%">
 												{/* <Select.ItemGroupLabel fontWeight="bold" color="blue.500">
@@ -1094,7 +1094,7 @@ export default function SongBook() {
 						>
 							<Box w="40px" h="4px" bg="gray.300" borderRadius="full" mx="auto" mt={3} mb={1} />
 							<DrawerCloseTrigger position="absolute" top={8} right={4} />
-							<DrawerBody p={0} bg={"bg"}>
+							<DrawerBody p={0} bg={"sqBg"}>
 								{selectedSong && detailViewContent}
 							</DrawerBody>
 						</DrawerContent>

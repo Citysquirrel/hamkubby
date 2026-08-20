@@ -31,7 +31,8 @@ export const OverlayContentView = ({
 
 	const songsWithNum = songList.map((s, idx) => ({ ...s, num: idx + 1 }));
 	const playingSong = songsWithNum.find((s) => s.status === "playing");
-	const otherSongs = songsWithNum.filter((s) => s.status !== "playing");
+	const otherSongs = np.placeOrigin ? songsWithNum : songsWithNum.filter((s) => s.status !== "playing");
+	const otherSongsLength = otherSongs.length;
 
 	const listContainerRef = useRef<HTMLDivElement>(null);
 	const originalSetRef = useRef<HTMLDivElement>(null);
@@ -69,13 +70,13 @@ export const OverlayContentView = ({
 	const scrollDuration = Math.max(5, (otherSongs.length * 2) / Math.max(wr.scrollSpeed * 0.2, 0.1));
 
 	// 대기열 아이템 렌더
-	const renderSongItem = (song: any, i: number, prefix: string) => (
+	const renderSongItem = (song: any, i: number, prefix: string, len: number) => (
 		<Flex
 			key={`${prefix}-${song.id}-${i}`}
 			align={wl.layout === "doubleLine" ? "flex-start" : "center"}
 			px={`${wl.paddingX ?? wl.padding ?? 12}px`}
 			py={`${wl.paddingY ?? wl.padding ?? 12}px`}
-			mb={`${wl.gap}px`}
+			mb={`${wl.gap + (i + 1 === len ? 12 : 0)}px`}
 			bg={wl.bgColor || "transparent"}
 			borderRadius={`${wl.borderRadius}px`}
 			gap={3}
@@ -250,7 +251,7 @@ export const OverlayContentView = ({
 				</Text>
 			)}
 
-			{!np.placeBelow && renderNowPlaying()}
+			{!np.placeOrigin && !np.placeBelow && renderNowPlaying()}
 
 			{/* 세트리스트 */}
 			<Box
@@ -268,14 +269,18 @@ export const OverlayContentView = ({
 					}
 				>
 					{/* 첫 번째 원본 세트 (높이 측정) */}
-					<Box ref={originalSetRef}>{otherSongs.map((song, i) => renderSongItem(song, i, "orig"))}</Box>
+					<Box ref={originalSetRef}>
+						{otherSongs.map((song, i) => renderSongItem(song, i, "orig", otherSongsLength))}
+					</Box>
 
 					{/* 공간이 넘칠 때만 발동하는 복제 세트 */}
-					{isListOverflowing && <Box>{otherSongs.map((song, i) => renderSongItem(song, i, "dup"))}</Box>}
+					{isListOverflowing && (
+						<Box>{otherSongs.map((song, i) => renderSongItem(song, i, "dup", otherSongsLength))}</Box>
+					)}
 				</Box>
 			</Box>
 
-			{np.placeBelow && renderNowPlaying()}
+			{!np.placeOrigin && np.placeBelow && renderNowPlaying()}
 
 			{f.text && (
 				<Text

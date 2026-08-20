@@ -258,7 +258,7 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 				top={position ? `${position.y}px` : "0px"}
 				zIndex="9999"
 				w="360px"
-				bg="bg"
+				bg="sqBg"
 				borderRadius="lg"
 				boxShadow="lg"
 				border="1px solid"
@@ -273,7 +273,7 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 					onTouchStart={handleTouchStart}
 					touchAction="none"
 					cursor={isDragging ? "grabbing" : "grab"}
-					bg="bg"
+					bg="sqBg"
 					p={"2px 2px 2px 12px"}
 					align="center"
 					justify="space-between"
@@ -314,7 +314,7 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 				/>
 
 				<Flex
-					bg="bg"
+					bg="sqBg"
 					p={0.5}
 					px="3"
 					align="center"
@@ -347,7 +347,7 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 								disabled={!player}
 							>
 								<Slider.Control>
-									<Slider.Track bg="bg" h="1.5" borderRadius="full">
+									<Slider.Track bg="sqBg" h="1.5" borderRadius="full">
 										<Slider.Range bg="primary.hover" />
 									</Slider.Track>
 									<Slider.Thumb index={0} boxSize="3" bg="primary.hover" borderRadius="full">
