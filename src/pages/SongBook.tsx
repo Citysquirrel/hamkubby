@@ -643,7 +643,7 @@ export default function SongBook() {
 							</Text>
 						</Stack>
 					) : (
-						<Flex direction="column" align="center" justify="center" h="200px" bg="cardBg" borderRadius="lg" gap={4}>
+						<Flex direction="column" align="center" justify="center" h="112px" bg="cardBg" borderRadius="lg" gap={4}>
 							<Text color="gray.500">가사는 본 사이트에서 제공되지 않습니다 :/</Text>
 							<Button
 								variant="outline"
