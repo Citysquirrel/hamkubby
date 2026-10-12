@@ -26,3 +26,5 @@ dist-ssr
 .env*
 wrangler.toml
 .wrangler/
+
+AGENTS.md
