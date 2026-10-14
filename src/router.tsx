@@ -6,6 +6,7 @@ import { generateRoomId, isValidRoomId } from "./lib/generate";
 import SongBook from "./pages/SongBook";
 import DockPanel from "./pages/obs/DockPanel";
 import NowPlayingWidgetScreen from "./pages/obs/NowPlayingWidgetScreen";
+import { v2Routes } from "./router-v2";
 
 const findLastManagedRoom = () => {
 	for (let i = 0; i < localStorage.length; i++) {
@@ -29,6 +30,7 @@ const redirectToRoom = () => {
 };
 
 export const router = createBrowserRouter([
+	...v2Routes,
 	{
 		path: "/",
 		element: <App />,

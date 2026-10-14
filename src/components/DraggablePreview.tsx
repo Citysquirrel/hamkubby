@@ -4,6 +4,7 @@ import { MdDragIndicator } from "react-icons/md";
 import { YoutubePlayer } from "./YoutubePlayer"; // 위에서 만든 컴포넌트
 import { CloseButton } from "./ui/close-button";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { isBoolean, isPlayerVolume, isPosition, readStoredValue, writeStoredValue } from "../lib/storage";
 
 interface DraggablePreviewProps {
 	videoId: string;
@@ -18,23 +19,16 @@ const LS_PLAYER_IS_MUTED = "csq-hamlist_player-is-muted";
 
 export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePreviewProps) => {
 	// 팝업의 초기 위치 설정 (우측 하단 예시)
-	const [position, setPosition] = useState<{ x: number; y: number } | null>(() => {
-		const saved = localStorage.getItem(LS_PLAYER_POSITION);
-		return saved ? JSON.parse(saved) : null;
-	});
+	const [position, setPosition] = useState<{ x: number; y: number } | null>(() =>
+		readStoredValue(LS_PLAYER_POSITION, null, isPosition),
+	);
 	const [isDragging, setIsDragging] = useState(false);
 
 	// 유튜브 상태값
 	const [player, setPlayer] = useState<any>(null); // 인스턴스
 	const [isPlaying, setIsPlaying] = useState(false);
-	const [volume, setVolume] = useState<number[]>(() => {
-		const saved = localStorage.getItem(LS_PLAYER_VOLUME);
-		return saved ? JSON.parse(saved) : [10];
-	});
-	const [isMuted, setIsMuted] = useState<boolean>(() => {
-		const saved = localStorage.getItem(LS_PLAYER_IS_MUTED);
-		return saved ? JSON.parse(saved) : false;
-	});
+	const [volume, setVolume] = useState(() => readStoredValue(LS_PLAYER_VOLUME, [10], isPlayerVolume));
+	const [isMuted, setIsMuted] = useState(() => readStoredValue(LS_PLAYER_IS_MUTED, false, isBoolean));
 	const [isVolumeChanging, setIsVolumeChanging] = useState(false);
 	const [playerStateText, setPlayerStateText] = useState("준비 중..");
 
@@ -42,13 +36,13 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 
 	// 로컬스토리지 자동갱신
 	useEffect(() => {
-		localStorage.setItem(LS_PLAYER_POSITION, JSON.stringify(position));
+		writeStoredValue(LS_PLAYER_POSITION, position);
 	}, [position]);
 	useEffect(() => {
-		localStorage.setItem(LS_PLAYER_VOLUME, JSON.stringify(volume));
+		writeStoredValue(LS_PLAYER_VOLUME, volume);
 	}, [volume]);
 	useEffect(() => {
-		localStorage.setItem(LS_PLAYER_IS_MUTED, JSON.stringify(isMuted));
+		writeStoredValue(LS_PLAYER_IS_MUTED, isMuted);
 	}, [isMuted]);
 
 	// 드래그 시작 시 마우스와 팝업 좌상단 간의 거리(오프셋) 기록
@@ -59,8 +53,8 @@ export const DraggablePreview = ({ videoId, onClose, start, end }: DraggablePrev
 	useLayoutEffect(() => {
 		if (!popupRef.current) return;
 
-		const saved = localStorage.getItem(LS_PLAYER_POSITION);
-		if (saved) setPosition(saved ? JSON.parse(saved) : null);
+		const saved = readStoredValue(LS_PLAYER_POSITION, null, isPosition);
+		if (saved) setPosition(saved);
 		else {
 			const { offsetWidth, offsetHeight } = popupRef.current;
 			const MARGIN = 24;

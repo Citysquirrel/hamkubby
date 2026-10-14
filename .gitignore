@@ -28,3 +28,8 @@ wrangler.toml
 .wrangler/
 
 AGENTS.md
+
+# Local agent analysis
+/agent-notes/
+/design-preview/
+/tests/

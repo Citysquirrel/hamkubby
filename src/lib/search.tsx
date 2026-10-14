@@ -1,3 +1,9 @@
+import Fuse from "fuse.js";
+import Inko from "inko";
+import type { Song } from "../config/types";
+
+const inko = new Inko();
+
 const doubleConsonantMap: Record<string, string> = {
 	ㄳ: "ㄱㅅ",
 	ㄵ: "ㄴㅈ",
@@ -13,9 +19,12 @@ const doubleConsonantMap: Record<string, string> = {
 };
 
 export const normalizeKeyword = (str: string) => {
-	let processed = str.normalize("NFC").toLowerCase();
+	let processed = str
+		.replace(/[\uFF01-\uFF9F]+/g, (value) => value.normalize("NFKC"))
+		.normalize("NFC")
+		.toLowerCase();
 	processed = processed.replace(/[ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ]/g, (match) => doubleConsonantMap[match]);
-	return processed.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-z0-9\+\-&]/gi, "");
+	return processed.replace(/[^\p{L}\p{M}\p{N}+\-&]/gu, "");
 };
 
 // 겹받침 딕셔너리
@@ -52,6 +61,25 @@ export const getChosung = (str: string) => {
 	}
 	return result;
 };
+
+export function createSongSearch(data: Song[]) {
+	return new Fuse(
+		data.map((song) => ({
+			...song,
+			searchTitle: normalizeKeyword(song.title),
+			searchArtist: normalizeKeyword(song.artist),
+			searchTitleCho: normalizeKeyword(getChosung(song.title)),
+			searchArtistCho: normalizeKeyword(getChosung(song.artist)),
+			searchTitleEng: normalizeKeyword(inko.ko2en(song.title)),
+			searchArtistEng: normalizeKeyword(inko.ko2en(song.artist)),
+		})),
+		{
+			keys: ["searchTitle", "searchArtist", "searchTitleCho", "searchArtistCho", "searchTitleEng", "searchArtistEng"],
+			threshold: 0.4,
+			ignoreLocation: true,
+		},
+	);
+}
 
 export const highlightText = (text: string, query: string) => {
 	if (!query) return text;

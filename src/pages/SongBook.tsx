@@ -24,8 +24,6 @@ import {
 	VStack,
 } from "@chakra-ui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import Fuse from "fuse.js";
-import Inko from "inko";
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
 	LuArrowRightFromLine,
@@ -46,13 +44,13 @@ import { DrawerBackdrop, DrawerBody, DrawerCloseTrigger, DrawerContent, DrawerRo
 import { toaster } from "../components/ui/toaster";
 import type { HamkubbySongHistoryModel, Song, SortType } from "../config/types";
 import { formatDateToYYYYMMDD } from "../lib/date";
-import { getChosung, normalizeKeyword } from "../lib/search";
+import { createSongSearch, normalizeKeyword } from "../lib/search";
+import { filterAndSortSongs, findSelectedSong } from "../lib/songbook";
+import { isBoolean, readStoredValue, writeStoredValue } from "../lib/storage";
 import { Background } from "../components/Background";
 import useUiStore from "@/store/useUiStore";
 import { useShallow } from "zustand/react/shallow";
 import useSongDataStore from "@/store/useSongDataStore";
-
-const inko = new Inko();
 
 const genreItems = [
 	{ label: "K-POP", value: "genre:K-POP" },
@@ -124,32 +122,23 @@ export default function SongBook() {
 	const [focused, setFocused] = useState(false);
 	const [isHeaderOnTop, setIsHeaderOnTop] = useState(false);
 
-	const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+	const [selection, setSelection] = useState<Song | null>(null);
+	const selectedSong = useMemo(() => findSelectedSong(data, selection), [data, selection]);
 	const [isOpenMobileView, setIsOpenMobileView] = useState(false);
 	const [copiedId, setCopiedId] = useState<string | null>(null);
-	const [lyricIndex, setLyricIndex] = useState<number>(() => {
-		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-			if (saved !== null) {
-				const parsed = Number(saved);
-				if (parsed >= 0 && parsed < LYRIC_SIZES.length) return parsed;
-			}
-		}
-		return 2;
-	});
-	const [isLyricBold, setIsLyricBold] = useState<boolean>(() => {
-		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem(LOCAL_STORAGE_BOLD_KEY);
-			return saved === "true";
-		}
-		return false;
-	});
+	const [lyricIndex, setLyricIndex] = useState(() =>
+		readStoredValue(LOCAL_STORAGE_KEY, 2, (value): value is number =>
+			typeof value === "number" && Number.isInteger(value) && value >= 0 && value < LYRIC_SIZES.length,
+		),
+	);
+	const [isLyricBold, setIsLyricBold] = useState(() => readStoredValue(LOCAL_STORAGE_BOLD_KEY, false, isBoolean));
 
 	// 디테일 뷰의 너비 조정 상태
-	const [detailWidth, setDetailWidth] = useState(() => {
-		const savedWidth = localStorage.getItem("detail-view-width");
-		return savedWidth ? parseInt(savedWidth, 10) : 450;
-	});
+	const [detailWidth, setDetailWidth] = useState(() =>
+		readStoredValue("detail-view-width", 450, (value): value is number =>
+			typeof value === "number" && Number.isFinite(value) && value >= 450 && value <= 600,
+		),
+	);
 	const [isDragging, setIsDragging] = useState(false);
 
 	const handleLyricSize = (isIncrease: boolean) => {
@@ -160,7 +149,7 @@ export default function SongBook() {
 
 		if (nextIndex !== lyricIndex) {
 			setLyricIndex(nextIndex);
-			localStorage.setItem(LOCAL_STORAGE_KEY, String(nextIndex));
+			writeStoredValue(LOCAL_STORAGE_KEY, nextIndex);
 		}
 	};
 
@@ -168,7 +157,7 @@ export default function SongBook() {
 		const nextBold = !isLyricBold;
 
 		setIsLyricBold(nextBold);
-		localStorage.setItem(LOCAL_STORAGE_BOLD_KEY, String(nextBold));
+		writeStoredValue(LOCAL_STORAGE_BOLD_KEY, nextBold);
 	};
 
 	// 1080px 기준으로 데스크탑(스플릿 뷰)과 모바일(바텀 시트) 분기
@@ -187,7 +176,7 @@ export default function SongBook() {
 	};
 
 	const handleSelectSong = (song: Song) => {
-		setSelectedSong(song);
+		setSelection(song);
 		if (!isDesktop) {
 			setIsOpenMobileView(true);
 		}
@@ -231,7 +220,7 @@ export default function SongBook() {
 	// 드래그 종료
 	const handleMouseUp = useCallback(() => {
 		setIsDragging(false);
-		localStorage.setItem("detail-view-width", detailWidth.toString());
+		writeStoredValue("detail-view-width", detailWidth);
 	}, [detailWidth]);
 
 	// 드래그 중일 때만 window에 이벤트 리스너 부착
@@ -316,28 +305,7 @@ export default function SongBook() {
 		[selectedFilters],
 	);
 
-	const processedSongs = useMemo(() => {
-		if (!data) return [];
-		return data.map((song) => ({
-			...song,
-			searchTitle: normalizeKeyword(song.title),
-			searchArtist: normalizeKeyword(song.artist),
-			searchTitleCho: getChosung(song.title),
-			searchArtistCho: getChosung(song.artist),
-
-			// 한글을 영타로 변환한 필드 (예: "밤양갱" -> "qkadidrod")
-			searchTitleEng: inko.ko2en(song.title),
-			searchArtistEng: inko.ko2en(song.artist),
-		}));
-	}, [data]);
-
-	const fuse = useMemo(() => {
-		return new Fuse(processedSongs, {
-			keys: ["searchTitle", "searchArtist", "searchTitleCho", "searchArtistCho", "searchTitleEng", "searchArtistEng"],
-			threshold: 0.4,
-			ignoreLocation: true,
-		});
-	}, [processedSongs]);
+	const fuse = useMemo(() => createSongSearch(data), [data]);
 
 	//! 필터링 된 데이터
 	const filteredSongs = useMemo(() => {
@@ -345,74 +313,8 @@ export default function SongBook() {
 
 		const baseData = keyword ? fuse.search(keyword).map((f) => f.item) : data;
 
-		const filtered = baseData.filter((song) => {
-			const matchGenre = activeFilters.genre?.length > 0 ? activeFilters.genre.includes(song.genre) : true;
-			// const matchLyrics = (() => {
-			// 	const lyricFilters = activeFilters.lyrics;
-
-			// 	if (!lyricFilters || lyricFilters.length === 0 || lyricFilters.length === 2) {
-			// 		return true;
-			// 	}
-
-			// 	const hasLyricText = !!song.lyric && song.lyric.trim() !== "";
-
-			// 	if (lyricFilters.includes("yes")) {
-			// 		return hasLyricText;
-			// 	}
-			// 	if (lyricFilters.includes("no")) {
-			// 		return !hasLyricText;
-			// 	}
-
-			// 	return true;
-			// })();
-			const matchOfficial =
-				activeFilters.official?.length > 0 ? activeFilters.official.includes(String(song.isOfficial)) : true;
-			const matchCheese = !song.isOfficial
-				? true // 비공식 곡일 경우 영향받지 않도록 구성
-				: activeFilters.cheese?.length > 0
-					? activeFilters.cheese.includes(song.cheese)
-					: true;
-
-			const matchHistory = (() => {
-				const historyFilters = activeFilters.history;
-
-				if (!historyFilters || historyFilters.length === 0 || historyFilters.length === 2) return true;
-
-				const hasHistory = song.song_histories && song.song_histories.length > 0;
-
-				if (historyFilters.includes("yes")) return hasHistory;
-				if (historyFilters.includes("no")) return !hasHistory;
-
-				return true;
-			})();
-
-			return matchGenre && matchOfficial && matchCheese && matchHistory;
-		});
-
-		if (selectedSong) {
-			const a = filtered.find((s) => s.syncId === selectedSong.syncId);
-			if (a) setSelectedSong(a);
-		}
-
-		return [...filtered].sort((a, b) => {
-			if (keyword) {
-				return 0;
-			}
-
-			switch (sort) {
-				case "title-asc":
-					return a.title.localeCompare(b.title, "ko");
-				case "title-desc":
-					return b.title.localeCompare(a.title, "ko");
-				case "artist-asc":
-					return a.artist.localeCompare(b.artist, "ko");
-				case "artist-desc":
-					return b.artist.localeCompare(a.artist, "ko");
-				default:
-					return 0;
-			}
-		});
-	}, [debouncedSearch, sort, data, activeFilters, fuse, selectedSong]);
+		return filterAndSortSongs(baseData, activeFilters, sort, Boolean(keyword));
+	}, [debouncedSearch, sort, data, activeFilters, fuse]);
 
 	// #endregion
 
@@ -1067,7 +969,7 @@ export default function SongBook() {
 								<Box position="sticky" top="0" left="0" height="0" zIndex={1} overflow="visible">
 									<IconButton
 										onClick={() => {
-											setSelectedSong(null);
+											setSelection(null);
 										}}
 										variant="ghost"
 										size="xs"
@@ -1084,7 +986,7 @@ export default function SongBook() {
 
 				{/* 모바일 바텀 시트 */}
 				{!isDesktop && (
-					<DrawerRoot placement="bottom" open={isOpenMobileView} onOpenChange={onOpenChange}>
+					<DrawerRoot placement="bottom" open={isOpenMobileView && selectedSong !== null} onOpenChange={onOpenChange}>
 						<DrawerBackdrop />
 						<DrawerContent
 							maxH="85vh"

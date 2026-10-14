@@ -1,0 +1,97 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpRight, Music2, Play, Search, X } from "lucide-react";
+import type { HamkubbySongHistoryModel, Song } from "../../config/types";
+import { formatDateToYYYYMMDD } from "../../lib/date";
+import { normalizeKeyword } from "../../lib/search";
+import useUiStore from "../../store/useUiStore";
+
+const previewLimit = 5;
+type HistorySort = "recommended" | "newest" | "oldest";
+
+function HistoryItems({ items, onPlay }: { items: HamkubbySongHistoryModel[]; onPlay: (item: HamkubbySongHistoryModel) => void }) {
+	return <div className="kub-histories">
+		{items.map((item) => <button key={item.id} className="kub-video-link" disabled={!item.youtubeVideoId} onClick={() => onPlay(item)}>
+			<Play className="kub-play-icon" aria-hidden="true" />
+			<span>
+				<time dateTime={formatDateToYYYYMMDD(item.sungAt)}>{formatDateToYYYYMMDD(item.sungAt)}</time>
+				{item.priority === 7 && " · 추천"}
+				<small>{item.memo || (item.youtubeVideoId ? "영상 재생" : "등록된 영상이 없어요")}</small>
+			</span>
+			<ArrowUpRight aria-hidden="true" />
+		</button>)}
+	</div>;
+}
+
+function HistoryDialog({ song, items, onClose, onPlay }: {
+	song: Song; items: HamkubbySongHistoryModel[]; onClose: () => void; onPlay: (item: HamkubbySongHistoryModel) => void;
+}) {
+	const dialogRef = useRef<HTMLDialogElement>(null);
+	const searchRef = useRef<HTMLInputElement>(null);
+	const [query, setQuery] = useState("");
+	const [sort, setSort] = useState<HistorySort>("recommended");
+	const results = useMemo(() => {
+		const keyword = normalizeKeyword(query);
+		const filtered = items.filter((item) => normalizeKeyword(`${formatDateToYYYYMMDD(item.sungAt)} ${item.memo ?? ""}`).includes(keyword));
+		if (sort === "recommended") return filtered;
+		return filtered.sort((a, b) => (new Date(a.sungAt).getTime() - new Date(b.sungAt).getTime()) * (sort === "oldest" ? 1 : -1));
+	}, [items, query, sort]);
+
+	useEffect(() => {
+		const dialog = dialogRef.current;
+		const overflow = document.body.style.overflow;
+		dialog?.showModal();
+		searchRef.current?.focus();
+		document.body.style.overflow = "hidden";
+		return () => { dialog?.close(); document.body.style.overflow = overflow; };
+	}, []);
+
+	return <dialog ref={dialogRef} className="kub-history-dialog" aria-labelledby="kub-history-title" onClose={onClose}
+		onKeyDown={(event) => {
+			event.stopPropagation();
+			if (event.key === "Escape" && !event.nativeEvent.isComposing) {
+				event.preventDefault();
+				event.currentTarget.close();
+			}
+		}}
+		onClick={(event) => {
+			if (event.target !== event.currentTarget) return;
+			const rect = event.currentTarget.getBoundingClientRect();
+			if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) event.currentTarget.close();
+		}}>
+		<header className="kub-history-header">
+			<div><h2 id="kub-history-title">방송 히스토리</h2><p>{song.title} · {song.artist}</p></div>
+			<button className="kub-history-close" aria-label="방송 히스토리 닫기" onClick={() => dialogRef.current?.close()}><X /></button>
+		</header>
+		<div className="kub-history-controls">
+			<label className="kub-history-search"><Search aria-hidden="true" /><input ref={searchRef} type="search" aria-label="방송 날짜·메모 검색" placeholder="날짜·메모 검색" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+			<select aria-label="방송 히스토리 정렬" value={sort} onChange={(event) => setSort(event.target.value as HistorySort)}>
+				<option value="recommended">추천순</option><option value="newest">최신순</option><option value="oldest">오래된순</option>
+			</select>
+		</div>
+		<p className="kub-history-count" role="status">전체 {items.length}개 · {results.length}개 표시</p>
+		<div className="kub-history-results">
+			{results.length ? <HistoryItems items={results} onPlay={(item) => { dialogRef.current?.close(); onPlay(item); }} /> : <p className="kub-history-empty">일치하는 방송 기록이 없어요.</p>}
+		</div>
+	</dialog>;
+}
+
+export function SongHistory({ song }: { song: Song }) {
+	const openPreview = useUiStore((state) => state.openPreview);
+	const setPreviewVideo = useUiStore((state) => state.setPreviewVideo);
+	const [open, setOpen] = useState(false);
+	const triggerRef = useRef<HTMLButtonElement>(null);
+	const histories = useMemo(() => [...(song.song_histories ?? [])].sort((a, b) => {
+		if ((a.priority === 7) !== (b.priority === 7)) return a.priority === 7 ? -1 : 1;
+		return b.priority - a.priority || new Date(b.sungAt).getTime() - new Date(a.sungAt).getTime();
+	}), [song.song_histories]);
+	const play = (item: HamkubbySongHistoryModel) => {
+		setPreviewVideo([item.youtubeVideoId, item.start ?? undefined, item.end ?? undefined]);
+		openPreview();
+	};
+	return <section className="kub-detail-section">
+		<h3><Music2 />쿠비가 부른 영상</h3>
+		{histories.length ? <HistoryItems items={histories.slice(0, previewLimit)} onPlay={play} /> : <p>아직 등록된 노래 영상이 없어요.</p>}
+		{histories.length > previewLimit && <button ref={triggerRef} className="kub-history-more" aria-haspopup="dialog" onClick={() => setOpen(true)}>방송 기록 {histories.length}개 전체 보기 <Search aria-hidden="true" /></button>}
+		{open && <HistoryDialog song={song} items={histories} onClose={() => { setOpen(false); triggerRef.current?.focus({ preventScroll: true }); }} onPlay={play} />}
+	</section>;
+}

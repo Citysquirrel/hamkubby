@@ -29,39 +29,17 @@ import { useShallow } from "zustand/react/shallow";
 import Cursor from "./components/Cursor";
 import { DraggablePreview } from "./components/DraggablePreview";
 import { ColorModeButton } from "./components/ui/color-mode";
-import { toaster } from "./components/ui/toaster";
-import type { RawSongData, Song } from "./config/types";
 import "./index.css";
+import { useSongbookData } from "./hooks/useSongbookData";
 import { confirmOnExit } from "./lib/confirm";
-import { fetch_ } from "./lib/fetch";
-import { normalizeKeyword } from "./lib/search";
-import useSongDataStore from "./store/useSongDataStore";
+import { isBoolean, readStoredValue, writeStoredValue } from "./lib/storage";
 import useUiStore from "./store/useUiStore";
-import { API_BASE_URL } from "./config/base-url";
-
-interface Maintenance {
-	maintenance_mode_hamkubby: boolean;
-	maintenance_message_hamkubby: string;
-}
 
 const SONGBOOK_URL = "https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE";
 
 function App() {
-	const [isLoading, setIsLoading] = useState(true);
-	const [maintenance, setMaintenance] = useState<Maintenance>({
-		maintenance_mode_hamkubby: false,
-		maintenance_message_hamkubby: "",
-	});
+	const { isLoading, maintenance } = useSongbookData();
 	const [scrollY, setScrollY] = useState(0);
-
-	const { setData, isSongDataLoading, startSongDataLoading, stopSongDataLoading } = useSongDataStore(
-		useShallow((state) => ({
-			setData: state.setData,
-			isSongDataLoading: state.isSongDataLoading,
-			startSongDataLoading: state.startSongDataLoading,
-			stopSongDataLoading: state.stopSongDataLoading,
-		})),
-	);
 
 	const { isProfileOpen, setIsProfileOpen, previewVideo, showPreview, closePreview } = useUiStore(
 		useShallow((state) => ({
@@ -81,20 +59,6 @@ function App() {
 		window.scrollTo({ top: 0 });
 	};
 
-	const parseRawData = (rawData: RawSongData[]): Song[] => {
-		return rawData
-			.filter((song) => song.isActive)
-			.map((song) => {
-				const { synonyms, isActive, ...restSong } = song;
-
-				return {
-					...restSong,
-					synonyms: synonyms ? JSON.parse(synonyms) : [],
-					actionStatus: isActive ? "ACTIVE" : "DISABLED",
-				};
-			});
-	};
-
 	useEffect(() => {
 		if (showPreview) enableBeforeUnload();
 		else disableBeforeUnload();
@@ -105,102 +69,7 @@ function App() {
 
 	// 로컬스토리지 불러오기
 	useEffect(() => {
-		const saved = localStorage.getItem("isHomeOpen");
-		if (saved !== null) {
-			setIsProfileOpen(JSON.parse(saved));
-		}
-	}, []);
-
-	// load data api & modify
-	useEffect(() => {
-		const fetchSongbookData = (isInitialLoad = false) => {
-			if (isInitialLoad) {
-				startSongDataLoading;
-			}
-
-			fetch_(`${API_BASE_URL}/api/v2/songbook`)
-				.then((res) => {
-					if (res.status >= 200 && res.status < 300) {
-						if (res.data) {
-							const data: RawSongData[] = res.data.data;
-							const parsed = parseRawData(data).map((song) => ({
-								...song,
-								searchTitle: normalizeKeyword(song.title),
-								searchArtist: normalizeKeyword(song.artist),
-							}));
-							setData(parsed);
-						}
-					} else {
-						toaster.create({
-							id: "network-error",
-							description: "노래책 데이터 로드 실패: 서버에 문제가 발생했습니다!",
-							type: "error",
-							closable: true,
-						});
-					}
-				})
-				.catch(() => {
-					toaster.create({
-						id: "network-error",
-						description: "노래책 데이터 로드 실패: 서버에 문제가 발생했습니다!",
-						type: "error",
-						closable: true,
-					});
-				})
-				.finally(() => {
-					if (isInitialLoad) {
-						stopSongDataLoading;
-					}
-				});
-		};
-
-		fetchSongbookData(true);
-
-		const POLLING_INTERVAL = 30 * 1000;
-		const intervalId = setInterval(() => {
-			fetchSongbookData(false);
-		}, POLLING_INTERVAL);
-
-		return () => clearInterval(intervalId);
-	}, []);
-
-	// Maintenance API Call
-	useEffect(() => {
-		let isCancelled = false;
-		let timerId: ReturnType<typeof setTimeout>;
-
-		const fetchMaintenance = () => {
-			fetch_(`${API_BASE_URL}/api/v2/maintenance`)
-				.then((res) => {
-					if (isCancelled) return;
-
-					if (res.status !== 200) {
-						return;
-					}
-
-					const data: { msg: string; data: Maintenance } = res.data;
-					if (data) {
-						const { maintenance_mode_hamkubby, maintenance_message_hamkubby } = data.data;
-						setMaintenance({ maintenance_mode_hamkubby, maintenance_message_hamkubby });
-
-						if (maintenance_mode_hamkubby) {
-							timerId = setTimeout(fetchMaintenance, 5000);
-						}
-					}
-				})
-				.finally(() => {
-					if (!isCancelled) {
-						setIsLoading(false);
-					}
-				});
-		};
-
-		fetchMaintenance();
-
-		return () => {
-			isCancelled = true;
-			clearTimeout(timerId);
-		};
+		setIsProfileOpen(readStoredValue("isHomeOpen", false, isBoolean));
 	}, []);
 
 	// scroll behavior
@@ -344,7 +213,7 @@ function ProfileButton({
 			onClick={() => {
 				setIsProfileOpen((prev) => {
 					const nextState = !prev;
-					localStorage.setItem("isHomeOpen", JSON.stringify(nextState));
+					writeStoredValue("isHomeOpen", nextState);
 					return nextState;
 				});
 			}}

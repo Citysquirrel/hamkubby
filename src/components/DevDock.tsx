@@ -1,6 +1,7 @@
 import { Accordion, Badge, Box, Button, Flex, HStack, Text, VStack } from "@chakra-ui/react";
 import React, { useEffect, useRef, useState } from "react";
 import type { NetworkLog } from "../lib/fetch";
+import { isPosition, readStoredValue, writeStoredValue } from "../lib/storage";
 import { toaster } from "./ui/toaster";
 
 const STORAGE_KEY__NETWORK_DOCK = "network_dock_position";
@@ -34,7 +35,7 @@ export const NetworkDock: React.FC = () => {
 		const consoleDock = document.getElementById("console-dock");
 		if (!dock) return;
 
-		const savedPos = JSON.parse(localStorage.getItem(STORAGE_KEY__NETWORK_DOCK) || '{"x": 0, "y": 0}');
+		const savedPos = readStoredValue(STORAGE_KEY__NETWORK_DOCK, { x: 0, y: 0 }, isPosition);
 		let currentX = savedPos.x;
 		let currentY = savedPos.y;
 		dock.style.transform = `translate(${currentX}px, ${currentY}px)`;
@@ -60,7 +61,7 @@ export const NetworkDock: React.FC = () => {
 				currentX = 0;
 				currentY = 0;
 				dock.style.transform = `translate(0px, 0px)`;
-				localStorage.setItem(STORAGE_KEY__NETWORK_DOCK, JSON.stringify({ x: 0, y: 0 }));
+				writeStoredValue(STORAGE_KEY__NETWORK_DOCK, { x: 0, y: 0 });
 				isDragging = false;
 				return;
 			}
@@ -98,7 +99,7 @@ export const NetworkDock: React.FC = () => {
 			if (!isDragging) return;
 			isDragging = false;
 			dock.releasePointerCapture(e.pointerId);
-			localStorage.setItem(STORAGE_KEY__NETWORK_DOCK, JSON.stringify({ x: currentX, y: currentY }));
+			writeStoredValue(STORAGE_KEY__NETWORK_DOCK, { x: currentX, y: currentY });
 
 			// 🔥 드래그하지 않고 제자리에서 마우스를 뗐다면 = '클릭'으로 간주하고 Dock 열기!
 			if (!hasMoved) {
@@ -434,7 +435,7 @@ export const ConsoleDock: React.FC = () => {
 
 		if (!dock) return;
 
-		const savedPos = JSON.parse(localStorage.getItem(STORAGE_KEY__CONSOLE_DOCK) || '{"x": 0, "y": 0}');
+		const savedPos = readStoredValue(STORAGE_KEY__CONSOLE_DOCK, { x: 0, y: 0 }, isPosition);
 		let currentX = savedPos.x;
 		let currentY = savedPos.y;
 		dock.style.transform = `translate(${currentX}px, ${currentY}px)`;
@@ -459,7 +460,7 @@ export const ConsoleDock: React.FC = () => {
 				currentX = 0;
 				currentY = 0;
 				dock.style.transform = `translate(0px, 0px)`;
-				localStorage.setItem(STORAGE_KEY__CONSOLE_DOCK, JSON.stringify({ x: 0, y: 0 }));
+				writeStoredValue(STORAGE_KEY__CONSOLE_DOCK, { x: 0, y: 0 });
 				isDragging = false;
 				return;
 			}
@@ -492,7 +493,7 @@ export const ConsoleDock: React.FC = () => {
 			if (!isDragging) return;
 			isDragging = false;
 			dock.releasePointerCapture(e.pointerId);
-			localStorage.setItem(STORAGE_KEY__CONSOLE_DOCK, JSON.stringify({ x: currentX, y: currentY }));
+			writeStoredValue(STORAGE_KEY__CONSOLE_DOCK, { x: currentX, y: currentY });
 			if (!hasMoved) setIsOpen(true);
 		};
 
@@ -512,7 +513,7 @@ export const ConsoleDock: React.FC = () => {
 	const handleResetPosition = () => {
 		if (dockRef.current) {
 			dockRef.current.style.transform = `translate(0px, 0px)`;
-			localStorage.setItem(STORAGE_KEY__CONSOLE_DOCK, JSON.stringify({ x: 0, y: 0 }));
+			writeStoredValue(STORAGE_KEY__CONSOLE_DOCK, { x: 0, y: 0 });
 		}
 	};
 
