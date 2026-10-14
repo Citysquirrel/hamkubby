@@ -78,7 +78,9 @@ export default function SongBookV2() {
 	const [pageSize, setPageSize] = useState(20);
 	const search = useMemo(() => createSongSearch(data), [data]);
 	const selected = useMemo(() => findSelectedSong(data, selection), [data, selection]);
-	const lyricsSearchUrl = selected ? `https://www.google.com/search?q=${encodeURIComponent(`${selected.artist} ${selected.title} 가사`)}&udm=14` : "";
+	const lyricsSearchUrl = selected
+		? `https://www.google.com/search?q=${encodeURIComponent(`${selected.artist} ${selected.title} 가사`)}&udm=14`
+		: "";
 	const registeredCount = useMemo(() => data.filter((song) => song.isOfficial).length, [data]);
 	const filteredSongs = useMemo(() => {
 		const keyword = normalizeKeyword(debouncedQuery);
@@ -190,7 +192,7 @@ export default function SongBookV2() {
 				</a>
 			</div>
 			<div className="kub-tools">
-				<label className="kub-search">
+				<div className="kub-search">
 					<Search aria-hidden="true" />
 					<input
 						ref={searchRef}
@@ -209,9 +211,24 @@ export default function SongBookV2() {
 						}}
 					/>
 					<span id="kub-search-hint" className="kub-search-hint">
-						키 입력으로 검색
+						키 입력으로 포커스
 					</span>
-				</label>
+					{query.length > 0 && (
+						<button
+							type="button"
+							className="kub-search-clear"
+							aria-label="검색어 지우기"
+							aria-keyshortcuts="Escape"
+							onClick={() => {
+								setQuery("");
+								setDebouncedQuery("");
+								searchRef.current?.focus();
+							}}
+						>
+							<span>ESC</span><X aria-hidden="true" />
+						</button>
+					)}
+				</div>
 				<button
 					className="kub-button kub-filter-toggle"
 					aria-label="상세 필터"
@@ -314,13 +331,7 @@ export default function SongBookV2() {
 				</div>
 			</div>
 			<div className="kub-workspace" data-detail-open={!!selected}>
-				<section
-					className="kub-song-section"
-					ref={listRef}
-					tabIndex={-1}
-					aria-label="노래 목록"
-					aria-busy={isLoading}
-				>
+				<section className="kub-song-section" ref={listRef} tabIndex={-1} aria-label="노래 목록" aria-busy={isLoading}>
 					<Pagination
 						page={currentPage}
 						pageCount={pageCount}
@@ -353,7 +364,11 @@ export default function SongBookV2() {
 											<span className="kub-song-artist">
 												<Highlight text={song.artist} query={debouncedQuery} />
 											</span>
-											{song.notes?.trim() && <span className="kub-song-note" title={song.notes}>쿠비 메모 · {song.notes}</span>}
+											{song.notes?.trim() && (
+												<span className="kub-song-note" title={song.notes}>
+													쿠비 메모 · {song.notes}
+												</span>
+											)}
 										</span>
 										<span className="kub-song-tags">
 											<SongTags song={song} />
@@ -425,14 +440,26 @@ export default function SongBookV2() {
 								</dl>
 							)}
 							<div className="kub-detail-actions">
-							<button className="kub-button kub-button-primary" onClick={() => void copySong(selected)}>
-								{copied === songKey(selected) ? <Check /> : <Copy />}
-								{copied === songKey(selected) ? "신청 문구 복사 완료" : "신청 문구 복사"}
-							</button>
-							<div className="kub-lyrics-links" role="group" aria-label="가사 찾아보기">
-								<button onClick={() => window.open(lyricsSearchUrl, "lyrics", "noopener,width=540,height=600")} aria-label="가사 찾아보기 새 창으로 열기">가사 새 창 <ArrowUpRight aria-hidden="true" /></button>
-								<a href={lyricsSearchUrl} target="_blank" rel="noopener noreferrer" aria-label="가사 찾아보기 새 탭으로 열기">가사 새 탭 <ArrowUpRight aria-hidden="true" /></a>
-							</div>
+								<button className="kub-button kub-button-primary" onClick={() => void copySong(selected)}>
+									{copied === songKey(selected) ? <Check /> : <Copy />}
+									{copied === songKey(selected) ? "신청 문구 복사 완료" : "신청 문구 복사"}
+								</button>
+								<div className="kub-lyrics-links" role="group" aria-label="가사 찾아보기">
+									<button
+										onClick={() => window.open(lyricsSearchUrl, "lyrics", "noopener,width=540,height=600")}
+										aria-label="가사 찾아보기 새 창으로 열기"
+									>
+										가사 새 창 <ArrowUpRight aria-hidden="true" />
+									</button>
+									<a
+										href={lyricsSearchUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label="가사 찾아보기 새 탭으로 열기"
+									>
+										가사 새 탭 <ArrowUpRight aria-hidden="true" />
+									</a>
+								</div>
 							</div>
 							{copyFallback && findSelectedSong([selected], copyFallback) && (
 								<div className="kub-copy-fallback">

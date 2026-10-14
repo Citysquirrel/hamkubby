@@ -1,8 +1,15 @@
-import { Navigate, type RouteObject } from "react-router-dom";
+import { Navigate, useLocation, type RouteObject } from "react-router-dom";
+
+function V2Redirect() {
+	const { pathname, search, hash } = useLocation();
+	const path = pathname.replace(/\/+$/, "");
+	const target = path === "/v2/videos" ? "/videos" : path === "/v2/recap" ? "/recap" : "/";
+	return <Navigate to={{ pathname: target, search, hash }} replace />;
+}
 
 export const v2Routes: RouteObject[] = [
 	{
-		path: "/v2",
+		path: "/",
 		lazy: async () => ({ Component: (await import("./AppV2")).default }),
 		children: [
 			{
@@ -11,7 +18,7 @@ export const v2Routes: RouteObject[] = [
 			},
 			{ path: "videos", lazy: async () => ({ Component: (await import("./pages/v2/Videos")).default }) },
 			{ path: "recap", lazy: async () => ({ Component: (await import("./pages/v2/Recap")).default }) },
-			{ path: "*", element: <Navigate to="/v2" replace /> },
 		],
 	},
+	{ path: "/v2/*", element: <V2Redirect /> },
 ];

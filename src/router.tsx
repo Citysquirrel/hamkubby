@@ -32,7 +32,7 @@ const redirectToRoom = () => {
 export const router = createBrowserRouter([
 	...v2Routes,
 	{
-		path: "/",
+		path: "/old",
 		element: <App />,
 		children: [{ index: true, element: <SongBook /> }],
 	},

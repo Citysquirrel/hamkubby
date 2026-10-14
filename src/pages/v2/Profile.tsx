@@ -122,7 +122,7 @@ export function Profile({ open }: { open: boolean }) {
 				</div>
 			</div>
 			<div className="kub-compact-profile" hidden={open}>
-				<span>노래하는 얼음도깨비, 햄쿠비</span>
+				<span></span>
 				<SocialLinks />
 			</div>
 		</>

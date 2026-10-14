@@ -33,7 +33,7 @@ function SongbookHelp() {
 export function PageHelp({ open }: { open: boolean }) {
 	const { pathname } = useLocation();
 	const path = pathname.replace(/\/+$/, "");
-	const page = path === "/v2/videos" ? "videos" : path === "/v2/recap" ? "recap" : "songbook";
+	const page = path === "/videos" ? "videos" : path === "/recap" ? "recap" : "songbook";
 	const label = page === "videos" ? "유튜브 영상" : page === "recap" ? "리캡" : "노래책";
 	return <section id="kub-help" className="kub-help" hidden={!open} aria-label={label + " 이용 안내"}>
 		{page === "songbook" ? <SongbookHelp /> : page === "videos" ? <>

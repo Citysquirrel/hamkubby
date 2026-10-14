@@ -233,6 +233,31 @@
 #kub-music-room .kub-search:has(input:not(:placeholder-shown)) .kub-search-hint {
 	display: none;
 }
+#kub-music-room .kub-search-clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	flex-shrink: 0;
+	min-height: 30px;
+	padding: 3px 7px;
+	border: 1px solid var(--kub-line);
+	border-radius: 6px;
+	color: var(--kub-muted);
+	font-size: 11px;
+	line-height: 1;
+}
+#kub-music-room .kub-search-clear:hover {
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+}
+#kub-music-room .kub-search-clear svg {
+	width: 13px;
+	height: 13px;
+}
+#kub-music-room .kub-search input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+}
 #kub-music-room .kub-filter-panel[data-source="false"] {
 	grid-template-columns: minmax(0, 1fr);
 }
