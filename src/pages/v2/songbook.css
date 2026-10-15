@@ -1,5 +1,5 @@
 #kub-music-room {
-	--kub-bg: light-dark(#fefcfb, #1a100e);
+	--kub-bg: light-dark(#fefcfb, #211b1b);
 	--kub-paper: light-dark(#fbf7f4, #2c1e1c);
 	--kub-ink: light-dark(#2c1e1c, #fefcfb);
 	--kub-muted: light-dark(#7c615a, #d1c2bd);
@@ -10,8 +10,9 @@
 	--kub-sage: light-dark(#b6d2a9, #7bb18f);
 	--kub-brown: light-dark(#946657, #d0a18e);
 	--kub-brown-soft: light-dark(#f7f1ed, #2a1f1c);
-	--kub-pink: light-dark(#e18ea0, #f0b3c1);
-	--kub-pink-soft: light-dark(#fbeef1, #2e1b20);
+	--kub-pink: light-dark(#c76082, #e6a0ba);
+	--kub-pink-deep: light-dark(#99445f, #f4bbcf);
+	--kub-pink-soft: light-dark(#fbe9ef, #392330);
 	--kub-row-height: 96px;
 	font-family: "LINE Seed Sans KR", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
 	font-size: 16px;
@@ -21,6 +22,16 @@
 	width: 100%;
 	isolation: isolate;
 	position: relative;
+}
+#kub-music-room::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background:
+		radial-gradient(ellipse at 95% 5%, light-dark(#efb4c626, #bf668618), transparent 60%),
+		radial-gradient(ellipse at 0% 85%, light-dark(#c8ded329, #608c7f12), transparent 50%);
 }
 #kub-music-room[data-theme="light"] {
 	color-scheme: light;
@@ -157,7 +168,7 @@
 	margin: 12px 0 9px;
 }
 #kub-music-room .kub-hero h1 span {
-	color: var(--kub-green-deep);
+	color: var(--kub-pink-deep);
 }
 #kub-music-room .kub-hero p {
 	font-size: 14px;
@@ -962,7 +973,7 @@
 	min-height: 286px;
 	margin-bottom: 22px;
 	border-radius: 12px 44px 12px 12px;
-	background: var(--kub-green-soft);
+	background: linear-gradient(115deg, var(--kub-green-soft) 55%, var(--kub-pink-soft));
 }
 #kub-music-room .kub-hero-copy {
 	padding: 25px 28px 27px;
@@ -1509,7 +1520,7 @@
 	inset: 0;
 	background-image:
 		radial-gradient(ellipse at -8% 68%, light-dark(#b2ccc733, #4087751a), transparent 48%),
-		radial-gradient(ellipse at 109% 25%, light-dark(#c4dcd52e, #71a89412), transparent 45%);
+		radial-gradient(ellipse at 109% 25%, light-dark(#e8a3bc33, #d07c9d26), transparent 45%);
 	background-size: 100% 100%;
 	background-repeat: no-repeat;
 	animation: kub-mist-breathe 16s ease-in-out infinite alternate;
@@ -1552,6 +1563,92 @@
 #kub-music-room .kub-frost-motes {
 	position: absolute;
 	inset: 0;
+}
+#kub-music-room .kub-frost-flowers {
+	position: absolute;
+	inset: 0;
+}
+#kub-music-room .kub-frost-flowers svg {
+	position: absolute;
+	width: 54px;
+	height: 54px;
+	opacity: 0.13;
+	animation: kub-flower-drift 18s ease-in-out infinite alternate;
+}
+#kub-music-room .kub-frost-flowers svg:nth-child(1) {
+	left: 5%;
+	top: 51%;
+	rotate: -35deg;
+}
+#kub-music-room .kub-frost-flowers svg:nth-child(2) {
+	right: 18%;
+	top: 8%;
+	width: 36px;
+	height: 36px;
+	rotate: 55deg;
+	animation-delay: -7s;
+	animation-duration: 23s;
+	animation-direction: alternate-reverse;
+}
+#kub-music-room .kub-frost-flowers svg:nth-child(3) {
+	right: 2%;
+	top: 60%;
+	width: 64px;
+	height: 64px;
+	opacity: 0.1;
+	rotate: -65deg;
+	animation-delay: -12s;
+	animation-duration: 21s;
+}
+#kub-music-room .kub-frost-flowers svg:nth-child(4) {
+	left: 18%;
+	bottom: 7%;
+	width: 40px;
+	height: 40px;
+	rotate: 32deg;
+	animation-delay: -5s;
+	animation-duration: 25s;
+	animation-direction: alternate-reverse;
+}
+#kub-music-room .kub-frost-flowers svg:nth-child(5) {
+	left: 2%;
+	top: 14%;
+	width: 44px;
+	height: 44px;
+	color: var(--kub-pink);
+	opacity: 0.1;
+	rotate: -18deg;
+	animation-delay: -16s;
+	animation-duration: 27s;
+}
+@keyframes kub-flower-drift {
+	from {
+		transform: translate(0, 6px) rotate(-24deg);
+	}
+	to {
+		transform: translate(7px, -18px) rotate(24deg);
+	}
+}
+@media (max-width: 620px) {
+	#kub-music-room .kub-frost-flowers svg:nth-child(2),
+	#kub-music-room .kub-frost-flowers svg:nth-child(5) {
+		display: none;
+	}
+	#kub-music-room .kub-frost-flowers svg:nth-child(1) {
+		left: 1%;
+		top: 53%;
+		width: 42px;
+		height: 42px;
+	}
+	#kub-music-room .kub-frost-flowers svg:nth-child(3) {
+		right: 1%;
+		top: 72%;
+		width: 48px;
+		height: 48px;
+	}
+	#kub-music-room .kub-frost-flowers svg:nth-child(4) {
+		left: 8%;
+	}
 }
 #kub-music-room .kub-frost-motes span {
 	position: absolute;
@@ -1943,6 +2040,23 @@
 	border-bottom-color: var(--kub-green);
 	color: var(--kub-green-deep);
 	font-weight: 600;
+}
+#kub-music-room .kub-hair-knot {
+	width: 30px;
+	height: 44px;
+	margin-left: auto;
+	align-self: center;
+	flex-shrink: 0;
+	pointer-events: none;
+}
+#kub-music-room .kub-hair-flower {
+	position: absolute;
+	left: 18px;
+	bottom: 16px;
+	width: 56px;
+	height: 56px;
+	rotate: -12deg;
+	pointer-events: none;
 }
 #kub-music-room .kub-page-avatar {
 	width: 44px;
