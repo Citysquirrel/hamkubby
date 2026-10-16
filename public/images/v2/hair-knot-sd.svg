@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 340" fill="none">
+  <title>SD 세 고리 머리 매듭</title>
+  <desc>빈 고리 세 개, 흰 꽃 모양 중심과 두 갈래 분홍 술. 투명 배경과 고리 안쪽.</desc>
+  <g stroke="#3D2B2D" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path fill-rule="evenodd" d="M98 112C85 96 48 61 49 48C50 35 108 20 130 24C148 28 143 67 133 106L98 112ZM108 86L122 82C125 66 128 52 122 51C114 50 94 56 88 60C86 63 99 77 108 86Z" fill="#EA7189"/>
+    <path fill-rule="evenodd" d="M91 140C70 139 32 148 30 164C28 179 58 215 75 218C90 221 113 185 118 167L91 140ZM87 165C78 165 62 168 61 173C62 178 71 189 76 189C82 189 88 179 92 171L87 165Z" fill="#EA7189"/>
+    <path fill-rule="evenodd" d="M150 122C171 104 198 107 205 121C213 137 223 175 215 187C206 201 168 184 149 170L150 122ZM174 139L172 157C178 162 187 166 191 165C194 159 189 139 186 136C184 134 179 136 174 139Z" fill="#EA7189"/>
+    <path d="M137 181C157 205 185 242 217 283C225 294 205 309 188 305C167 275 147 232 127 194Z" fill="#E9768D"/>
+    <path d="M117 183C120 224 125 267 127 308C128 322 166 326 188 314C178 271 160 226 144 185Z" fill="#EE8199"/>
+  </g>
+  <path d="M140 202C149 238 166 279 176 307C161 300 147 303 139 312C151 316 171 317 183 311C173 270 155 224 144 202Z" fill="#BE526F"/>
+  <path d="M157 202C177 232 198 262 215 285C213 292 205 296 199 295C185 266 170 232 157 202Z" fill="#C55671"/>
+  <path d="M60 49C76 41 107 34 128 34" stroke="#FFA4AF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M41 165C42 173 52 188 62 197M181 119C190 118 194 125 196 133" stroke="#FFA4AF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M115 175C109 189 117 201 130 201C145 202 153 189 147 177Z" fill="#CD5D7B" stroke="#3D2B2D" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M103 105C109 89 130 88 141 100C157 98 170 110 169 124C184 134 180 153 169 161C170 178 154 188 139 183C126 193 110 185 104 180C87 182 77 169 80 155C66 143 72 124 86 119C86 110 94 105 103 105Z" fill="#FFF8F1" stroke="#302B30" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

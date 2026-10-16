@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Check, Copy, Search, SlidersHorizontal, X } from "lucide-react";
 import type { Song, SortType } from "../../config/types";
 import { createSongSearch, normalizeKeyword } from "../../lib/search";
@@ -69,9 +69,13 @@ export default function SongBookV2() {
 	const [copied, setCopied] = useState<string | null>(null);
 	const [copyFallback, setCopyFallback] = useState<Song | null>(null);
 	const [status, setStatus] = useState("");
+	const [knotSwing, setKnotSwing] = useState(0);
+	const [detailClosing, setDetailClosing] = useState(false);
 	const searchRef = useRef<HTMLInputElement>(null);
 	const listRef = useRef<HTMLElement>(null);
 	const detailRef = useRef<HTMLElement>(null);
+	const detailContentRef = useRef<HTMLDivElement>(null);
+	const previousDetailHeight = useRef<number | null>(null);
 	const copyRef = useRef<HTMLTextAreaElement>(null);
 	const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 	const [page, setPage] = useState(1);
@@ -109,6 +113,52 @@ export default function SongBookV2() {
 
 	useEffect(() => () => clearTimeout(copyTimer.current), []);
 
+	useLayoutEffect(() => {
+		const from = previousDetailHeight.current;
+		previousDetailHeight.current = null;
+		const content = detailContentRef.current;
+		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+		const finishClose = () => {
+			if (!detailClosing) return;
+			setDetailClosing(false);
+			setSelection(null);
+		};
+		if (!content || !from || reducedMotion.matches ||
+			detailRef.current?.closest<HTMLElement>("#kub-music-room")?.dataset.effects === "false") {
+			finishClose();
+			return;
+		}
+		const to = detailClosing ? 0 : content.getBoundingClientRect().height;
+		if (Math.abs(from - to) < 1) return;
+		const animation = content.animate(
+			{
+				height: [`${from}px`, `${to}px`],
+				...(detailClosing ? {
+					paddingTop: [getComputedStyle(content).paddingTop, "0px"],
+					paddingBottom: [getComputedStyle(content).paddingBottom, "0px"],
+				} : {}),
+			},
+			{ duration: 280, easing: "cubic-bezier(.22,1,.36,1)", fill: detailClosing ? "forwards" : "none" },
+		);
+		const fade = detailClosing
+			? detailRef.current?.animate({ opacity: [1, 1, 0] }, { duration: 280, fill: "forwards" })
+			: undefined;
+		animation.onfinish = finishClose;
+		const cancel = () => {
+			animation.cancel();
+			fade?.cancel();
+			finishClose();
+		};
+		reducedMotion.addEventListener("change", cancel);
+		window.addEventListener("resize", cancel);
+		return () => {
+			animation.cancel();
+			fade?.cancel();
+			reducedMotion.removeEventListener("change", cancel);
+			window.removeEventListener("resize", cancel);
+		};
+	}, [selected, detailClosing]);
+
 	useEffect(() => {
 		if (copyFallback && copyRef.current) {
 			copyRef.current.focus();
@@ -145,7 +195,10 @@ export default function SongBookV2() {
 		setHistory([]);
 	};
 	const selectSong = (song: Song) => {
+		previousDetailHeight.current = detailContentRef.current?.getBoundingClientRect().height ?? null;
+		setDetailClosing(false);
 		setSelection(song);
+		setKnotSwing((value) => value + 1);
 		setCopyFallback(null);
 		if (window.matchMedia("(max-width: 680px)").matches) {
 			requestAnimationFrame(() => {
@@ -154,10 +207,22 @@ export default function SongBookV2() {
 			});
 		}
 	};
+	const closeDetail = () => {
+		previousDetailHeight.current = detailContentRef.current?.getBoundingClientRect().height ?? null;
+		setKnotSwing((value) => value + 1);
+		setCopyFallback(null);
+		if (detailRef.current && getComputedStyle(detailRef.current).position === "relative") {
+			setDetailClosing(true);
+		} else {
+			setSelection(null);
+		}
+		searchRef.current?.focus({ preventScroll: true });
+	};
 	const copySong = async (song: Song) => {
 		try {
 			await navigator.clipboard.writeText(`${song.title} - ${song.artist}`);
 			setCopied(songKey(song));
+			if (findSelectedSong([song], selected)) setKnotSwing((value) => value + 1);
 			setCopyFallback(null);
 			setStatus(`${song.title} - ${song.artist} · 복사했어요.`);
 			clearTimeout(copyTimer.current);
@@ -166,6 +231,7 @@ export default function SongBookV2() {
 				setStatus("");
 			}, 2400);
 		} catch {
+			setDetailClosing(false);
 			setSelection(song);
 			setCopyFallback(song);
 			setStatus("복사할 문구를 선택했어요. 직접 복사해 주세요.");
@@ -412,81 +478,90 @@ export default function SongBookV2() {
 						/>
 					)}
 				</section>
-				<aside className="kub-detail" aria-label="선택한 곡 상세" ref={detailRef} tabIndex={-1}>
-					{selected ? (
-						<>
-							<div className="kub-detail-top">
-								<span className="kub-detail-label">고른 노래</span>
-								<button
-									className="kub-close"
-									aria-label="곡 상세 닫기"
-									onClick={() => {
-										setSelection(null);
-										setCopyFallback(null);
-										searchRef.current?.focus({ preventScroll: true });
-									}}
-								>
-									<X />
-								</button>
-							</div>
-							<h2>{selected.title}</h2>
-							<p className="kub-detail-artist">{selected.artist}</p>
-							<div className="kub-tags">
-								<SongTags song={selected} />
-							</div>
-							{selected.notes && (
-								<dl className="kub-note">
-									<dt>쿠비 메모</dt>
-									<dd>{selected.notes}</dd>
-								</dl>
-							)}
-							<div className="kub-detail-actions">
-								<button className="kub-button kub-button-primary" onClick={() => void copySong(selected)}>
-									{copied === songKey(selected) ? <Check /> : <Copy />}
-									{copied === songKey(selected) ? "신청 문구 복사 완료" : "신청 문구 복사"}
-								</button>
-								<div className="kub-lyrics-links" role="group" aria-label="가사 찾아보기">
-									<button
-										onClick={() => window.open(lyricsSearchUrl, "lyrics", "noopener,width=540,height=600")}
-										aria-label="가사 찾아보기 새 창으로 열기"
-									>
-										가사 새 창 <ArrowUpRight aria-hidden="true" />
-									</button>
-									<a
-										href={lyricsSearchUrl}
-										target="_blank"
-										rel="noopener noreferrer"
-										aria-label="가사 찾아보기 새 탭으로 열기"
-									>
-										가사 새 탭 <ArrowUpRight aria-hidden="true" />
-									</a>
+				<aside className="kub-detail" aria-label="선택한 곡 상세" ref={detailRef} tabIndex={-1} data-closing={detailClosing} inert={detailClosing}>
+					<img className="kub-detail-flower" src="/images/v2/hair-flower-sd.svg" alt="" aria-hidden="true" />
+					<img
+						key={`${selected ? songKey(selected) : "empty"}:${knotSwing}`}
+						className="kub-detail-knot"
+						data-swing={knotSwing > 0}
+						src="/images/v2/hair-knot-sd.svg"
+						alt=""
+						aria-hidden="true"
+					/>
+					<div className="kub-detail-content" ref={detailContentRef}>
+						<div className="kub-detail-scroll">
+							{selected ? (
+								<>
+									<div className="kub-detail-top">
+										<span className="kub-detail-label">고른 노래</span>
+										<button
+											className="kub-close"
+											aria-label="곡 상세 닫기"
+											onClick={closeDetail}
+										>
+											<X />
+										</button>
+									</div>
+									<h2>{selected.title}</h2>
+									<p className="kub-detail-artist">{selected.artist}</p>
+									<div className="kub-tags">
+										<SongTags song={selected} />
+									</div>
+									{selected.notes && (
+										<dl className="kub-note">
+											<dt>쿠비 메모</dt>
+											<dd>{selected.notes}</dd>
+										</dl>
+									)}
+									<div className="kub-detail-actions">
+										<button className="kub-button kub-button-primary" onClick={() => void copySong(selected)}>
+											{copied === songKey(selected) ? <Check /> : <Copy />}
+											{copied === songKey(selected) ? "신청 문구 복사 완료" : "신청 문구 복사"}
+										</button>
+										<div className="kub-lyrics-links" role="group" aria-label="가사 찾아보기">
+											<button
+												onClick={() => window.open(lyricsSearchUrl, "lyrics", "noopener,width=540,height=600")}
+												aria-label="가사 찾아보기 새 창으로 열기"
+											>
+												가사 새 창 <ArrowUpRight aria-hidden="true" />
+											</button>
+											<a
+												href={lyricsSearchUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												aria-label="가사 찾아보기 새 탭으로 열기"
+											>
+												가사 새 탭 <ArrowUpRight aria-hidden="true" />
+											</a>
+										</div>
+									</div>
+									{copyFallback && findSelectedSong([selected], copyFallback) && (
+										<div className="kub-copy-fallback">
+											<label htmlFor="kub-copy-text">문구를 선택해 직접 복사해 주세요.</label>
+											<textarea
+												id="kub-copy-text"
+												ref={copyRef}
+												readOnly
+												rows={2}
+												value={`${selected.title} - ${selected.artist}`}
+											/>
+										</div>
+									)}
+									<SongHistory key={songKey(selected)} song={selected} />
+									{selected.lyric && <Lyrics text={selected.lyric} />}
+								</>
+							) : (
+								<div className="kub-detail-empty">
+									<RiceCake color="white" />
+									<span>
+										어떤 곡이 궁금해요?
+										<br />
+										목록에서 하나 골라보세요.
+									</span>
 								</div>
-							</div>
-							{copyFallback && findSelectedSong([selected], copyFallback) && (
-								<div className="kub-copy-fallback">
-									<label htmlFor="kub-copy-text">문구를 선택해 직접 복사해 주세요.</label>
-									<textarea
-										id="kub-copy-text"
-										ref={copyRef}
-										readOnly
-										rows={2}
-										value={`${selected.title} - ${selected.artist}`}
-									/>
-								</div>
 							)}
-							<SongHistory key={songKey(selected)} song={selected} />
-							{selected.lyric && <Lyrics text={selected.lyric} />}
-						</>
-					) : (
-						<div className="kub-detail-empty">
-							<RiceCake color="white" />
-							<span>
-								어떤 곡이 궁금해요?
-								<br />
-								목록에서 하나 골라보세요.
-							</span>
 						</div>
-					)}
+					</div>
 				</aside>
 			</div>
 			<div className="kub-status" role="status">
