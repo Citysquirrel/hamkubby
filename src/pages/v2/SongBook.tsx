@@ -178,6 +178,7 @@ export default function SongBookV2() {
 
 	return (
 		<>
+			<link rel="canonical" href="https://hamkubby.pages.dev/" />
 			<div className="kub-search-heading">
 				<h2>노래 찾기</h2>
 				<a
