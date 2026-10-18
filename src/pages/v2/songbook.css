@@ -1178,7 +1178,7 @@
 }
 @container (max-width:420px) {
 	#kub-music-room .kub-top {
-		flex-wrap: nowrap;
+		flex-wrap: wrap;
 	}
 	#kub-music-room .kub-nav {
 		margin-left: auto;
@@ -2319,5 +2319,12 @@
 #kub-music-room .kub-history-dialog .kub-histories {
 	max-height: none;
 	overflow: visible;
+}
+
+#kub-music-room .kub-cursor-toggle { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 8px; color: var(--kub-muted); }
+#kub-music-room .kub-cursor-toggle[aria-pressed="true"] { color: var(--kub-green-deep); background: var(--kub-green-soft); }
+#kub-music-room .kub-cursor-toggle:focus-visible { outline: 2px solid var(--kub-green); outline-offset: 2px; }
+@media (pointer: coarse) {
+	#kub-music-room .kub-cursor-toggle { display: none; }
 }
 

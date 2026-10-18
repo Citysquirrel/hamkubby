@@ -1,24 +1,31 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Music2, Play, Search, X } from "lucide-react";
+import { ArrowUpRight, Check, Music2, Play, Plus, Search, X } from "lucide-react";
 import type { HamkubbySongHistoryModel, Song } from "../../config/types";
 import { formatDateToYYYYMMDD } from "../../lib/date";
 import { normalizeKeyword } from "../../lib/search";
-import useUiStore from "../../store/useUiStore";
+import { usePlayerStore } from "../../store/usePlayerStore";
+import { toQueueTrack } from "../../lib/player";
 
 const previewLimit = 5;
 type HistorySort = "recommended" | "newest" | "oldest";
 
-function HistoryItems({ items, onPlay }: { items: HamkubbySongHistoryModel[]; onPlay: (item: HamkubbySongHistoryModel) => void }) {
+function HistoryItems({ song, items, onPlay }: { song: Song; items: HamkubbySongHistoryModel[]; onPlay: (item: HamkubbySongHistoryModel) => void }) {
+	const queue = usePlayerStore((state) => state.queue);
+	const add = usePlayerStore((state) => state.add);
 	return <div className="kub-histories">
-		{items.map((item) => <button key={item.id} className="kub-video-link" disabled={!item.youtubeVideoId} onClick={() => onPlay(item)}>
+		{items.map((item) => {
+			const track = toQueueTrack(song, item);
+			const added = !!track && queue.some((entry) => entry.id === track.id);
+			return <div key={item.id} className="kub-history-row"><button className="kub-video-link" disabled={!track} onClick={() => onPlay(item)}>
 			<Play className="kub-play-icon" aria-hidden="true" />
 			<span>
 				<time dateTime={formatDateToYYYYMMDD(item.sungAt)}>{formatDateToYYYYMMDD(item.sungAt)}</time>
 				{item.priority === 7 && " · 추천"}
-				<small>{item.memo || (item.youtubeVideoId ? "영상 재생" : "등록된 영상이 없어요")}</small>
+				<small>{!item.youtubeVideoId ? "등록된 영상이 없어요" : !track ? "재생 구간 정보가 올바르지 않아요" : item.memo || "영상 재생"}</small>
 			</span>
 			<ArrowUpRight aria-hidden="true" />
-		</button>)}
+		</button><button className="kub-history-add" aria-label={`${formatDateToYYYYMMDD(item.sungAt)} 영상 대기열에 담기`} aria-pressed={added} disabled={!track} onClick={() => track && add(track)}>{added ? <Check /> : <Plus />}</button></div>;
+		})}
 	</div>;
 }
 
@@ -70,14 +77,13 @@ function HistoryDialog({ song, items, onClose, onPlay }: {
 		</div>
 		<p className="kub-history-count" role="status">전체 {items.length}개 · {results.length}개 표시</p>
 		<div className="kub-history-results">
-			{results.length ? <HistoryItems items={results} onPlay={(item) => { dialogRef.current?.close(); onPlay(item); }} /> : <p className="kub-history-empty">일치하는 방송 기록이 없어요.</p>}
+			{results.length ? <HistoryItems song={song} items={results} onPlay={(item) => { dialogRef.current?.close(); onPlay(item); }} /> : <p className="kub-history-empty">일치하는 방송 기록이 없어요.</p>}
 		</div>
 	</dialog>;
 }
 
 export function SongHistory({ song }: { song: Song }) {
-	const openPreview = useUiStore((state) => state.openPreview);
-	const setPreviewVideo = useUiStore((state) => state.setPreviewVideo);
+	const add = usePlayerStore((state) => state.add);
 	const [open, setOpen] = useState(false);
 	const triggerRef = useRef<HTMLButtonElement>(null);
 	const histories = useMemo(() => [...(song.song_histories ?? [])].sort((a, b) => {
@@ -85,12 +91,12 @@ export function SongHistory({ song }: { song: Song }) {
 		return b.priority - a.priority || new Date(b.sungAt).getTime() - new Date(a.sungAt).getTime();
 	}), [song.song_histories]);
 	const play = (item: HamkubbySongHistoryModel) => {
-		setPreviewVideo([item.youtubeVideoId, item.start ?? undefined, item.end ?? undefined]);
-		openPreview();
+		const track = toQueueTrack(song, item);
+		if (track) add(track, true);
 	};
 	return <section className="kub-detail-section">
 		<h3><Music2 />쿠비가 부른 영상</h3>
-		{histories.length ? <HistoryItems items={histories.slice(0, previewLimit)} onPlay={play} /> : <p>아직 등록된 노래 영상이 없어요.</p>}
+		{histories.length ? <HistoryItems song={song} items={histories.slice(0, previewLimit)} onPlay={play} /> : <p>아직 등록된 노래 영상이 없어요.</p>}
 		{histories.length > previewLimit && <button ref={triggerRef} className="kub-history-more" aria-haspopup="dialog" onClick={() => setOpen(true)}>방송 기록 {histories.length}개 전체 보기 <Search aria-hidden="true" /></button>}
 		{open && <HistoryDialog song={song} items={histories} onClose={() => { setOpen(false); triggerRef.current?.focus({ preventScroll: true }); }} onPlay={play} />}
 	</section>;

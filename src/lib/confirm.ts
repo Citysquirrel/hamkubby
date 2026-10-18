@@ -1,6 +1,7 @@
 export function confirmOnExit() {
 	const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 		event.preventDefault();
+		event.returnValue = "true";
 	};
 
 	const enableBeforeUnload = () => {

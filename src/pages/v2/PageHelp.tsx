@@ -20,6 +20,8 @@ function SongbookHelp() {
 		<p>
 			입력 중이 아닐 때 글자 키를 누르면 검색창으로 이동합니다. <kbd>Esc</kbd>로 검색어를 지울 수 있어요.
 		</p>
+		<p>영상의 ▶는 바로 재생, +는 대기열에 담기예요. 플레이어에서 목록을 저장하고 순서를 바꿀 수 있어요.</p>
+		<p>목록은 현재 브라우저에 저장됩니다. 플레이어를 닫아도 곡과 위치는 남으며, 헤더의 플레이어 버튼으로 다시 열 수 있어요.</p>
 		<a
 			href="https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE"
 			target="_blank"
