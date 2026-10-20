@@ -120,8 +120,8 @@ export function useQueuePlayback() {
 		setDuration(0);
 		setLoading(!!track);
 		if (!track) { player.stopVideo(); return; }
-		player.setVolume(state.volume);
 		if (state.muted) player.mute(); else player.unMute();
+		player.setVolume(state.volume);
 		const position = state.position >= (track.end ?? Infinity) ? track.start : Math.max(track.start, state.position);
 		const options = { videoId: track.videoId, startSeconds: position, ...(track.end !== null ? { endSeconds: track.end } : {}) };
 		usePlayerStore.setState({ position });
@@ -222,16 +222,17 @@ export function useQueuePlayback() {
 		usePlayerStore.setState({ position: value });
 	};
 	const volume = (value: number) => {
-		playerRef.current?.setVolume(value);
-		if (value > 0) playerRef.current?.unMute();
+		const player = playerRef.current;
+		if (value > 0 && player?.isMuted()) player.unMute();
+		if (value === 0) player?.mute();
+		// 음소거 해제 후 지정한 볼륨을 마지막에 적용한다.
+		player?.setVolume(value);
 		usePlayerStore.setState({ volume: value, muted: value === 0 });
 	};
 	const mute = () => {
 		const state = usePlayerStore.getState();
 		if (state.muted || state.volume === 0) {
-			playerRef.current?.unMute();
-			if (state.volume === 0) volume(20);
-			usePlayerStore.setState({ muted: false });
+			volume(state.volume === 0 ? 20 : state.volume);
 		} else { playerRef.current?.mute(); usePlayerStore.setState({ muted: true }); }
 	};
 	return { onReady, onStateChange, onError, ready, loading: !!currentId && !error && (!ready || loading), status, error, duration, longPlay, dismissLongPlay: () => setLongPlay(false), toggle, seek, volume, mute };

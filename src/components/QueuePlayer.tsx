@@ -12,6 +12,18 @@ import "./queue-player.css";
 
 const options = { width: "100%", height: "100%", playerVars: { playsinline: 1, controls: 1, rel: 0, origin: window.location.origin } };
 
+function VolumeSlider({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+	const [dismissed, setDismissed] = useState(false);
+	return <div className="kub-player-volume-slider" data-player-no-drag data-dismissed={dismissed}
+		onPointerEnter={() => setDismissed(false)} onFocus={() => setDismissed(false)}
+		onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setDismissed(true); } }}>
+		<input aria-label={label} aria-valuetext={`${value}%`} type="range" min={0} max={100} step={1}
+			value={value} style={{ "--kub-range-fill": `${value}%` } as CSSProperties}
+			onChange={(event) => onChange(Number(event.target.value))} />
+		<output className="kub-player-volume-tooltip" aria-hidden="true">볼륨 {value}%</output>
+	</div>;
+}
+
 function TrackList({ tracks, currentId, onPlay, onMove, onRemove }: {
 	tracks: QueueTrack[]; currentId?: string; onPlay: (id: string) => void; onMove: (id: string, offset: number) => void; onRemove: (id: string) => void;
 }) {
@@ -47,7 +59,6 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 	const cycleRepeat = () => usePlayerStore.setState({ repeat: state.repeat === "off" ? "all" : state.repeat === "all" ? "one" : "off" });
 	const resizeEdges = layout.mobile ? [] : layout.dock === "bottom" ? ["top"] as const
 		: layout.compact ? [] : layout.dock === "floating" ? ["width", "top", "bottom", "corner"] as const : ["width", "top", "bottom"] as const;
-	const rangeStyle = (value: number): CSSProperties => ({ "--kub-range-fill": `${Math.max(0, Math.min(100, value))}%` } as CSSProperties);
 	useEffect(() => {
 		if (state.open && layout.mobile && layout.dock === "expanded" && !layout.minimized && !layout.panelRef.current?.contains(document.activeElement)) {
 			layout.panelRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
@@ -70,7 +81,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 						<button aria-pressed={segmentOnly && track?.end != null} disabled={track?.end == null} onClick={() => setSegmentOnly(!segmentOnly)}>재생바: {segmentOnly && track?.end != null ? "노래 구간만 보기" : "전체 영상 보기"}</button>
 						<button aria-pressed={state.shuffle} onClick={() => usePlayerStore.setState({ shuffle: !state.shuffle, visited: state.currentId ? [state.currentId] : [] })}><Shuffle />셔플 {state.shuffle ? "켬" : "끔"}</button>
 						<button aria-label={`반복 재생: ${repeatLabel}`} aria-pressed={state.repeat !== "off"} onClick={cycleRepeat}>{state.repeat === "one" ? <Repeat1 /> : <Repeat />}{repeatLabel}</button>
-						<div className="kub-player-volume"><button aria-label={state.muted ? "음소거 해제" : "음소거"} onClick={playback.mute}>{state.muted || !state.volume ? <VolumeX /> : <Volume2 />}</button><input aria-label="설정 볼륨" type="range" min={0} max={100} value={state.muted ? 0 : state.volume} style={rangeStyle(state.muted ? 0 : state.volume)} onChange={(event) => playback.volume(Number(event.target.value))} /></div>
+						<div className="kub-player-volume"><button aria-label={state.muted ? "음소거 해제" : "음소거"} onClick={playback.mute}>{state.muted || !state.volume ? <VolumeX /> : <Volume2 />}</button><VolumeSlider label="설정 볼륨" value={state.muted ? 0 : state.volume} onChange={playback.volume} /></div>
 						{track && <a href={`https://www.youtube.com/watch?v=${track.videoId}&t=${Math.floor(state.position)}s`} target="_blank" rel="noopener noreferrer">YouTube에서 열기 <ExternalLink /></a>}
 						{track && <small>{playback.status}{track.end === null && " · 종료 지점 미등록"}</small>}
 					</div>
@@ -106,7 +117,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 						</div>
 						<div className="kub-player-volume">
 							<button aria-label={state.muted ? "음소거 해제" : "음소거"} onClick={playback.mute}>{state.muted || !state.volume ? <VolumeX /> : <Volume2 />}</button>
-							<input aria-label="볼륨" type="range" min={0} max={100} value={state.muted ? 0 : state.volume} style={rangeStyle(state.muted ? 0 : state.volume)} onChange={(event) => playback.volume(Number(event.target.value))} />
+							<VolumeSlider label="볼륨" value={state.muted ? 0 : state.volume} onChange={playback.volume} />
 							{track && <a href={`https://www.youtube.com/watch?v=${track.videoId}&t=${Math.floor(state.position)}s`} target="_blank" rel="noopener noreferrer">YouTube <ExternalLink /></a>}
 						</div>
 					</div>
