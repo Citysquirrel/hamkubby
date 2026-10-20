@@ -13,7 +13,7 @@ import { usePlayerStore } from "../../store/usePlayerStore";
 import { ListMusic, MousePointer2 } from "lucide-react";
 import "./songbook.css";
 
-export function PageShell({ children, cursorEnabled, onToggleCursor }: { children: ReactNode; cursorEnabled: boolean; onToggleCursor: () => void }) {
+export function PageShell({ children, cursorAvailable, cursorEnabled, onToggleCursor }: { children: ReactNode; cursorAvailable: boolean; cursorEnabled: boolean; onToggleCursor: () => void }) {
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [intro, setIntro] = useState(() => readStoredValue("songbook-v2-intro", true, isBoolean));
 	const [effects] = useState(() => readStoredValue("songbook-v2-effects", !window.matchMedia("(prefers-reduced-motion: reduce)").matches, isBoolean));
@@ -66,7 +66,7 @@ export function PageShell({ children, cursorEnabled, onToggleCursor }: { childre
 					>
 						이용 안내
 					</button>
-					<button className="kub-cursor-toggle" aria-label={cursorEnabled ? "쿠비 커서 끄기" : "쿠비 커서 켜기"} title={cursorEnabled ? "쿠비 커서 끄기" : "쿠비 커서 켜기"} aria-pressed={cursorEnabled} onClick={onToggleCursor}><MousePointer2 size={18} /></button>
+					{cursorAvailable && <button className="kub-cursor-toggle" aria-label={cursorEnabled ? "쿠비 커서 끄기" : "쿠비 커서 켜기"} title={cursorEnabled ? "쿠비 커서 끄기" : "쿠비 커서 켜기"} aria-pressed={cursorEnabled} onClick={onToggleCursor}><MousePointer2 size={18} /></button>}
 					<button
 						className="kub-theme"
 						aria-label={colorMode === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}

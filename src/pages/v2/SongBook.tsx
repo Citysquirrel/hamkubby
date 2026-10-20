@@ -39,7 +39,6 @@ function SongTags({ song }: { song: Song }) {
 		</>
 	);
 }
-
 function Highlight({ text, query }: { text: string; query: string }) {
 	const term = query.trim();
 	const index = term ? text.toLocaleLowerCase().indexOf(term.toLocaleLowerCase()) : -1;
@@ -123,8 +122,12 @@ export default function SongBookV2() {
 			setDetailClosing(false);
 			setSelection(null);
 		};
-		if (!content || !from || reducedMotion.matches ||
-			detailRef.current?.closest<HTMLElement>("#kub-music-room")?.dataset.effects === "false") {
+		if (
+			!content ||
+			!from ||
+			reducedMotion.matches ||
+			detailRef.current?.closest<HTMLElement>("#kub-music-room")?.dataset.effects === "false"
+		) {
 			finishClose();
 			return;
 		}
@@ -133,10 +136,12 @@ export default function SongBookV2() {
 		const animation = content.animate(
 			{
 				height: [`${from}px`, `${to}px`],
-				...(detailClosing ? {
-					paddingTop: [getComputedStyle(content).paddingTop, "0px"],
-					paddingBottom: [getComputedStyle(content).paddingBottom, "0px"],
-				} : {}),
+				...(detailClosing
+					? {
+							paddingTop: [getComputedStyle(content).paddingTop, "0px"],
+							paddingBottom: [getComputedStyle(content).paddingBottom, "0px"],
+						}
+					: {}),
 			},
 			{ duration: 280, easing: "cubic-bezier(.22,1,.36,1)", fill: detailClosing ? "forwards" : "none" },
 		);
@@ -247,16 +252,6 @@ export default function SongBookV2() {
 			<link rel="canonical" href="https://hamkubby.pages.dev/" />
 			<div className="kub-search-heading">
 				<h2>노래 찾기</h2>
-				<a
-					className="kub-original-link"
-					href="https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<img src="/images/spreadsheet.svg" alt="" />
-					원본 노래책 열기
-					<ArrowUpRight aria-hidden="true" />
-				</a>
 			</div>
 			<div className="kub-tools">
 				<div className="kub-search">
@@ -292,7 +287,8 @@ export default function SongBookV2() {
 								searchRef.current?.focus();
 							}}
 						>
-							<span>ESC</span><X aria-hidden="true" />
+							<span>ESC</span>
+							<X aria-hidden="true" />
 						</button>
 					)}
 				</div>
@@ -386,9 +382,6 @@ export default function SongBookV2() {
 					))}
 				</div>
 				<div className="kub-result-meta">
-					<span aria-live="polite">
-						{filteredSongs.length.toLocaleString()}곡{debouncedQuery && " · 검색 결과"}
-					</span>
 					<select aria-label="곡 정렬" value={sort} onChange={(event) => setSort(event.target.value as SortType)}>
 						<option value="title-asc">제목 오름차순</option>
 						<option value="title-desc">제목 내림차순</option>
@@ -478,7 +471,14 @@ export default function SongBookV2() {
 						/>
 					)}
 				</section>
-				<aside className="kub-detail" aria-label="선택한 곡 상세" ref={detailRef} tabIndex={-1} data-closing={detailClosing} inert={detailClosing}>
+				<aside
+					className="kub-detail"
+					aria-label="선택한 곡 상세"
+					ref={detailRef}
+					tabIndex={-1}
+					data-closing={detailClosing}
+					inert={detailClosing}
+				>
 					<img className="kub-detail-flower" src="/images/v2/hair-flower-sd.svg" alt="" aria-hidden="true" />
 					<img
 						key={`${selected ? songKey(selected) : "empty"}:${knotSwing}`}
@@ -494,11 +494,7 @@ export default function SongBookV2() {
 								<>
 									<div className="kub-detail-top">
 										<span className="kub-detail-label">고른 노래</span>
-										<button
-											className="kub-close"
-											aria-label="곡 상세 닫기"
-											onClick={closeDetail}
-										>
+										<button className="kub-close" aria-label="곡 상세 닫기" onClick={closeDetail}>
 											<X />
 										</button>
 									</div>
@@ -576,3 +572,4 @@ export default function SongBookV2() {
 		</>
 	);
 }
+

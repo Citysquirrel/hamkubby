@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { API_BASE_URL } from "../config/base-url";
+import { API_BASE_URL, SONGBOOK_API_URL } from "../config/base-url";
 import { toaster } from "../components/ui/toaster";
 import { fetch_ } from "../lib/fetch";
 import { parseSongbookData } from "../lib/songbook";
@@ -34,7 +34,7 @@ export function useSongbookData() {
 				startSongDataLoading();
 			}
 
-			fetch_(`${API_BASE_URL}/api/v2/songbook`)
+			fetch_(SONGBOOK_API_URL)
 				.then((res) => {
 					if (isCancelled) return;
 					if (res.status >= 200 && res.status < 300) {

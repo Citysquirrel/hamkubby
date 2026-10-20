@@ -384,12 +384,13 @@
 	color: var(--kub-muted);
 }
 #kub-music-room .kub-result-meta select {
-	max-width: 120px;
+	min-height: 38px;
 	background: var(--kub-bg);
-	border: 0;
-	color: var(--kub-muted);
-	font-size: 13px;
-	padding: 5px 0;
+	border: 1px solid var(--kub-line);
+	border-radius: 7px;
+	color: var(--kub-ink);
+	font-size: 14px;
+	padding: 6px 10px;
 }
 #kub-music-room .kub-workspace {
 	display: grid;
@@ -2112,6 +2113,7 @@
 }
 #kub-music-room .kub-page-tabs {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 26px;
 	padding: 0 30px;
 	max-width: 1280px;
@@ -2129,6 +2131,15 @@
 	border-bottom-color: var(--kub-green);
 	color: var(--kub-green-deep);
 	font-weight: 600;
+}
+#kub-music-room .kub-page-tabs .kub-original-link {
+	display: inline-flex;
+	align-self: center;
+	margin-left: auto;
+	padding: 7px 10px;
+	border: 1px solid var(--kub-line);
+	color: var(--kub-green-deep);
+	white-space: nowrap;
 }
 #kub-music-room .kub-hair-knot {
 	width: 30px;
@@ -2180,7 +2191,11 @@
 @container (max-width: 620px) {
 	#kub-music-room .kub-page-tabs {
 		padding-inline: 16px;
-		gap: 24px;
+		gap: 0 24px;
+	}
+	#kub-music-room .kub-page-tabs .kub-original-link {
+		min-height: 44px;
+		margin-block: 4px;
 	}
 	#kub-music-room .kub-pagination {
 		justify-content: center;

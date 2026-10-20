@@ -25,6 +25,17 @@ export default defineConfig(({ mode }) => {
 
 		server: {
 			proxy: {
+				"/api/v2/songbook": {
+					target: "https://api.stelcount.fans",
+					changeOrigin: true,
+					configure: (proxy) => {
+						proxy.on("proxyReq", (request) => {
+							request.removeHeader("origin");
+							request.removeHeader("cookie");
+							request.removeHeader("authorization");
+						});
+					},
+				},
 				"/api/v1/youtube": {
 					target: env.VITE_HAMKUBBY_API_URL || "https://hamkubby.stelcount.fans",
 					changeOrigin: true,

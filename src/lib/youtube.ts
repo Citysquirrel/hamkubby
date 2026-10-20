@@ -18,19 +18,13 @@ export interface YoutubeFilters {
 	category: string;
 	from: string;
 	to: string;
+	broadcastFrom: string;
+	broadcastTo: string;
 }
 
-export interface YoutubeVideoPage {
+interface YoutubeVideoList {
 	items: YoutubeVideo[];
 	total: number;
-	page: number;
-	pageSize: number;
-	totalPages: number;
-}
-
-export interface YoutubeCategory {
-	name: string;
-	count: number;
 }
 
 export type YoutubeSort = "newest" | "oldest" | "popular";
@@ -48,9 +42,6 @@ async function requestYoutube(path: string, signal: AbortSignal): Promise<unknow
 	const timeout = setTimeout(cancel, 20000);
 	try {
 		const response = await fetch(`${HAMKUBBY_API_BASE_URL}/api/v1/youtube/${path}`, { signal: controller.signal });
-		if (response.status === 400 && new URLSearchParams(path.split("?")[1]).has("sort")) {
-			throw new Error("현재 이 정렬을 사용할 수 없어요. 최신순으로 다시 확인해 주세요.");
-		}
 		if (!response.ok) throw new Error("영상을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
 		return await response.json();
 	} finally {
@@ -59,44 +50,77 @@ async function requestYoutube(path: string, signal: AbortSignal): Promise<unknow
 	}
 }
 
-export async function getYoutubeVideos(
-	filters: YoutubeFilters, page: number, signal: AbortSignal,
-	{ pageSize = 20, sort = "newest" }: { pageSize?: number; sort?: YoutubeSort } = {},
-): Promise<YoutubeVideoPage> {
-	const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-	if (sort !== "newest") params.set("sort", sort);
-	Object.entries(filters).forEach(([key, value]) => { if (value) params.set(key, value); });
-	const result = await requestYoutube(`videos?${params}`, signal) as YoutubeVideoPage | null;
+export async function getAllYoutubeVideos(signal: AbortSignal): Promise<YoutubeVideo[]> {
+	const result = await requestYoutube("videos", signal) as YoutubeVideoList | null;
 	if (!result || !Array.isArray(result.items) || !Number.isInteger(result.total) || result.total < 0 ||
-		result.page !== page || result.pageSize !== pageSize || result.totalPages !== Math.ceil(result.total / pageSize) ||
+		result.items.length !== result.total ||
 		!result.items.every((video) => video && /^[\w-]{11}$/.test(video.id) &&
 			["main", "replay"].includes(video.channel) && typeof video.title === "string" &&
 			typeof video.thumbnailUrl === "string" && typeof video.duration === "string" &&
 			typeof video.publishedAt === "string" && Number.isFinite(Date.parse(video.publishedAt)) &&
 			Array.isArray(video.categories) && video.categories.every((category) => typeof category === "string") &&
 			(video.viewCount == null || (typeof video.viewCount === "string" && /^\d{1,20}$/.test(video.viewCount))))) {
-		throw new Error("영상 목록을 확인하지 못했어요. 다시 시도해 주세요.");
+		throw new Error("전체 영상 목록을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.");
 	}
-	return result;
+	if (new Set(result.items.map((video) => video.id)).size !== result.total) {
+		throw new Error("영상 목록이 갱신됐어요. 다시 불러와 주세요.");
+	}
+	return result.items.sort((a, b) => compareYoutubeVideos(a, b, "newest"));
+}
+
+export function youtubeBroadcastDate(title: string): string | null {
+	const match = /^\[(\d{2})\.(\d{2})\.(\d{2})\]/.exec(title.trimStart());
+	if (!match) return null;
+	const year = 2000 + Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	const date = new Date(Date.UTC(year, month - 1, day));
+	if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+	return `${year}-${match[2]}-${match[3]}`;
+}
+
+function koreanDate(time: number): string {
+	return new Date(time + 9 * 3600000).toISOString().slice(0, 10);
+}
+
+function compareYoutubeVideos(a: YoutubeVideo, b: YoutubeVideo, sort: YoutubeSort): number {
+	if (sort === "popular") {
+		if (a.viewCount == null && b.viewCount != null) return 1;
+		if (a.viewCount != null && b.viewCount == null) return -1;
+		if (a.viewCount != null && b.viewCount != null) {
+			const left = BigInt(a.viewCount);
+			const right = BigInt(b.viewCount);
+			if (left !== right) return left > right ? -1 : 1;
+		}
+	}
+	const dateOrder = Date.parse(a.publishedAt) - Date.parse(b.publishedAt);
+	return (sort === "oldest" ? dateOrder : -dateOrder) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
+export function filterAndSortYoutubeVideos(videos: YoutubeVideo[], filters: YoutubeFilters, sort: YoutubeSort): YoutubeVideo[] {
+	const keyword = filters.q.trim().toLowerCase();
+	return videos.filter((video) => {
+		if (keyword && !video.title.toLowerCase().includes(keyword)) return false;
+		if (filters.channel && video.channel !== filters.channel) return false;
+		if (filters.category && !video.categories.includes(filters.category)) return false;
+		const published = koreanDate(Date.parse(video.publishedAt));
+		if (filters.from && published < filters.from || filters.to && published > filters.to) return false;
+		if (filters.broadcastFrom || filters.broadcastTo) {
+			const broadcast = youtubeBroadcastDate(video.title);
+			if (!broadcast || filters.broadcastFrom && broadcast < filters.broadcastFrom ||
+				filters.broadcastTo && broadcast > filters.broadcastTo) return false;
+		}
+		return true;
+	}).sort((a, b) => compareYoutubeVideos(a, b, sort));
 }
 
 export function youtubeDateRange(days: number, now = Date.now()): Pick<YoutubeFilters, "from" | "to"> {
-	const koreanDate = (time: number) => new Date(time + 9 * 3600000).toISOString().slice(0, 10);
 	return { from: koreanDate(now - (days - 1) * 86400000), to: koreanDate(now) };
 }
 
 export function isRecentYoutubeVideo(video: YoutubeVideo, now = Date.now()): boolean {
 	const published = Date.parse(video.publishedAt);
 	return video.channel === "main" && published <= now && published >= now - 7 * 86400000;
-}
-
-export async function getYoutubeCategories(signal: AbortSignal): Promise<YoutubeCategory[]> {
-	const result = await requestYoutube("categories", signal) as { categories: YoutubeCategory[] } | null;
-	if (!result || !Array.isArray(result.categories) || !result.categories.every((category) =>
-		category && typeof category.name === "string" && Number.isInteger(category.count) && category.count >= 0)) {
-		throw new Error("카테고리를 불러오지 못했어요.");
-	}
-	return result.categories;
 }
 
 export function formatYoutubeDuration(duration: string): string {
