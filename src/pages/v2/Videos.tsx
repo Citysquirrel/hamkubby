@@ -19,7 +19,15 @@ import { toQueueTrack, type QueueTrack } from "../../lib/player";
 import useSongDataStore from "../../store/useSongDataStore";
 import "./videos.css";
 
-const emptyFilters: YoutubeFilters = { q: "", channel: "", category: "", from: "", to: "", broadcastFrom: "", broadcastTo: "" };
+const emptyFilters: YoutubeFilters = {
+	q: "",
+	channel: "",
+	category: "",
+	from: "",
+	to: "",
+	broadcastFrom: "",
+	broadcastTo: "",
+};
 const publishedDate = new Intl.DateTimeFormat("ko-KR", {
 	timeZone: "Asia/Seoul",
 	year: "numeric",
@@ -34,8 +42,16 @@ const channels = [
 
 const noTracks: QueueTrack[] = [];
 
-function VideoCard({ video, tracks, historiesLoading, featured = false }: {
-	video: YoutubeVideo; tracks: QueueTrack[]; historiesLoading: boolean; featured?: boolean;
+function VideoCard({
+	video,
+	tracks,
+	historiesLoading,
+	featured = false,
+}: {
+	video: YoutubeVideo;
+	tracks: QueueTrack[];
+	historiesLoading: boolean;
+	featured?: boolean;
 }) {
 	const [imageFailed, setImageFailed] = useState(false);
 	const url = `https://www.youtube.com/watch?v=${video.id}`;
@@ -81,17 +97,23 @@ function VideoCard({ video, tracks, historiesLoading, featured = false }: {
 						{video.title}
 					</a>
 				</h2>
-				{broadcastDate && <p className="kub-video-broadcast-date">방송 <time dateTime={broadcastDate}>{broadcastDate.replaceAll("-", ".")}</time></p>}
+				{broadcastDate && (
+					<p className="kub-video-broadcast-date">
+						방송 <time dateTime={broadcastDate}>{broadcastDate.replaceAll("-", ".")}</time>
+					</p>
+				)}
 				{video.viewCount != null && (
 					<p className="kub-video-views">조회수 {BigInt(video.viewCount).toLocaleString("ko-KR")}회</p>
 				)}
-				{video.categories.length > 0 && <div className="kub-video-tags">
-					{video.categories.map((category) => (
-						<span className="kub-tag kub-tag-green" key={category}>
-							{category}
-						</span>
-					))}
-				</div>}
+				{video.categories.length > 0 && (
+					<div className="kub-video-tags">
+						{video.categories.map((category) => (
+							<span className="kub-tag kub-tag-green" key={category}>
+								{category}
+							</span>
+						))}
+					</div>
+				)}
 				<VideoSongs tracks={tracks} loading={historiesLoading} videoTitle={video.title} />
 				{/* <div className="kub-video-actions">
 				<a href={url} target="_blank" rel="noopener noreferrer" aria-label={`${video.title} YouTube에서 열기`}>YouTube에서 보기 <ArrowUpRight size={15} /></a>
@@ -117,7 +139,8 @@ export default function Videos() {
 				grouped.set(track.videoId, tracks);
 			}
 		}
-		for (const tracks of grouped.values()) tracks.sort((a, b) => a.start - b.start || a.title.localeCompare(b.title, "ko"));
+		for (const tracks of grouped.values())
+			tracks.sort((a, b) => a.start - b.start || a.title.localeCompare(b.title, "ko"));
 		return grouped;
 	}, [songs]);
 	const [query, setQuery] = useState("");
@@ -130,10 +153,12 @@ export default function Videos() {
 	});
 	const { filters, page: requestedPage, pageSize, sort } = selection;
 	const [now, setNow] = useState(Date.now);
-	const publishedValidation = filters.from && filters.to && filters.from > filters.to
-		? "공개일 시작은 종료일보다 늦을 수 없어요." : "";
-	const broadcastValidation = filters.broadcastFrom && filters.broadcastTo && filters.broadcastFrom > filters.broadcastTo
-		? "방송일 시작은 종료일보다 늦을 수 없어요." : "";
+	const publishedValidation =
+		filters.from && filters.to && filters.from > filters.to ? "공개일 시작은 종료일보다 늦을 수 없어요." : "";
+	const broadcastValidation =
+		filters.broadcastFrom && filters.broadcastTo && filters.broadcastFrom > filters.broadcastTo
+			? "방송일 시작은 종료일보다 늦을 수 없어요."
+			: "";
 	const validation = publishedValidation || broadcastValidation;
 	const typing = composing || query.trim() !== filters.q;
 	const searchRef = useRef<HTMLInputElement>(null);
@@ -162,18 +187,26 @@ export default function Videos() {
 		refetchInterval: 60000,
 		retry: 1,
 	});
-	const filteredVideos = useMemo(() => filterAndSortYoutubeVideos(videos.data ?? [], filters, sort), [videos.data, filters, sort]);
-	const categories = useMemo(() => [...new Set(videos.data?.flatMap((video) => video.categories) ?? [])]
-		.sort((a, b) => a.localeCompare(b, "ko")), [videos.data]);
+	const filteredVideos = useMemo(
+		() => filterAndSortYoutubeVideos(videos.data ?? [], filters, sort),
+		[videos.data, filters, sort],
+	);
+	const categories = useMemo(
+		() =>
+			[...new Set(videos.data?.flatMap((video) => video.categories) ?? [])].sort((a, b) => a.localeCompare(b, "ko")),
+		[videos.data],
+	);
 	const hasViewCounts = videos.data?.some((video) => video.viewCount != null) ?? false;
 	const newest = videos.data?.find((video) => video.channel === "main");
 	const hero = newest && isRecentYoutubeVideo(newest, now) ? newest : null;
 	const pageCount = Math.max(1, Math.ceil(filteredVideos.length / pageSize));
 	const page = Math.min(requestedPage, pageCount);
-	const data = videos.data ? {
-		total: filteredVideos.length,
-		items: filteredVideos.slice((page - 1) * pageSize, page * pageSize),
-	} : undefined;
+	const data = videos.data
+		? {
+				total: filteredVideos.length,
+				items: filteredVideos.slice((page - 1) * pageSize, page * pageSize),
+			}
+		: undefined;
 	useEffect(() => {
 		if (requestedPage !== page) {
 			setSelection((previous) => ({ ...previous, page }));
@@ -210,7 +243,12 @@ export default function Videos() {
 	const activeFilters = [
 		...(filters.q ? [{ label: `제목: ${filters.q}`, clear: clearQuery }] : []),
 		...(filters.channel
-			? [{ label: filters.channel === "main" ? "햄쿠비 채널" : "다시보기 채널", clear: () => updateFilters({ channel: "" }) }]
+			? [
+					{
+						label: filters.channel === "main" ? "햄쿠비 채널" : "다시보기 채널",
+						clear: () => updateFilters({ channel: "" }),
+					},
+				]
 			: []),
 		...(filters.category ? [{ label: filters.category, clear: () => updateFilters({ category: "" }) }] : []),
 		...(filters.from || filters.to
@@ -221,15 +259,19 @@ export default function Videos() {
 					},
 				]
 			: []),
-		...(filters.broadcastFrom || filters.broadcastTo ? [{
-			label: `방송일: ${filters.broadcastFrom || "처음"} ~ ${filters.broadcastTo || "제한 없음"}`,
-			clear: () => updateFilters({ broadcastFrom: "", broadcastTo: "" }),
-		}] : []),
+		...(filters.broadcastFrom || filters.broadcastTo
+			? [
+					{
+						label: `방송일: ${filters.broadcastFrom || "처음"} ~ ${filters.broadcastTo || "제한 없음"}`,
+						clear: () => updateFilters({ broadcastFrom: "", broadcastTo: "" }),
+					},
+				]
+			: []),
 	];
 
 	return (
 		<section className="kub-secondary-page kub-videos" aria-label="유튜브 영상">
-			<title>유튜브 영상 | 햄쿠비 노래책</title>
+			<title>유튜브 영상 | 🐹햄쿠비 노래책🍡</title>
 			<div className="kub-videos-heading">
 				<div>
 					<span className="kub-eyebrow">KUBBY ON AIR</span>
@@ -242,7 +284,13 @@ export default function Videos() {
 			</div>
 			{hero && (
 				<section className="kub-video-hero" aria-label="최근 7일 내 본채널 최신 영상">
-					<VideoCard video={hero} tracks={tracksByVideo.get(hero.id) ?? noTracks} historiesLoading={historiesLoading} featured key={hero.id} />
+					<VideoCard
+						video={hero}
+						tracks={tracksByVideo.get(hero.id) ?? noTracks}
+						historiesLoading={historiesLoading}
+						featured
+						key={hero.id}
+					/>
 				</section>
 			)}
 			<div className="kub-video-channels" role="group" aria-label="영상 채널">
@@ -326,17 +374,23 @@ export default function Videos() {
 					</label>
 					<label>
 						방송일 시작
-						<input type="date" value={filters.broadcastFrom}
+						<input
+							type="date"
+							value={filters.broadcastFrom}
 							aria-invalid={!!broadcastValidation}
 							aria-describedby={broadcastValidation ? "kub-video-broadcast-error" : "kub-video-broadcast-help"}
-							onChange={(event) => updateFilters({ broadcastFrom: event.target.value })} />
+							onChange={(event) => updateFilters({ broadcastFrom: event.target.value })}
+						/>
 					</label>
 					<label>
 						방송일 종료
-						<input type="date" value={filters.broadcastTo}
+						<input
+							type="date"
+							value={filters.broadcastTo}
 							aria-invalid={!!broadcastValidation}
 							aria-describedby={broadcastValidation ? "kub-video-broadcast-error" : "kub-video-broadcast-help"}
-							onChange={(event) => updateFilters({ broadcastTo: event.target.value })} />
+							onChange={(event) => updateFilters({ broadcastTo: event.target.value })}
+						/>
 					</label>
 				</div>
 				<div className="kub-video-periods" role="group" aria-label="공개일 빠른 선택">
@@ -359,17 +413,23 @@ export default function Videos() {
 				</div>
 				<div className="kub-video-periods" role="group" aria-label="방송일 빠른 선택">
 					<span className="kub-video-period-label">방송일</span>
-					<button aria-pressed={!filters.broadcastFrom && !filters.broadcastTo}
-						onClick={() => updateFilters({ broadcastFrom: "", broadcastTo: "" })}>
+					<button
+						aria-pressed={!filters.broadcastFrom && !filters.broadcastTo}
+						onClick={() => updateFilters({ broadcastFrom: "", broadcastTo: "" })}
+					>
 						전체 기간
 					</button>
 					{[7, 30, 90].map((days) => {
 						const range = youtubeDateRange(days, now);
-						return <button key={days}
-							aria-pressed={filters.broadcastFrom === range.from && filters.broadcastTo === range.to}
-							onClick={() => updateFilters({ broadcastFrom: range.from, broadcastTo: range.to })}>
-							최근 {days}일
-						</button>;
+						return (
+							<button
+								key={days}
+								aria-pressed={filters.broadcastFrom === range.from && filters.broadcastTo === range.to}
+								onClick={() => updateFilters({ broadcastFrom: range.from, broadcastTo: range.to })}
+							>
+								최근 {days}일
+							</button>
+						);
 					})}
 				</div>
 				<p id="kub-video-date-help" className="kub-video-hint">
@@ -383,7 +443,11 @@ export default function Videos() {
 						{publishedValidation}
 					</p>
 				)}
-				{broadcastValidation && <p id="kub-video-broadcast-error" className="kub-video-feedback" role="alert">{broadcastValidation}</p>}
+				{broadcastValidation && (
+					<p id="kub-video-broadcast-error" className="kub-video-feedback" role="alert">
+						{broadcastValidation}
+					</p>
+				)}
 			</div>
 			{activeFilters.length > 0 && (
 				<div className="kub-video-active-filters" aria-label="적용된 검색 조건">
@@ -421,11 +485,17 @@ export default function Videos() {
 						))}
 					</select>
 				</div>
-				{videos.data && !hasViewCounts && <p className="kub-video-hint">조회수 정보가 아직 제공되지 않아 인기순을 사용할 수 없어요.</p>}
-				{videos.isError && data && <p className="kub-video-feedback" role="status">
-					목록을 갱신하지 못해 마지막으로 불러온 영상을 표시하고 있어요.{" "}
-					<button onClick={() => void videos.refetch()} disabled={videos.isFetching}>다시 불러오기</button>
-				</p>}
+				{videos.data && !hasViewCounts && (
+					<p className="kub-video-hint">조회수 정보가 아직 제공되지 않아 인기순을 사용할 수 없어요.</p>
+				)}
+				{videos.isError && data && (
+					<p className="kub-video-feedback" role="status">
+						목록을 갱신하지 못해 마지막으로 불러온 영상을 표시하고 있어요.{" "}
+						<button onClick={() => void videos.refetch()} disabled={videos.isFetching}>
+							다시 불러오기
+						</button>
+					</p>
+				)}
 				{sort === "popular" && (
 					<p className="kub-video-hint">
 						마지막으로 확인한 조회수가 높은 순이에요. 조회수 확인 전인 영상은 뒤에 표시돼요.
@@ -469,7 +539,12 @@ export default function Videos() {
 						/>
 						<div className="kub-video-grid">
 							{data.items.map((video) => (
-								<VideoCard key={video.id} video={video} tracks={tracksByVideo.get(video.id) ?? noTracks} historiesLoading={historiesLoading} />
+								<VideoCard
+									key={video.id}
+									video={video}
+									tracks={tracksByVideo.get(video.id) ?? noTracks}
+									historiesLoading={historiesLoading}
+								/>
 							))}
 						</div>
 						<Pagination {...pagination} position="하단" />
@@ -479,7 +554,9 @@ export default function Videos() {
 						<Search size={32} />
 						<h3>{isFiltered ? "조건에 맞는 영상이 없어요." : "아직 등록된 영상이 없어요."}</h3>
 						<p>
-							{isFiltered ? "검색어나 공개일·방송일 범위를 바꿔서 찾아보세요." : "새 영상이 준비되면 이곳에서 볼 수 있어요."}
+							{isFiltered
+								? "검색어나 공개일·방송일 범위를 바꿔서 찾아보세요."
+								: "새 영상이 준비되면 이곳에서 볼 수 있어요."}
 						</p>
 						{isFiltered && (
 							<button className="kub-button" onClick={reset}>
@@ -492,3 +569,4 @@ export default function Videos() {
 		</section>
 	);
 }
+
