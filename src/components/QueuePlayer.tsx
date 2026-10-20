@@ -12,15 +12,28 @@ import "./queue-player.css";
 
 const options = { width: "100%", height: "100%", playerVars: { playsinline: 1, controls: 1, rel: 0, origin: window.location.origin } };
 
-function VolumeSlider({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+function VolumeControl({ value, muted, onMute, onChange }: { value: number; muted: boolean; onMute: () => void; onChange: (value: number) => void }) {
 	const [dismissed, setDismissed] = useState(false);
-	return <div className="kub-player-volume-slider" data-player-no-drag data-dismissed={dismissed}
+	const silent = muted || value === 0;
+	const volume = muted ? 0 : value;
+	return <div className="kub-player-volume" data-player-no-drag data-dismissed={dismissed}
 		onPointerEnter={() => setDismissed(false)} onFocus={() => setDismissed(false)}
-		onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setDismissed(true); } }}>
-		<input aria-label={label} aria-valuetext={`${value}%`} type="range" min={0} max={100} step={1}
-			value={value} style={{ "--kub-range-fill": `${value}%` } as CSSProperties}
-			onChange={(event) => onChange(Number(event.target.value))} />
-		<output className="kub-player-volume-tooltip" aria-hidden="true">볼륨 {value}%</output>
+		onKeyDown={(event) => {
+			if (event.key === "Escape") {
+				event.preventDefault();
+				event.currentTarget.querySelector("button")?.focus();
+				setDismissed(true);
+			}
+		}}>
+		<button aria-label={silent ? "음소거 해제" : "음소거"} aria-pressed={silent} onClick={onMute}>{silent ? <VolumeX /> : <Volume2 />}</button>
+		<div className="kub-player-volume-popup">
+			<div className="kub-player-volume-slider">
+				<input aria-label="볼륨" aria-orientation="vertical" aria-valuetext={`${volume}%`} type="range" min={0} max={100} step={1}
+					value={volume} style={{ "--kub-range-fill": `${volume}%` } as CSSProperties}
+					onChange={(event) => onChange(Number(event.target.value))} />
+				<output aria-hidden="true">{volume}%</output>
+			</div>
+		</div>
 	</div>;
 }
 
@@ -70,6 +83,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 		<section ref={layout.panelRef} className="kub-player" style={{ ...layout.panelStyle, "--kub-bar-height": `${layout.panelStyle.height}px` } as CSSProperties} data-dock={layout.dock} data-mobile={layout.mobile} data-moving={layout.moving} data-compact={layout.compact} data-list-above={layout.listAbove} hidden={!state.open} aria-label="영상 플레이어" onKeyDown={(event) => event.stopPropagation()} onPointerDown={(event) => { if (layout.compact) layout.begin(event); }}>
 			<header className="kub-player-header" onPointerDown={(event) => { if (!layout.compact) layout.begin(event); }}>
 				<GripHorizontal aria-hidden="true" /><strong>쿠비 플레이어</strong>
+				<VolumeControl value={state.volume} muted={state.muted} onMute={playback.mute} onChange={playback.volume} />
 				<button aria-label={layout.listOpen ? "목록 접기" : "목록 펼치기"} title="재생 목록" aria-expanded={layout.listOpen} onClick={layout.toggleList}><ListMusic /></button>
 				<details className="kub-player-menu" onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
 					<summary aria-label="플레이어 설정" title="플레이어 설정"><MoreHorizontal /></summary>
@@ -81,7 +95,6 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 						<button aria-pressed={segmentOnly && track?.end != null} disabled={track?.end == null} onClick={() => setSegmentOnly(!segmentOnly)}>재생바: {segmentOnly && track?.end != null ? "노래 구간만 보기" : "전체 영상 보기"}</button>
 						<button aria-pressed={state.shuffle} onClick={() => usePlayerStore.setState({ shuffle: !state.shuffle, visited: state.currentId ? [state.currentId] : [] })}><Shuffle />셔플 {state.shuffle ? "켬" : "끔"}</button>
 						<button aria-label={`반복 재생: ${repeatLabel}`} aria-pressed={state.repeat !== "off"} onClick={cycleRepeat}>{state.repeat === "one" ? <Repeat1 /> : <Repeat />}{repeatLabel}</button>
-						<div className="kub-player-volume"><button aria-label={state.muted ? "음소거 해제" : "음소거"} onClick={playback.mute}>{state.muted || !state.volume ? <VolumeX /> : <Volume2 />}</button><VolumeSlider label="설정 볼륨" value={state.muted ? 0 : state.volume} onChange={playback.volume} /></div>
 						{track && <a href={`https://www.youtube.com/watch?v=${track.videoId}&t=${Math.floor(state.position)}s`} target="_blank" rel="noopener noreferrer">YouTube에서 열기 <ExternalLink /></a>}
 						{track && <small>{playback.status}{track.end === null && " · 종료 지점 미등록"}</small>}
 					</div>
@@ -114,11 +127,6 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 							<button aria-label="다음 곡" disabled={!hasNext} onClick={() => state.next()}><SkipForward /></button>
 							<button aria-label="셔플" aria-pressed={state.shuffle} onClick={() => usePlayerStore.setState({ shuffle: !state.shuffle, visited: state.currentId ? [state.currentId] : [] })}><Shuffle /></button>
 							<button aria-label={`반복 재생: ${repeatLabel}`} title={repeatLabel} aria-pressed={state.repeat !== "off"} onClick={cycleRepeat}>{state.repeat === "one" ? <Repeat1 /> : <Repeat />}</button>
-						</div>
-						<div className="kub-player-volume">
-							<button aria-label={state.muted ? "음소거 해제" : "음소거"} onClick={playback.mute}>{state.muted || !state.volume ? <VolumeX /> : <Volume2 />}</button>
-							<VolumeSlider label="볼륨" value={state.muted ? 0 : state.volume} onChange={playback.volume} />
-							{track && <a href={`https://www.youtube.com/watch?v=${track.videoId}&t=${Math.floor(state.position)}s`} target="_blank" rel="noopener noreferrer">YouTube <ExternalLink /></a>}
 						</div>
 					</div>
 				</div>
