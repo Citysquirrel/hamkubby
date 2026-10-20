@@ -1,10 +1,11 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import ssl from "@vitejs/plugin-basic-ssl";
 import viteCompression from "vite-plugin-compression"; // 압축 플러그인 (npm i -D vite-plugin-compression)
 
 export default defineConfig(({ mode }) => {
 	const isProd = mode === "production";
+	const env = loadEnv(mode, process.cwd(), "VITE_");
 
 	return {
 		plugins: [
@@ -24,6 +25,18 @@ export default defineConfig(({ mode }) => {
 
 		server: {
 			proxy: {
+				"/api/v1/youtube": {
+					target: env.VITE_HAMKUBBY_API_URL || "https://hamkubby.stelcount.fans",
+					changeOrigin: true,
+					configure: (proxy) => {
+						// 공개 영상 API는 개발 서버에서 서버 간 요청으로 전달한다.
+						proxy.on("proxyReq", (request) => {
+							request.removeHeader("origin");
+							request.removeHeader("cookie");
+							request.removeHeader("authorization");
+						});
+					},
+				},
 				"/api": "http://localhost:8788",
 			},
 		},

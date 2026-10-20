@@ -40,8 +40,12 @@ export function PageHelp({ open }: { open: boolean }) {
 	return <section id="kub-help" className="kub-help" hidden={!open} aria-label={label + " 이용 안내"}>
 		{page === "songbook" ? <SongbookHelp /> : page === "videos" ? <>
 			<h2>유튜브 영상 이용 안내</h2>
-			<p>햄쿠비 유튜브 채널의 영상을 모아볼 페이지입니다. 영상 목록은 준비 중이에요.</p>
-			<p>지금은 아래 채널에서 영상을 보실 수 있어요. 방송 다시보기는 다시보기 채널을 이용해 주세요.</p>
+			<p>검색어를 입력하면 자동으로 찾아드려요. 채널·카테고리·공개일 필터도 선택 즉시 적용되며, 최근 7·30·90일을 빠르게 고를 수 있어요.</p>
+			<p>최신순·인기순·오래된순으로 정렬할 수 있어요. 인기순은 마지막으로 확인한 조회수 기준이에요.</p>
+			<p>최근 7일 내 본채널의 가장 최신 영상은 상단에 따로 소개해요. 검색 결과 위의 조건을 누르면 해당 조건만 해제돼요.</p>
+			<p>날짜는 한국 시간 기준 유튜브 공개일이며, 제목에 적힌 방송 날짜와 다를 수 있어요.</p>
+			<p>썸네일이나 제목을 누르면 YouTube 새 탭에서 영상을 볼 수 있어요.</p>
+			<p>가창 기록이 연결된 영상은 ‘등록된 노래’를 펼쳐 곡별로 대기열에 담을 수 있어요. 노래책에 등록된 시작·끝 구간을 사용하며, 이미 담긴 기록은 중복으로 추가되지 않아요.</p>
 			<a href="https://www.youtube.com/@hamkubby" target="_blank" rel="noopener noreferrer">햄쿠비 유튜브 ↗</a>{" · "}
 			<a href="https://www.youtube.com/@kubbyreplay" target="_blank" rel="noopener noreferrer">방송 다시보기 ↗</a>
 		</> : <>

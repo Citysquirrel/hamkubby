@@ -8,16 +8,18 @@ interface PaginationProps {
 	onPageChange: (page: number) => void;
 	onPageSizeChange?: (size: number) => void;
 	position: "상단" | "하단";
+	listLabel?: string;
+	unit?: string;
 }
 
-export function Pagination({ page, pageCount, pageSize, total, onPageChange, onPageSizeChange, position }: PaginationProps) {
+export function Pagination({ page, pageCount, pageSize, total, onPageChange, onPageSizeChange, position, listLabel = "노래", unit = "곡" }: PaginationProps) {
 	const start = Math.max(1, Math.min(page - 1, pageCount - 2));
 	const pages = Array.from({ length: Math.min(3, pageCount) }, (_, index) => start + index);
-	return <nav className="kub-pagination" aria-label={`노래 목록 페이지 ${position}`}>
+	return <nav className="kub-pagination" aria-label={`${listLabel} 목록 페이지 ${position}`}>
 		<div className="kub-page-meta">
-			<span aria-live="polite">{total ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, total)} / {total}곡</span>
-			{onPageSizeChange && <select aria-label="페이지당 곡 수" value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))}>
-				{[10, 20, 50].map((size) => <option key={size} value={size}>{size}곡씩</option>)}
+			<span aria-live="polite">{total ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, total)} / {total}{unit}</span>
+			{onPageSizeChange && <select aria-label={`페이지당 ${listLabel === "노래" ? "곡" : listLabel} 수`} value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))}>
+				{[10, 20, 50].map((size) => <option key={size} value={size}>{size}{unit}씩</option>)}
 			</select>}
 		</div>
 		<div className="kub-page-buttons">
