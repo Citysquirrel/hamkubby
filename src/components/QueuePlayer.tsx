@@ -64,6 +64,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 	const [segmentOnly, setSegmentOnly] = useState(() => readStoredValue("songbook-player-segment-only", false, isBoolean));
 	useEffect(() => { writeStoredValue("songbook-player-segment-only", segmentOnly); }, [segmentOnly]);
 	const track = state.queue.find((item) => item.id === state.currentId);
+	const showThumbnail = !!track && !state.playing && !state.wantPlay;
 	const playLabel = playback.loading ? playback.ready && state.wantPlay ? "불러오는 중 · 일시정지" : "영상 준비 중"
 		: state.playing ? "일시정지" : playback.error ? "다시 재생" : "재생";
 	const list = state.lists.find((item) => item.id === selectedList);
@@ -108,8 +109,11 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 			</div>}
 			<div className="kub-player-body">
 				<div className="kub-player-media">
-					<div className="kub-player-video" data-player-no-drag data-empty={!track} aria-hidden={!track} inert={!track}>
+					<div className="kub-player-video" data-player-no-drag data-empty={!track} data-thumbnail={showThumbnail} aria-hidden={!track} inert={!track}>
 						{(track || playback.ready) && <YouTube opts={options} title="쿠비 노래 영상" onReady={playback.onReady} onStateChange={playback.onStateChange} onError={playback.onError} />}
+						{showThumbnail && track && <button className="kub-player-thumbnail" aria-label={`${track.title} 재생`} disabled={!playback.ready || playback.loading} onClick={playback.toggle}>
+							<img src={`https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`} alt="" draggable={false} />
+						</button>}
 					</div>
 					<div className="kub-player-now" onPointerDown={(event) => { if (!layout.compact) layout.begin(event); }} title={track ? `${track.title} · ${track.artist}` : "쿠비 플레이어"}>
 						<strong>{track?.title ?? "아직 담긴 노래가 없어요"}</strong>
