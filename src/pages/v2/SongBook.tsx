@@ -479,15 +479,15 @@ export default function SongBookV2() {
 					data-closing={detailClosing}
 					inert={detailClosing}
 				>
-					<img className="kub-detail-flower" src="/images/v2/hair-flower-sd.svg" alt="" aria-hidden="true" />
-					<img
+					{/* <img className="kub-detail-flower" src="/images/v2/hair-flower-sd.svg" alt="" aria-hidden="true" /> */}
+					{/* <img
 						key={`${selected ? songKey(selected) : "empty"}:${knotSwing}`}
 						className="kub-detail-knot"
 						data-swing={knotSwing > 0}
 						src="/images/v2/hair-knot-sd.svg"
 						alt=""
 						aria-hidden="true"
-					/>
+					/> */}
 					<div className="kub-detail-content" ref={detailContentRef}>
 						<div className="kub-detail-scroll">
 							{selected ? (

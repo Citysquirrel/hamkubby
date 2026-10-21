@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { LuMoon, LuSun } from "react-icons/lu";
 
 export function Horn({
-	side,
 	tone = "light",
 	className = "",
 }: {
@@ -9,7 +9,8 @@ export function Horn({
 	tone?: "light" | "dark";
 	className?: string;
 }) {
-	return <img className={`kub-horn ${className}`} src={`/images/v2/horn-${tone}-${side}.svg`} alt="" aria-hidden="true" />;
+	const Icon = tone === "dark" ? LuMoon : LuSun;
+	return <Icon className={`kub-horn ${className}`} aria-hidden="true" focusable="false" />;
 }
 
 const riceCakeColors = {

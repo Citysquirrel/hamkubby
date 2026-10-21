@@ -19,7 +19,6 @@ export function PageTabs() {
 				원본 노래책 열기
 				<ArrowUpRight size={16} aria-hidden="true" />
 			</a>
-			{/* <img className="kub-hair-knot" src="/images/v2/hair-knot.svg" alt="" aria-hidden="true" /> */}
 		</nav>
 	);
 }
