@@ -100,7 +100,7 @@ export function PageShell({
 								aria-controls="kub-help"
 								onClick={() => setHelp(!help)}
 							>
-								이용 안내
+								{help ? "안내 접기" : "이용 안내"}
 							</button>
 							{cursorAvailable && (
 								<button
