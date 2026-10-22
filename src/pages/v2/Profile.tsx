@@ -116,7 +116,7 @@ export function Profile({ open }: { open: boolean }) {
 										event.currentTarget.src = "/images/v2/portrait.webp";
 								}}
 							/>
-							<img className="kub-ribbon" src="/images/v2/ribbon.svg" alt="" />
+							{/* <img className="kub-ribbon" src="/images/v2/ribbon.svg" alt="" /> */}
 							{/* <img className="kub-hair-flower" src="/images/v2/hair-flower.svg" alt="" aria-hidden="true" /> */}
 						</div>
 					</section>
