@@ -1277,10 +1277,10 @@
 	rotate: -12deg;
 }
 #kub-music-room .kub-detail-knot {
-	width: 36px;
-	height: 51px;
+	width: 40px;
+	height: 72px;
 	right: -4px;
-	bottom: -12px;
+	bottom: -36px;
 	transform-origin: 50% 15%;
 }
 #kub-music-room .kub-detail-knot[data-swing="true"] {
