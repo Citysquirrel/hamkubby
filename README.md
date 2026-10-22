@@ -22,3 +22,10 @@
 AI는 코드 작성, 리팩토링, 디버깅 등에
 활용되었으며, 프로젝트의 기획, 최종 관리 및
 유지보수는 개발자가 담당합니다.
+
+## Design
+
+일부 햄쿠비의 디자인 요소는 figma를 통해 작업하였습니다.
+
+- [Figma Share URL](https://www.figma.com/design/jAZHCDgmgXCnJgZKNRJM1C/%EC%82%AC%EC%9D%B4%ED%8A%B8%EC%9A%A9-svg?node-id=2007-170&t=EUgsrz0S73ZOoS8u-1)
+
