@@ -15,9 +15,7 @@ export interface YoutubeVideo {
 export interface YoutubeFilters {
 	q: string;
 	channel: "" | "main" | "replay";
-	category: string;
-	from: string;
-	to: string;
+	// category: string; // 카테고리 제공 시 복원
 	broadcastFrom: string;
 	broadcastTo: string;
 }
@@ -102,9 +100,7 @@ export function filterAndSortYoutubeVideos(videos: YoutubeVideo[], filters: Yout
 	return videos.filter((video) => {
 		if (keyword && !video.title.toLowerCase().includes(keyword)) return false;
 		if (filters.channel && video.channel !== filters.channel) return false;
-		if (filters.category && !video.categories.includes(filters.category)) return false;
-		const published = koreanDate(Date.parse(video.publishedAt));
-		if (filters.from && published < filters.from || filters.to && published > filters.to) return false;
+		// if (filters.category && !video.categories.includes(filters.category)) return false;
 		if (filters.broadcastFrom || filters.broadcastTo) {
 			const broadcast = youtubeBroadcastDate(video.title);
 			if (!broadcast || filters.broadcastFrom && broadcast < filters.broadcastFrom ||
@@ -114,7 +110,7 @@ export function filterAndSortYoutubeVideos(videos: YoutubeVideo[], filters: Yout
 	}).sort((a, b) => compareYoutubeVideos(a, b, sort));
 }
 
-export function youtubeDateRange(days: number, now = Date.now()): Pick<YoutubeFilters, "from" | "to"> {
+export function youtubeDateRange(days: number, now = Date.now()): { from: string; to: string } {
 	return { from: koreanDate(now - (days - 1) * 86400000), to: koreanDate(now) };
 }
 

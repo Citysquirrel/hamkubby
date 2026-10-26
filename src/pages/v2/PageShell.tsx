@@ -13,6 +13,14 @@ import { usePlayerStore } from "../../store/usePlayerStore";
 import { ListMusic, MousePointer2 } from "lucide-react";
 import "./songbook.css";
 
+const defaultPortrait = "/images/v2/portrait.webp";
+const portraits = Object.keys(
+	import.meta.glob(
+		["./images/v2/portrait*.{webp,png,jpg,jpeg,avif}", "./images/v2/portraits/*.{webp,png,jpg,jpeg,avif}"],
+		{ base: "../../../public" },
+	),
+).map((path) => path.slice(1));
+
 export function PageShell({
 	children,
 	cursorAvailable,
@@ -26,6 +34,8 @@ export function PageShell({
 }) {
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [intro, setIntro] = useState(() => readStoredValue("songbook-v2-intro", true, isBoolean));
+	const [portrait, setPortrait] = useState(() => portraits[Math.floor(Math.random() * portraits.length)] ?? defaultPortrait);
+	const handlePortraitError = () => setPortrait(defaultPortrait);
 	const [effects] = useState(() =>
 		readStoredValue("songbook-v2-effects", !window.matchMedia("(prefers-reduced-motion: reduce)").matches, isBoolean),
 	);
@@ -125,7 +135,10 @@ export function PageShell({
 					<PageTabs />
 					<PageHelp open={help} />
 					<main className="kub-main">
-						<Profile open={intro} />
+						<div className="kub-folded-portrait" aria-hidden="true">
+							<img src={portrait} alt="" draggable={false} onError={handlePortraitError} />
+						</div>
+						<Profile open={intro} portrait={portrait} onPortraitError={handlePortraitError} />
 						{children}
 					</main>
 					<Footer />

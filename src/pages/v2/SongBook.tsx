@@ -12,13 +12,13 @@ import { SongHistory } from "./SongHistory";
 const genres = ["K-POP", "J-POP", "POP"];
 const cheeses = ["일반곡", "잘몰라", "피토곡", "우엑곡"];
 const tones: Record<string, string> = {
-	"K-POP": "brown",
+	"K-POP": "blue",
 	"J-POP": "purple",
 	POP: "pink",
-	일반곡: "sage",
+	일반곡: "slate",
 	잘몰라: "amber",
 	피토곡: "red",
-	우엑곡: "purple",
+	우엑곡: "olive",
 };
 const songKey = (song: Song) => song.syncId ?? song.id ?? JSON.stringify([song.title, song.artist, song.genre]);
 const toggleValue = (values: string[], value: string) =>
@@ -34,8 +34,8 @@ function SongTags({ song }: { song: Song }) {
 			<span className={`kub-tag kub-tag-${song.isOfficial ? "green" : "brown"}`}>
 				{song.isOfficial ? "쿠비 등록곡" : "추가 수록곡"}
 			</span>
-			{!!song.lyric?.trim() && <span className="kub-tag kub-tag-green">가사 있음</span>}
-			{!!song.song_histories?.length && <span className="kub-tag kub-tag-green">영상 있음</span>}
+			{!!song.lyric?.trim() && <span className="kub-tag kub-tag-cyan">가사 있음</span>}
+			{!!song.song_histories?.length && <span className="kub-tag kub-tag-orange">영상 있음</span>}
 		</>
 	);
 }

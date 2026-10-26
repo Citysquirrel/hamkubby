@@ -22,9 +22,7 @@ import "./videos.css";
 const emptyFilters: YoutubeFilters = {
 	q: "",
 	channel: "",
-	category: "",
-	from: "",
-	to: "",
+	// category: "", // 카테고리 제공 시 복원
 	broadcastFrom: "",
 	broadcastTo: "",
 };
@@ -41,6 +39,7 @@ const channels = [
 ] as const;
 
 const noTracks: QueueTrack[] = [];
+const youtubeThumbnailPattern = /^(https:\/\/(?:i\d?\.ytimg\.com|img\.youtube\.com)\/vi(?:_webp)?\/[\w-]{11}\/)(?:default|mqdefault|hqdefault|sddefault|maxresdefault)(\.(?:jpg|webp)(?:[?#].*)?)$/;
 
 function VideoCard({
 	video,
@@ -54,6 +53,12 @@ function VideoCard({
 	featured?: boolean;
 }) {
 	const [imageFailed, setImageFailed] = useState(false);
+	const [thumbnailSize, setThumbnailSize] = useState(featured ? "sddefault" : "hqdefault");
+	const thumbnailUrl = video.thumbnailUrl.replace(youtubeThumbnailPattern, `$1${thumbnailSize}$2`);
+	const fallBackThumbnail = () => {
+		if (thumbnailSize === "sddefault" && youtubeThumbnailPattern.test(video.thumbnailUrl)) setThumbnailSize("hqdefault");
+		else setImageFailed(true);
+	};
 	const url = `https://www.youtube.com/watch?v=${video.id}`;
 	const duration = formatYoutubeDuration(video.duration);
 	const broadcastDate = youtubeBroadcastDate(video.title);
@@ -68,11 +73,15 @@ function VideoCard({
 			>
 				{!imageFailed && video.thumbnailUrl ? (
 					<img
-						src={video.thumbnailUrl}
+						src={thumbnailUrl}
 						alt=""
 						loading={featured ? "eager" : "lazy"}
 						decoding="async"
-						onError={() => setImageFailed(true)}
+						onLoad={(event) => {
+							// 미제공 해상도에 HTTP 200으로 반환되는 작은 대체 이미지도 처리한다.
+							if (thumbnailSize === "sddefault" && event.currentTarget.naturalWidth <= 120) fallBackThumbnail();
+						}}
+						onError={fallBackThumbnail}
 					/>
 				) : (
 					<Film className="kub-video-fallback" aria-hidden="true" />
@@ -105,6 +114,7 @@ function VideoCard({
 				{video.viewCount != null && (
 					<p className="kub-video-views">조회수 {BigInt(video.viewCount).toLocaleString("ko-KR")}회</p>
 				)}
+				{/* 카테고리 제공 시 복원
 				{video.categories.length > 0 && (
 					<div className="kub-video-tags">
 						{video.categories.map((category) => (
@@ -113,7 +123,7 @@ function VideoCard({
 							</span>
 						))}
 					</div>
-				)}
+				)} */}
 				<VideoSongs tracks={tracks} loading={historiesLoading} videoTitle={video.title} />
 				{/* <div className="kub-video-actions">
 				<a href={url} target="_blank" rel="noopener noreferrer" aria-label={`${video.title} YouTube에서 열기`}>YouTube에서 보기 <ArrowUpRight size={15} /></a>
@@ -153,13 +163,10 @@ export default function Videos() {
 	});
 	const { filters, page: requestedPage, pageSize, sort } = selection;
 	const [now, setNow] = useState(Date.now);
-	const publishedValidation =
-		filters.from && filters.to && filters.from > filters.to ? "공개일 시작은 종료일보다 늦을 수 없어요." : "";
 	const broadcastValidation =
 		filters.broadcastFrom && filters.broadcastTo && filters.broadcastFrom > filters.broadcastTo
 			? "방송일 시작은 종료일보다 늦을 수 없어요."
 			: "";
-	const validation = publishedValidation || broadcastValidation;
 	const typing = composing || query.trim() !== filters.q;
 	const searchRef = useRef<HTMLInputElement>(null);
 	const resultsRef = useRef<HTMLDivElement>(null);
@@ -191,11 +198,12 @@ export default function Videos() {
 		() => filterAndSortYoutubeVideos(videos.data ?? [], filters, sort),
 		[videos.data, filters, sort],
 	);
+	/* 카테고리 제공 시 복원
 	const categories = useMemo(
 		() =>
 			[...new Set(videos.data?.flatMap((video) => video.categories) ?? [])].sort((a, b) => a.localeCompare(b, "ko")),
 		[videos.data],
-	);
+	); */
 	const hasViewCounts = videos.data?.some((video) => video.viewCount != null) ?? false;
 	const newest = videos.data?.find((video) => video.channel === "main");
 	const hero = newest && isRecentYoutubeVideo(newest, now) ? newest : null;
@@ -250,15 +258,7 @@ export default function Videos() {
 					},
 				]
 			: []),
-		...(filters.category ? [{ label: filters.category, clear: () => updateFilters({ category: "" }) }] : []),
-		...(filters.from || filters.to
-			? [
-					{
-						label: `공개일: ${filters.from || "처음"} ~ ${filters.to || "제한 없음"}`,
-						clear: () => updateFilters({ from: "", to: "" }),
-					},
-				]
-			: []),
+		// ...(filters.category ? [{ label: filters.category, clear: () => updateFilters({ category: "" }) }] : []),
 		...(filters.broadcastFrom || filters.broadcastTo
 			? [
 					{
@@ -312,7 +312,7 @@ export default function Videos() {
 							ref={searchRef}
 							type="search"
 							aria-label="영상 제목 검색"
-							placeholder="제목을 입력하면 바로 찾아드려요"
+							placeholder="영상 제목 검색"
 							maxLength={200}
 							value={query}
 							onChange={(event) => setQuery(event.target.value)}
@@ -328,8 +328,13 @@ export default function Videos() {
 							</button>
 						)}
 					</label>
+					<button className="kub-button" type="button" onClick={reset}>
+						<RotateCcw size={15} />
+						초기화
+					</button>
 				</div>
 				<div className="kub-video-filter-fields">
+					{/* 카테고리 제공 시 복원
 					<label>
 						카테고리
 						<select
@@ -347,31 +352,7 @@ export default function Videos() {
 								</option>
 							))}
 						</select>
-					</label>
-					<button className="kub-button" type="button" onClick={reset}>
-						<RotateCcw size={15} />
-						초기화
-					</button>
-					<label>
-						공개일 시작
-						<input
-							type="date"
-							value={filters.from}
-							aria-invalid={!!publishedValidation}
-							aria-describedby={publishedValidation ? "kub-video-date-error" : "kub-video-date-help"}
-							onChange={(event) => updateFilters({ from: event.target.value })}
-						/>
-					</label>
-					<label>
-						공개일 종료
-						<input
-							type="date"
-							value={filters.to}
-							aria-invalid={!!publishedValidation}
-							aria-describedby={publishedValidation ? "kub-video-date-error" : "kub-video-date-help"}
-							onChange={(event) => updateFilters({ to: event.target.value })}
-						/>
-					</label>
+					</label> */}
 					<label>
 						방송일 시작
 						<input
@@ -392,24 +373,6 @@ export default function Videos() {
 							onChange={(event) => updateFilters({ broadcastTo: event.target.value })}
 						/>
 					</label>
-				</div>
-				<div className="kub-video-periods" role="group" aria-label="공개일 빠른 선택">
-					<span className="kub-video-period-label">공개일</span>
-					<button aria-pressed={!filters.from && !filters.to} onClick={() => updateFilters({ from: "", to: "" })}>
-						전체 기간
-					</button>
-					{[7, 30, 90].map((days) => {
-						const range = youtubeDateRange(days, now);
-						return (
-							<button
-								key={days}
-								aria-pressed={filters.from === range.from && filters.to === range.to}
-								onClick={() => updateFilters(range)}
-							>
-								최근 {days}일
-							</button>
-						);
-					})}
 				</div>
 				<div className="kub-video-periods" role="group" aria-label="방송일 빠른 선택">
 					<span className="kub-video-period-label">방송일</span>
@@ -432,17 +395,9 @@ export default function Videos() {
 						);
 					})}
 				</div>
-				<p id="kub-video-date-help" className="kub-video-hint">
-					최근 기간은 한국 시간 기준 오늘을 포함해요. 공개일과 방송일 조건은 함께 적용돼요.
-				</p>
 				<p id="kub-video-broadcast-help" className="kub-video-hint">
-					방송일은 제목 앞의 [YY.MM.DD] 기준이에요. 방송일 조건을 선택하면 날짜가 없는 영상은 제외돼요.
+					제목의 [YY.MM.DD] 기준 · 기간 선택 시 날짜 없는 영상 제외
 				</p>
-				{publishedValidation && (
-					<p id="kub-video-date-error" className="kub-video-feedback" role="alert">
-						{publishedValidation}
-					</p>
-				)}
 				{broadcastValidation && (
 					<p id="kub-video-broadcast-error" className="kub-video-feedback" role="alert">
 						{broadcastValidation}
@@ -469,7 +424,7 @@ export default function Videos() {
 				<div className="kub-video-results-heading">
 					<h2 aria-live="polite">
 						{isFiltered ? "검색 결과" : "전체 영상"}
-						{data && !typing && !validation && <span>{data.total.toLocaleString()}개</span>}
+						{data && !typing && !broadcastValidation && <span>{data.total.toLocaleString()}개</span>}
 					</h2>
 					<select
 						aria-label="영상 정렬"
@@ -501,10 +456,10 @@ export default function Videos() {
 						마지막으로 확인한 조회수가 높은 순이에요. 조회수 확인 전인 영상은 뒤에 표시돼요.
 					</p>
 				)}
-				{validation ? (
+				{broadcastValidation ? (
 					<div className="kub-video-empty">
 						<h3>날짜 범위를 확인해 주세요.</h3>
-						<p>{validation}</p>
+						<p>{broadcastValidation}</p>
 					</div>
 				) : typing || videos.isPending ? (
 					<>
@@ -555,7 +510,7 @@ export default function Videos() {
 						<h3>{isFiltered ? "조건에 맞는 영상이 없어요." : "아직 등록된 영상이 없어요."}</h3>
 						<p>
 							{isFiltered
-								? "검색어나 공개일·방송일 범위를 바꿔서 찾아보세요."
+								? "검색어나 방송일 범위를 바꿔서 찾아보세요."
 								: "새 영상이 준비되면 이곳에서 볼 수 있어요."}
 						</p>
 						{isFiltered && (

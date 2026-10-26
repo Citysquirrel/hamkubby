@@ -8,13 +8,6 @@ const greetings = [
 	{ lead: "다음 노래는", title: "어떤 곡으로 할까요?", description: "목록을 넘겨 보며 듣고 싶은 곡을 찾아보세요." },
 	{ lead: "좋아하는 노래", title: "여기 있나요?", description: "노래 제목이나 가수 이름으로 검색해 보세요." },
 ];
-const portraits = Object.keys(
-	import.meta.glob(
-		["./images/v2/portrait*.{webp,png,jpg,jpeg,avif}", "./images/v2/portraits/*.{webp,png,jpg,jpeg,avif}"],
-		{ base: "../../../public" },
-	),
-).map((path) => path.slice(1));
-
 const socials = [
 	{ label: "치지직", image: "chzzk.svg", href: "https://chzzk.naver.com/9351fb8417f73405c84e0846409e3263" },
 	{ label: "YouTube", image: "youtube.svg", href: "https://www.youtube.com/@hamkubby" },
@@ -36,11 +29,12 @@ function SocialLinks() {
 	);
 }
 
-export function Profile({ open }: { open: boolean }) {
+export function Profile({ open, portrait, onPortraitError }: {
+	open: boolean;
+	portrait: string;
+	onPortraitError: () => void;
+}) {
 	const [greeting] = useState(() => greetings[Math.floor(Math.random() * greetings.length)]);
-	const [portrait] = useState(
-		() => portraits[Math.floor(Math.random() * portraits.length)] ?? "/images/v2/portrait.webp",
-	);
 	const shellRef = useRef<HTMLDivElement>(null);
 	const cardRef = useRef<HTMLElement>(null);
 	const previousOpen = useRef(open);
@@ -111,10 +105,7 @@ export function Profile({ open }: { open: boolean }) {
 								className="kub-portrait"
 								src={portrait}
 								alt="햄쿠비"
-								onError={(event) => {
-									if (!event.currentTarget.src.endsWith("/images/v2/portrait.webp"))
-										event.currentTarget.src = "/images/v2/portrait.webp";
-								}}
+								onError={onPortraitError}
 							/>
 							{/* <img className="kub-ribbon" src="/images/v2/ribbon.svg" alt="" /> */}
 							{/* <img className="kub-hair-flower" src="/images/v2/hair-flower.svg" alt="" aria-hidden="true" /> */}
