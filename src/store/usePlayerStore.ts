@@ -4,6 +4,7 @@ import { readStoredValue, writeStoredValue } from "../lib/storage";
 
 type Repeat = "off" | "one" | "all";
 interface PersistedPlayer {
+	open?: boolean;
 	queue: QueueTrack[];
 	lists: SavedPlaylist[];
 	currentId: string | null;
@@ -42,7 +43,8 @@ const defaults: PersistedPlayer = { queue: [], lists: [], currentId: null, posit
 function isPersisted(value: unknown): value is PersistedPlayer {
 	if (!value || typeof value !== "object") return false;
 	const state = value as PersistedPlayer;
-	return Array.isArray(state.queue) && state.queue.every(isQueueTrack) &&
+	return (state.open === undefined || typeof state.open === "boolean") &&
+		Array.isArray(state.queue) && state.queue.every(isQueueTrack) &&
 		Array.isArray(state.lists) && state.lists.every((list) => list && typeof list.id === "string" && typeof list.name === "string" && Array.isArray(list.tracks) && list.tracks.every(isQueueTrack)) &&
 		(state.currentId === null || typeof state.currentId === "string") &&
 		Number.isFinite(state.position) && state.position >= 0 &&
@@ -60,7 +62,7 @@ if (current) restored.position = Math.max(current.start, Math.min(restored.posit
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
 	...restored,
-	open: restored.queue.length > 0,
+	open: restored.open ?? restored.queue.length > 0,
 	playing: false,
 	wantPlay: false,
 	revision: 0,
@@ -162,8 +164,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
 let lastPositionSave = 0;
 export function persistPlayerState() {
-	const { queue, lists, currentId, position, volume, muted, shuffle, repeat } = usePlayerStore.getState();
-	writeStoredValue(key, { queue, lists, currentId, position, volume, muted, shuffle, repeat });
+	const { open, queue, lists, currentId, position, volume, muted, shuffle, repeat } = usePlayerStore.getState();
+	writeStoredValue(key, { open, queue, lists, currentId, position, volume, muted, shuffle, repeat });
 }
 usePlayerStore.subscribe((state, previous) => {
 	const structural = state.queue !== previous.queue || state.lists !== previous.lists || state.currentId !== previous.currentId ||

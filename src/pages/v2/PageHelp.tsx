@@ -1,9 +1,9 @@
 import { useLocation } from "react-router-dom";
+import { X } from "lucide-react";
 
 function SongbookHelp() {
 	return (
 		<>
-			<h2>노래책 설명서</h2>
 			<ol>
 				<li>
 					<strong>검색</strong> — 곡명·가수·초성으로 찾기
@@ -30,18 +30,23 @@ function SongbookHelp() {
 	);
 }
 
-export function PageHelp({ open }: { open: boolean }) {
+export function PageHelp({ open, onClose }: { open: boolean; onClose: () => void }) {
 	const { pathname } = useLocation();
 	const path = pathname.replace(/\/+$/, "");
 	const page = path === "/videos" ? "videos" : path === "/recap" ? "recap" : "songbook";
 	const label = page === "videos" ? "유튜브 영상" : page === "recap" ? "리캡" : "노래책";
 	return (
 		<section id="kub-help" className="kub-help" hidden={!open} aria-label={label + " 이용 안내"}>
+			<div className="kub-help-header">
+				<h2>{page === "songbook" ? "노래책 설명서" : `${label} 이용 안내`}</h2>
+				<button className="kub-help-close" onClick={onClose} aria-label="이용 안내 닫기">
+					<X size={16} aria-hidden="true" /> 닫기
+				</button>
+			</div>
 			{page === "songbook" ? (
 				<SongbookHelp />
 			) : page === "videos" ? (
 				<>
-					<h2>유튜브 영상 이용 안내</h2>
 					<ul>
 						<li>
 							<strong>찾기</strong> — 제목 검색 · 채널·방송일 필터
@@ -60,7 +65,6 @@ export function PageHelp({ open }: { open: boolean }) {
 				</>
 			) : (
 				<>
-					<h2>리캡 이용 안내</h2>
 					<p>한 해의 노래 기록을 돌아보는 연말 리캡. 현재 준비 중이에요.</p>
 				</>
 			)}

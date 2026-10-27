@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useColorMode } from "../../components/ui/color-mode";
 import { isBoolean, readStoredValue, writeStoredValue } from "../../lib/storage";
 import { BackgroundEffects, Horn } from "./Motifs";
@@ -40,6 +40,7 @@ export function PageShell({
 		readStoredValue("songbook-v2-effects", !window.matchMedia("(prefers-reduced-motion: reduce)").matches, isBoolean),
 	);
 	const [help, setHelp] = useState(false);
+	const helpTriggerRef = useRef<HTMLButtonElement>(null);
 	const playerOpen = usePlayerStore((state) => state.open);
 	const showPlayer = usePlayerStore((state) => state.show);
 	const playerLayout = usePlayerLayout(playerOpen);
@@ -106,6 +107,7 @@ export function PageShell({
 							</button>
 							<button
 								className="kub-help-toggle"
+								ref={helpTriggerRef}
 								aria-expanded={help}
 								aria-controls="kub-help"
 								onClick={() => setHelp(!help)}
@@ -133,7 +135,10 @@ export function PageShell({
 						</nav>
 					</header>
 					<PageTabs />
-					<PageHelp open={help} />
+					<PageHelp open={help} onClose={() => {
+						setHelp(false);
+						helpTriggerRef.current?.focus({ preventScroll: true });
+					}} />
 					<main className="kub-main">
 						<div className="kub-folded-portrait" aria-hidden="true">
 							<img src={portrait} alt="" draggable={false} onError={handlePortraitError} />

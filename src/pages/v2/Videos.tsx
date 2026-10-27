@@ -39,7 +39,8 @@ const channels = [
 ] as const;
 
 const noTracks: QueueTrack[] = [];
-const youtubeThumbnailPattern = /^(https:\/\/(?:i\d?\.ytimg\.com|img\.youtube\.com)\/vi(?:_webp)?\/[\w-]{11}\/)(?:default|mqdefault|hqdefault|sddefault|maxresdefault)(\.(?:jpg|webp)(?:[?#].*)?)$/;
+const youtubeThumbnailPattern =
+	/^(https:\/\/(?:i\d?\.ytimg\.com|img\.youtube\.com)\/vi(?:_webp)?\/[\w-]{11}\/)(?:default|mqdefault|hqdefault|sddefault|maxresdefault)(\.(?:jpg|webp)(?:[?#].*)?)$/;
 
 function VideoCard({
 	video,
@@ -56,7 +57,8 @@ function VideoCard({
 	const [thumbnailSize, setThumbnailSize] = useState(featured ? "sddefault" : "hqdefault");
 	const thumbnailUrl = video.thumbnailUrl.replace(youtubeThumbnailPattern, `$1${thumbnailSize}$2`);
 	const fallBackThumbnail = () => {
-		if (thumbnailSize === "sddefault" && youtubeThumbnailPattern.test(video.thumbnailUrl)) setThumbnailSize("hqdefault");
+		if (thumbnailSize === "sddefault" && youtubeThumbnailPattern.test(video.thumbnailUrl))
+			setThumbnailSize("hqdefault");
 		else setImageFailed(true);
 	};
 	const url = `https://www.youtube.com/watch?v=${video.id}`;
@@ -396,7 +398,7 @@ export default function Videos() {
 					})}
 				</div>
 				<p id="kub-video-broadcast-help" className="kub-video-hint">
-					제목의 [YY.MM.DD] 기준 · 기간 선택 시 날짜 없는 영상 제외
+					제목의 [YY.MM.DD] 기준 · 날짜가 없으면 공개일 기준
 				</p>
 				{broadcastValidation && (
 					<p id="kub-video-broadcast-error" className="kub-video-feedback" role="alert">
@@ -424,10 +426,11 @@ export default function Videos() {
 				<div className="kub-video-results-heading">
 					<h2 aria-live="polite">
 						{isFiltered ? "검색 결과" : "전체 영상"}
-						{data && !typing && !broadcastValidation && <span>{data.total.toLocaleString()}개</span>}
+						{data && !broadcastValidation && <span>{data.total.toLocaleString()}개</span>}
 					</h2>
 					<select
 						aria-label="영상 정렬"
+						name="kub-video-sort"
 						value={sort}
 						onChange={(event) =>
 							setSelection((previous) => ({ ...previous, sort: event.target.value as YoutubeSort, page: 1 }))
@@ -440,6 +443,11 @@ export default function Videos() {
 						))}
 					</select>
 				</div>
+				{typing && data && (
+					<p className="kub-video-hint" role="status">
+						검색 조건을 적용하고 있어요.
+					</p>
+				)}
 				{videos.data && !hasViewCounts && (
 					<p className="kub-video-hint">조회수 정보가 아직 제공되지 않아 인기순을 사용할 수 없어요.</p>
 				)}
@@ -461,10 +469,10 @@ export default function Videos() {
 						<h3>날짜 범위를 확인해 주세요.</h3>
 						<p>{broadcastValidation}</p>
 					</div>
-				) : typing || videos.isPending ? (
+				) : videos.isPending || (videos.isFetching && !data) ? (
 					<>
 						<p className="kub-video-hint" role="status">
-							{videos.isPending ? "전체 영상 목록을 불러오고 있어요." : "영상을 찾고 있어요."}
+							전체 영상 목록을 불러오고 있어요.
 						</p>
 						<div className="kub-video-grid" aria-hidden="true">
 							{Array.from({ length: 6 }, (_, index) => (
@@ -509,9 +517,7 @@ export default function Videos() {
 						<Search size={32} />
 						<h3>{isFiltered ? "조건에 맞는 영상이 없어요." : "아직 등록된 영상이 없어요."}</h3>
 						<p>
-							{isFiltered
-								? "검색어나 방송일 범위를 바꿔서 찾아보세요."
-								: "새 영상이 준비되면 이곳에서 볼 수 있어요."}
+							{isFiltered ? "검색어나 방송일 범위를 바꿔서 찾아보세요." : "새 영상이 준비되면 이곳에서 볼 수 있어요."}
 						</p>
 						{isFiltered && (
 							<button className="kub-button" onClick={reset}>

@@ -102,8 +102,8 @@ export function filterAndSortYoutubeVideos(videos: YoutubeVideo[], filters: Yout
 		if (filters.channel && video.channel !== filters.channel) return false;
 		// if (filters.category && !video.categories.includes(filters.category)) return false;
 		if (filters.broadcastFrom || filters.broadcastTo) {
-			const broadcast = youtubeBroadcastDate(video.title);
-			if (!broadcast || filters.broadcastFrom && broadcast < filters.broadcastFrom ||
+			const broadcast = youtubeBroadcastDate(video.title) ?? koreanDate(Date.parse(video.publishedAt));
+			if (filters.broadcastFrom && broadcast < filters.broadcastFrom ||
 				filters.broadcastTo && broadcast > filters.broadcastTo) return false;
 		}
 		return true;

@@ -6,6 +6,7 @@ export interface QueueTrack {
 	title: string;
 	artist: string;
 	sungAt: string;
+	memo?: string;
 	start: number;
 	end: number | null;
 }
@@ -20,6 +21,7 @@ export function isQueueTrack(value: unknown): value is QueueTrack {
 	if (!value || typeof value !== "object") return false;
 	const track = value as QueueTrack;
 	return [track.id, track.title, track.artist, track.sungAt].every((item) => typeof item === "string") &&
+		(track.memo === undefined || typeof track.memo === "string") &&
 		typeof track.videoId === "string" && /^[\w-]{11}$/.test(track.videoId) &&
 		Number.isFinite(track.start) && track.start >= 0 &&
 		(track.end === null || (Number.isFinite(track.end) && track.end > track.start));
@@ -33,6 +35,7 @@ export function toQueueTrack(song: Song, history: HamkubbySongHistoryModel): Que
 		title: song.title,
 		artist: song.artist,
 		sungAt: history.sungAt,
+		memo: history.memo ?? undefined,
 		start: history.start ?? 0,
 		end: history.end ?? null,
 	};

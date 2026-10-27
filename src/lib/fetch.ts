@@ -49,6 +49,10 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 
 	const timeout = options?.timeout ?? 20000;
 	const controller = new AbortController();
+	const callerSignal = options?.signal ?? (input instanceof Request ? input.signal : undefined);
+	const cancel = () => controller.abort();
+	if (callerSignal?.aborted) cancel();
+	else callerSignal?.addEventListener("abort", cancel, { once: true });
 	const id = timeout > 0 ? setTimeout(() => controller.abort(), timeout) : undefined;
 	try {
 		const res = await fetch(input, {
@@ -57,7 +61,10 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 		});
 
 		const response: FetchResponse<T> = {
-			data: await res.json().catch(() => undefined),
+			data: await res.json().catch((error) => {
+				if (controller.signal.aborted) throw error;
+				return undefined;
+			}),
 			headers: res.headers,
 			status: res.status,
 			statusText: res.statusText,
@@ -100,5 +107,6 @@ export async function fetch_<T = any>(input: RequestInfo | URL, options?: FetchO
 		};
 	} finally {
 		if (id) clearTimeout(id);
+		callerSignal?.removeEventListener("abort", cancel);
 	}
 }

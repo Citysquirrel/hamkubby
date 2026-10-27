@@ -1,7 +1,10 @@
 import { useState } from "react";
 
 export function Horn({ tone = "light", className = "" }: { tone?: "light" | "dark"; className?: string }) {
-	return <img className={`kub-horn ${className}`} src={`/images/v2/horn_${tone}.svg`} alt="" aria-hidden="true" />;
+	return <span className={`kub-horn ${className}`} data-tone={tone} aria-hidden="true">
+		<img src="/images/v2/horn_light.svg" data-tone="light" alt="" decoding="sync" loading="eager" />
+		<img src="/images/v2/horn_dark.svg" data-tone="dark" alt="" decoding="sync" loading="eager" />
+	</span>;
 }
 
 const riceCakeColors = {

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { ArrowUpRight, Check, Copy, Search, SlidersHorizontal, X } from "lucide-react";
 import type { Song, SortType } from "../../config/types";
 import { createSongSearch, normalizeKeyword } from "../../lib/search";
@@ -8,6 +9,7 @@ import { RiceCake } from "./Motifs";
 import { Lyrics } from "./Lyrics";
 import { Pagination } from "./Pagination";
 import { SongHistory } from "./SongHistory";
+import { SongListLoading } from "./LoadingState";
 
 const genres = ["K-POP", "J-POP", "POP"];
 const cheeses = ["일반곡", "잘몰라", "피토곡", "우엑곡"];
@@ -56,6 +58,10 @@ function Highlight({ text, query }: { text: string; query: string }) {
 export default function SongBookV2() {
 	const data = useSongDataStore((state) => state.data);
 	const isLoading = useSongDataStore((state) => state.isSongDataLoading);
+	const hasLoaded = useSongDataStore((state) => state.hasLoaded);
+	const error = useSongDataStore((state) => state.error);
+	const { retrySongbook } = useOutletContext<{ retrySongbook: () => void }>();
+	const initialLoading = !hasLoaded && isLoading;
 	const [filterOpen, setFilterOpen] = useState(false);
 	const [query, setQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -102,7 +108,7 @@ export default function SongBookV2() {
 	}, [data, search, debouncedQuery, source, selectedGenres, selectedCheeses, history, sort]);
 	const pageCount = Math.max(1, Math.ceil(filteredSongs.length / pageSize));
 	const currentPage = Math.min(page, pageCount);
-	const pageSongs = isLoading ? [] : filteredSongs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+	const pageSongs = filteredSongs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 	useEffect(() => setPage(1), [debouncedQuery, source, selectedGenres, selectedCheeses, history, sort, pageSize]);
 
 	useEffect(() => {
@@ -243,6 +249,7 @@ export default function SongBookV2() {
 		}
 	};
 	const filterCount = (source === "false" ? 0 : selectedCheeses.length) + history.length;
+	const isFiltered = !!debouncedQuery.trim() || source !== "all" || selectedGenres.length > 0 || filterCount > 0;
 	const changePage = (nextPage: number) => {
 		setPage(nextPage);
 	};
@@ -250,9 +257,6 @@ export default function SongBookV2() {
 	return (
 		<>
 			<link rel="canonical" href="https://hamkubby.pages.dev/" />
-			<div className="kub-search-heading">
-				<h2>노래 찾기</h2>
-			</div>
 			<div className="kub-tools">
 				<div className="kub-search">
 					<Search aria-hidden="true" />
@@ -319,7 +323,7 @@ export default function SongBookV2() {
 							onClick={() => setSource(item.value)}
 						>
 							{item.label}
-							<small>{item.count.toLocaleString()}</small>
+							<small>{hasLoaded ? item.count.toLocaleString() : "—"}</small>
 						</button>
 					))}
 				</div>
@@ -381,32 +385,48 @@ export default function SongBookV2() {
 						</button>
 					))}
 				</div>
-				<div className="kub-result-meta">
-					<select aria-label="곡 정렬" value={sort} onChange={(event) => setSort(event.target.value as SortType)}>
-						<option value="title-asc">제목 오름차순</option>
-						<option value="title-desc">제목 내림차순</option>
-						<option value="artist-asc">가수 오름차순</option>
-						<option value="artist-desc">가수 내림차순</option>
-					</select>
-				</div>
 			</div>
 			<div className="kub-workspace" data-detail-open={!!selected}>
 				<section className="kub-song-section" ref={listRef} tabIndex={-1} aria-label="노래 목록" aria-busy={isLoading}>
-					<Pagination
-						page={currentPage}
-						pageCount={pageCount}
-						pageSize={pageSize}
-						total={filteredSongs.length}
-						onPageChange={changePage}
-						onPageSizeChange={setPageSize}
-						position="상단"
-					/>
+					{error && !initialLoading && (
+						<div className="kub-data-feedback" role="status">
+							<p>{hasLoaded ? "목록을 갱신하지 못해 마지막으로 불러온 노래를 표시하고 있어요." : error}</p>
+							<button className="kub-button" onClick={retrySongbook} disabled={isLoading}>
+								{isLoading ? "다시 불러오는 중…" : "다시 불러오기"}
+							</button>
+						</div>
+					)}
+					{hasLoaded && (
+						<Pagination
+							page={currentPage}
+							pageCount={pageCount}
+							pageSize={pageSize}
+							total={filteredSongs.length}
+							onPageChange={changePage}
+							onPageSizeChange={setPageSize}
+							position="상단"
+						>
+							<select
+								className="kub-page-sort"
+								name="kub-page-sort"
+								aria-label="곡 정렬"
+								value={sort}
+								onChange={(event) => setSort(event.target.value as SortType)}
+							>
+								<option value="title-asc">제목 오름차순</option>
+								<option value="title-desc">제목 내림차순</option>
+								<option value="artist-asc">가수 오름차순</option>
+								<option value="artist-desc">가수 내림차순</option>
+							</select>
+						</Pagination>
+					)}
 					<div className="kub-list-head" aria-hidden="true">
 						<span>곡 / 아티스트</span>
 						<span className="kub-column-tags">분류</span>
 						<span>복사</span>
 					</div>
-					<ul className="kub-list">
+					{initialLoading && <SongListLoading />}
+					<ul className="kub-list" hidden={!pageSongs.length}>
 						{pageSongs.map((song) => {
 							const isSelected = !!findSelectedSong([song], selected);
 							return (
@@ -445,20 +465,17 @@ export default function SongBookV2() {
 							);
 						})}
 					</ul>
-					{isLoading ? (
+					{hasLoaded && !filteredSongs.length && (
 						<div className="kub-empty" role="status">
-							노래를 불러오는 중이에요.
-						</div>
-					) : (
-						!filteredSongs.length && (
-							<div className="kub-empty">
-								아직 찾는 곡이 보이지 않네요.
-								<br />
+							<p>{isFiltered ? "조건에 맞는 곡이 없어요." : "아직 등록된 노래가 없어요."}</p>
+							{isFiltered ? (
 								<button className="kub-reset" onClick={reset}>
 									검색·필터 초기화
 								</button>
-							</div>
-						)
+							) : (
+								<p>노래가 등록되면 이곳에서 볼 수 있어요.</p>
+							)}
+						</div>
 					)}
 					{!!pageSongs.length && (
 						<Pagination

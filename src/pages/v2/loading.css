@@ -1,0 +1,40 @@
+.kub-route-loading {
+	min-height: 100dvh;
+	background: light-dark(#fefcfb, #211b1b);
+	color: light-dark(#2c1e1c, #fefcfb);
+}
+.kub-route-loading header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 20px clamp(16px, 4vw, 48px);
+	border-bottom: 1px solid light-dark(#e7deda, #493531);
+	font-weight: 700;
+}
+.kub-route-loading header img { width: 40px; height: 40px; border-radius: 50%; }
+.kub-route-loading main { max-width: 1100px; margin: 0 auto; padding: 32px 16px; }
+.kub-loading { color: var(--kub-muted, light-dark(#7c615a, #d1c2bd)); }
+.kub-loading > p { padding: 12px 0; font-size: 14px; }
+.kub-loading-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	min-height: 96px;
+	padding: 16px;
+	border-bottom: 1px solid var(--kub-line, light-dark(#e7deda, #493531));
+}
+.kub-loading-row > div { width: 65%; }
+.kub-loading-row span {
+	display: block;
+	height: 14px;
+	border-radius: 5px;
+	background: var(--kub-line, light-dark(#e7deda, #493531));
+}
+.kub-loading-row > div span:first-child { width: 80%; margin-bottom: 12px; }
+.kub-loading-row > div span:last-child { width: 45%; height: 10px; }
+.kub-loading-row > span { width: 20%; height: 24px; }
+@media (prefers-reduced-motion: no-preference) {
+	.kub-loading-rows { animation: kub-loading-pulse 1.8s ease-in-out infinite alternate; }
+}
+@keyframes kub-loading-pulse { to { opacity: .5; } }

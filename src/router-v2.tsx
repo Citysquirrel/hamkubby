@@ -1,4 +1,5 @@
 import { Navigate, useLocation, type RouteObject } from "react-router-dom";
+import { RouteLoading } from "./pages/v2/LoadingState";
 
 function V2Redirect() {
 	const { pathname, search, hash } = useLocation();
@@ -10,6 +11,7 @@ function V2Redirect() {
 export const v2Routes: RouteObject[] = [
 	{
 		path: "/",
+		HydrateFallback: RouteLoading,
 		lazy: async () => ({ Component: (await import("./AppV2")).default }),
 		children: [
 			{
