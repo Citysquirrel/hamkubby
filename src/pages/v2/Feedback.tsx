@@ -6,7 +6,11 @@ import "./feedback.css";
 
 type FeedbackCategory = "bug" | "suggestion" | "other";
 
-function FeedbackDialog({ onClose, retryAt, onRateLimit }: {
+function FeedbackDialog({
+	onClose,
+	retryAt,
+	onRateLimit,
+}: {
 	onClose: () => void;
 	retryAt: number;
 	onRateLimit: (until: number) => void;
@@ -69,25 +73,28 @@ function FeedbackDialog({ onClose, retryAt, onRateLimit }: {
 			setVerificationError("보안 인증을 완료하지 못했어요. 다시 인증해 주세요.");
 			return true;
 		};
-		void loadTurnstile().then((turnstile) => {
-			if (!active || !widgetRef.current) return;
-			api = turnstile;
-			widgetId = api.render(widgetRef.current, {
-				sitekey: FEEDBACK_SITE_KEY,
-				action: "feedback",
-				language: "ko",
-				size: "flexible",
-				callback: (value) => {
-					if (!active) return;
-					setToken(value);
-					setVerificationError("");
-				},
-				"error-callback": verificationFailed,
-				"expired-callback": verificationFailed,
-				"timeout-callback": verificationFailed,
-			});
-			if (widgetId === undefined) verificationFailed();
-		}).catch(verificationFailed);
+		void loadTurnstile()
+			.then((turnstile) => {
+				if (!active || !widgetRef.current) return;
+				api = turnstile;
+				widgetId = api.render(widgetRef.current, {
+					sitekey: FEEDBACK_SITE_KEY,
+					action: "feedback",
+					language: "ko",
+					size: "flexible",
+					appearance: "interaction-only",
+					callback: (value) => {
+						if (!active) return;
+						setToken(value);
+						setVerificationError("");
+					},
+					"error-callback": verificationFailed,
+					"expired-callback": verificationFailed,
+					"timeout-callback": verificationFailed,
+				});
+				if (widgetId === undefined) verificationFailed();
+			})
+			.catch(verificationFailed);
 		return () => {
 			active = false;
 			if (widgetId !== undefined) api?.remove(widgetId);
@@ -129,8 +136,10 @@ function FeedbackDialog({ onClose, retryAt, onRateLimit }: {
 			} else {
 				const result: unknown = await response.json().catch(() => null);
 				if (!mountedRef.current) return;
-				const serverMessage = result && typeof result === "object" && "message" in result
-					&& typeof result.message === "string" ? result.message : "피드백을 접수하지 못했어요. 잠시 후 다시 시도해 주세요.";
+				const serverMessage =
+					result && typeof result === "object" && "message" in result && typeof result.message === "string"
+						? result.message
+						: "피드백을 접수하지 못했어요. 잠시 후 다시 시도해 주세요.";
 				setError(serverMessage);
 			}
 			refreshVerification();
@@ -146,36 +155,62 @@ function FeedbackDialog({ onClose, retryAt, onRateLimit }: {
 	};
 
 	return (
-		<dialog ref={dialogRef} className="kub-feedback-dialog" aria-labelledby="kub-feedback-title"
-			onClose={onClose} onCancel={(event) => { if (requestRef.current) event.preventDefault(); }}
-			onKeyDown={(event) => event.stopPropagation()}>
+		<dialog
+			ref={dialogRef}
+			className="kub-feedback-dialog"
+			aria-labelledby="kub-feedback-title"
+			onClose={onClose}
+			onCancel={(event) => {
+				if (requestRef.current) event.preventDefault();
+			}}
+			onKeyDown={(event) => event.stopPropagation()}
+		>
 			<header className="kub-feedback-header">
 				<div>
 					<h2 id="kub-feedback-title">개발자에게 피드백</h2>
 					<p>사이트 오류나 개선 의견을 익명으로 보내주세요.</p>
 				</div>
-				<button type="button" className="kub-feedback-close" aria-label="피드백 창 닫기"
-					disabled={pending} onClick={() => dialogRef.current?.close()}><X aria-hidden="true" /></button>
+				<button
+					type="button"
+					className="kub-feedback-close"
+					aria-label="피드백 창 닫기"
+					disabled={pending}
+					onClick={() => dialogRef.current?.close()}
+				>
+					<X aria-hidden="true" />
+				</button>
 			</header>
 			{sent ? (
 				<div className="kub-feedback-success">
 					<p role="status">피드백이 접수되었어요. 의견 감사합니다!</p>
-					<button type="button" className="kub-feedback-submit" onClick={() => dialogRef.current?.close()}>닫기</button>
+					<button type="button" className="kub-feedback-submit" onClick={() => dialogRef.current?.close()}>
+						닫기
+					</button>
 				</div>
 			) : (
 				<form onSubmit={(event) => void submit(event)} aria-busy={pending}>
 					<label htmlFor="kub-feedback-category">유형</label>
-					<select id="kub-feedback-category" value={category} disabled={pending}
-						onChange={(event) => setCategory(event.target.value as FeedbackCategory)}>
+					<select
+						id="kub-feedback-category"
+						value={category}
+						disabled={pending}
+						onChange={(event) => setCategory(event.target.value as FeedbackCategory)}
+					>
 						<option value="bug">오류 제보</option>
 						<option value="suggestion">개선 제안</option>
 						<option value="other">기타</option>
 					</select>
 					<label htmlFor="kub-feedback-message">내용</label>
-					<textarea id="kub-feedback-message" rows={5} value={message} disabled={pending}
-						aria-describedby="kub-feedback-hint kub-feedback-count" aria-invalid={message.length > 0 && !validMessage}
+					<textarea
+						id="kub-feedback-message"
+						rows={5}
+						value={message}
+						disabled={pending}
+						aria-describedby="kub-feedback-hint kub-feedback-count"
+						aria-invalid={message.length > 0 && !validMessage}
 						placeholder="어느 화면에서 어떤 문제가 있었는지 알려주세요."
-						onChange={(event) => setMessage(event.target.value)} />
+						onChange={(event) => setMessage(event.target.value)}
+					/>
 					<div className="kub-feedback-meta">
 						<span id="kub-feedback-hint">10~300자 · 연속 공백은 한 칸으로 계산</span>
 						<span id="kub-feedback-count">{length} / 300</span>
@@ -184,16 +219,37 @@ function FeedbackDialog({ onClose, retryAt, onRateLimit }: {
 					{FEEDBACK_SITE_KEY ? (
 						<>
 							<div ref={widgetRef} className="kub-feedback-verification" />
-							{verificationError && <div className="kub-feedback-error" role="alert">
-								<p>{verificationError}</p>
-								<button type="button" disabled={pending} onClick={refreshVerification}>다시 인증하기</button>
-							</div>}
+							{verificationError && (
+								<div className="kub-feedback-error" role="alert">
+									<p>{verificationError}</p>
+									<button type="button" disabled={pending} onClick={refreshVerification}>
+										다시 인증하기
+									</button>
+								</div>
+							)}
 						</>
-					) : <p className="kub-feedback-note" role="status">현재 피드백 접수를 준비 중이에요. 문의는 <a href="mailto:tok1324@naver.com">이메일</a>로 보내주세요.</p>}
-					{error && <p className="kub-feedback-error" role="alert">{error}</p>}
-					<button type="submit" className="kub-feedback-submit"
-						disabled={pending || !validMessage || !token || retrySeconds > 0}>
-						{pending ? "보내는 중…" : retrySeconds > 0 ? `${retrySeconds}초 후 다시 보내기` : "피드백 보내기"}
+					) : (
+						<p className="kub-feedback-note" role="status">
+							현재 피드백 접수를 준비 중이에요. 문의는 <a href="mailto:tok1324@naver.com">이메일</a>로 보내주세요.
+						</p>
+					)}
+					{error && (
+						<p className="kub-feedback-error" role="alert">
+							{error}
+						</p>
+					)}
+					<button
+						type="submit"
+						className="kub-feedback-submit"
+						disabled={pending || !validMessage || !token || retrySeconds > 0}
+					>
+						{token
+							? "보안 인증 중…"
+							: pending
+								? "보내는 중…"
+								: retrySeconds > 0
+									? `${retrySeconds}초 후 다시 보내기`
+									: "피드백 보내기"}
 					</button>
 				</form>
 			)}
@@ -205,12 +261,28 @@ export function Feedback() {
 	const [open, setOpen] = useState(false);
 	const [retryAt, setRetryAt] = useState(0);
 	const triggerRef = useRef<HTMLButtonElement>(null);
-	return <>
-		<button ref={triggerRef} type="button" className="kub-feedback-trigger" aria-haspopup="dialog"
-			onClick={() => setOpen(true)}><MessageSquare aria-hidden="true" /> 개발자에게 피드백</button>
-		{open && <FeedbackDialog retryAt={retryAt} onRateLimit={setRetryAt} onClose={() => {
-			setOpen(false);
-			triggerRef.current?.focus({ preventScroll: true });
-		}} />}
-	</>;
+	return (
+		<>
+			<button
+				ref={triggerRef}
+				type="button"
+				className="kub-feedback-trigger"
+				aria-haspopup="dialog"
+				onClick={() => setOpen(true)}
+			>
+				<MessageSquare aria-hidden="true" /> 개발자에게 피드백
+			</button>
+			{open && (
+				<FeedbackDialog
+					retryAt={retryAt}
+					onRateLimit={setRetryAt}
+					onClose={() => {
+						setOpen(false);
+						triggerRef.current?.focus({ preventScroll: true });
+					}}
+				/>
+			)}
+		</>
+	);
 }
+

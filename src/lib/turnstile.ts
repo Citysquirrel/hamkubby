@@ -3,6 +3,7 @@ interface TurnstileOptions {
 	action: "feedback";
 	language: "ko";
 	size: "flexible";
+	appearance: "always" | "execute" | "interaction-only";
 	callback: (token: string) => void;
 	"error-callback": () => boolean;
 	"expired-callback": () => void;
@@ -38,7 +39,10 @@ export function loadTurnstile(): Promise<Turnstile> {
 		script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 		script.async = true;
 		script.onload = () => {
-			if (!window.turnstile) { fail(); return; }
+			if (!window.turnstile) {
+				fail();
+				return;
+			}
 			clearTimeout(timer);
 			resolve(window.turnstile);
 		};
@@ -50,3 +54,4 @@ export function loadTurnstile(): Promise<Turnstile> {
 	});
 	return loading;
 }
+
