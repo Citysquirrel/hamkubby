@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { MessageSquare, X } from "lucide-react";
-import { FEEDBACK_API_URL, FEEDBACK_SITE_KEY } from "../../config/feedback";
+import { FEEDBACK_API_URL, FEEDBACK_SITE_KEY, FEEDBACK_SOURCE_SITE } from "../../config/feedback";
 import { loadTurnstile, type Turnstile } from "../../lib/turnstile";
 import "./feedback.css";
 
-type FeedbackCategory = "bug" | "suggestion" | "other";
+type FeedbackCategory = "bug" | "suggestion" | "missing" | "other";
 
 function FeedbackDialog({
 	onClose,
@@ -117,7 +117,7 @@ function FeedbackDialog({
 				credentials: "omit",
 				cache: "no-store",
 				signal: controller.signal,
-				body: JSON.stringify({ category, message: normalizedMessage, turnstileToken: token }),
+				body: JSON.stringify({ category, sourceSite: FEEDBACK_SOURCE_SITE, message: normalizedMessage, turnstileToken: token }),
 			});
 			if (!mountedRef.current) return;
 			if (response.status === 201) {
@@ -198,6 +198,7 @@ function FeedbackDialog({
 					>
 						<option value="bug">오류 제보</option>
 						<option value="suggestion">개선 제안</option>
+						<option value="missing">데이터 누락/오기</option>
 						<option value="other">기타</option>
 					</select>
 					<label htmlFor="kub-feedback-message">내용</label>
