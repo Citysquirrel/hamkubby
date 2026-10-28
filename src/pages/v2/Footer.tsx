@@ -1,6 +1,7 @@
 import { Mail } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { Feedback } from "./Feedback";
 
 export function Footer() {
 	return (
@@ -11,6 +12,7 @@ export function Footer() {
 				비공식 팬 사이트 · 원작물의 저작권은 소속사 및 라이버에게 있습니다.
 			</span>
 			<nav className="kub-footer-contacts" aria-label="사이트 링크 및 개발자 연락처">
+				{/* <Feedback /> */}
 				<Link to="/old">구버전 노래책</Link>
 				<a href="https://github.com/Citysquirrel/hamkubby" target="_blank" rel="noopener noreferrer">
 					<FaGithub aria-hidden="true" /> GitHub
@@ -22,3 +24,4 @@ export function Footer() {
 		</footer>
 	);
 }
+

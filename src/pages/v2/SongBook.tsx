@@ -180,7 +180,7 @@ export default function SongBookV2() {
 	useEffect(() => {
 		const handleKey = (event: KeyboardEvent) => {
 			const active = document.activeElement as HTMLElement | null;
-			if (document.querySelector(".kub-history-dialog[open]")) return;
+			if (document.querySelector("dialog[open]")) return;
 			if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
 			if (active?.closest("input, textarea, select") || active?.isContentEditable) return;
 			if (event.key === "Escape") {
@@ -435,11 +435,14 @@ export default function SongBookV2() {
 					<ul className="kub-list" hidden={!pageSongs.length}>
 						{pageSongs.map((song) => {
 							const isSelected = !!findSelectedSong([song], selected);
+							const familiarityNotice = song.song_histories?.some((history) => history.memo?.includes("몰루"))
+								? "잘 모르는 곡일 수 있어요"
+								: "";
 							return (
 								<li key={songKey(song)} className="kub-song" data-selected={isSelected}>
 									<button
 										className="kub-song-main"
-										aria-label={`${song.title} · ${song.artist} 상세 보기`}
+										aria-label={`${song.title} · ${song.artist} 상세 보기${familiarityNotice ? ` · ${familiarityNotice}` : ""}`}
 										aria-pressed={isSelected}
 										onClick={() => selectSong(song)}
 									>
@@ -458,6 +461,7 @@ export default function SongBookV2() {
 										</span>
 										<span className="kub-song-tags">
 											<SongTags song={song} />
+											{familiarityNotice && <span className="kub-tag kub-tag-amber">{familiarityNotice}</span>}
 										</span>
 									</button>
 									<button

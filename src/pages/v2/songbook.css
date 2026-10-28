@@ -1305,7 +1305,7 @@
 	padding-top: 30px;
 }
 #kub-music-room .kub-workspace {
-	grid-template-columns: minmax(0, 1fr) 320px;
+	grid-template-columns: minmax(0, 1fr) 340px;
 }
 #kub-music-room .kub-detail {
 	position: sticky;
@@ -1422,7 +1422,7 @@
 }
 @container (max-width: 900px) {
 	#kub-music-room .kub-workspace {
-		grid-template-columns: minmax(0, 1fr) 280px;
+		grid-template-columns: minmax(0, 1fr) 300px;
 		gap: 18px;
 	}
 	#kub-music-room .kub-legacy-link {
