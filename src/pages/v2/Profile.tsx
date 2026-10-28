@@ -83,7 +83,6 @@ export function Profile({
 				<div className="kub-hero-clip">
 					<section className="kub-hero" ref={cardRef} aria-label="햄쿠비 소개">
 						<ProfileEffects />
-						<RiceCake color="pink" className="kub-profile-cake" />
 						<div className="kub-hero-copy">
 							<div className="kub-profile-line">
 								<img className="kub-avatar kub-profile-avatar" src="/images/v2/avatar.png" alt="" />
