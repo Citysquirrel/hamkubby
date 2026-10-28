@@ -29,7 +29,11 @@ function SocialLinks() {
 	);
 }
 
-export function Profile({ open, portrait, onPortraitError }: {
+export function Profile({
+	open,
+	portrait,
+	onPortraitError,
+}: {
 	open: boolean;
 	portrait: string;
 	onPortraitError: () => void;
@@ -93,20 +97,11 @@ export function Profile({ open, portrait, onPortraitError }: {
 								<br />
 								<span>{greeting.title}</span>
 							</h1>
-							<p>
-								{greeting.description}
-								<br />
-								제목과 가수를 복사하면 신청 준비 끝.
-							</p>
+							<p>{greeting.description}</p>
 							<SocialLinks />
 						</div>
 						<div className="kub-portrait-wrap">
-							<img
-								className="kub-portrait"
-								src={portrait}
-								alt="햄쿠비"
-								onError={onPortraitError}
-							/>
+							<img className="kub-portrait" src={portrait} alt="햄쿠비" onError={onPortraitError} />
 							{/* <img className="kub-ribbon" src="/images/v2/ribbon.svg" alt="" /> */}
 							{/* <img className="kub-hair-flower" src="/images/v2/hair-flower.svg" alt="" aria-hidden="true" /> */}
 						</div>

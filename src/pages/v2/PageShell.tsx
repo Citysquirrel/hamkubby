@@ -34,7 +34,9 @@ export function PageShell({
 }) {
 	const { colorMode, toggleColorMode } = useColorMode();
 	const [intro, setIntro] = useState(() => readStoredValue("songbook-v2-intro", true, isBoolean));
-	const [portrait, setPortrait] = useState(() => portraits[Math.floor(Math.random() * portraits.length)] ?? defaultPortrait);
+	const [portrait, setPortrait] = useState(
+		() => portraits[Math.floor(Math.random() * portraits.length)] ?? defaultPortrait,
+	);
 	const handlePortraitError = () => setPortrait(defaultPortrait);
 	const [effects] = useState(() =>
 		readStoredValue("songbook-v2-effects", !window.matchMedia("(prefers-reduced-motion: reduce)").matches, isBoolean),
@@ -52,7 +54,6 @@ export function PageShell({
 		)
 			return;
 		current.close();
-		requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".kub-player-toggle")?.focus());
 	};
 	const toggleIntro = () => {
 		const next = !intro;
@@ -135,10 +136,13 @@ export function PageShell({
 						</nav>
 					</header>
 					<PageTabs />
-					<PageHelp open={help} onClose={() => {
-						setHelp(false);
-						helpTriggerRef.current?.focus({ preventScroll: true });
-					}} />
+					<PageHelp
+						open={help}
+						onClose={() => {
+							setHelp(false);
+							helpTriggerRef.current?.focus({ preventScroll: true });
+						}}
+					/>
 					<main className="kub-main">
 						<div className="kub-folded-portrait" aria-hidden="true">
 							<img src={portrait} alt="" draggable={false} onError={handlePortraitError} />

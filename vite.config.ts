@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
 		server: {
 			proxy: {
 				"/api/feedback": {
-					target: "https://api.stelcount.fans",
+					target: "http://127.0.0.1:3477",
 					changeOrigin: true,
 					configure: (proxy) => {
 						proxy.on("proxyReq", (request) => {
