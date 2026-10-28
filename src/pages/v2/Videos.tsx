@@ -428,20 +428,6 @@ export default function Videos() {
 						{isFiltered ? "검색 결과" : "전체 영상"}
 						{data && !broadcastValidation && <span>{data.total.toLocaleString()}개</span>}
 					</h2>
-					<select
-						aria-label="영상 정렬"
-						name="kub-video-sort"
-						value={sort}
-						onChange={(event) =>
-							setSelection((previous) => ({ ...previous, sort: event.target.value as YoutubeSort, page: 1 }))
-						}
-					>
-						{youtubeSorts.map((option) => (
-							<option key={option.value} value={option.value} disabled={option.value === "popular" && !hasViewCounts}>
-								{option.label}
-							</option>
-						))}
-					</select>
 				</div>
 				{typing && data && (
 					<p className="kub-video-hint" role="status">
@@ -499,7 +485,23 @@ export default function Videos() {
 							{...pagination}
 							position="상단"
 							onPageSizeChange={(size) => setSelection((previous) => ({ ...previous, pageSize: size, page: 1 }))}
-						/>
+						>
+							<select
+								className="kub-page-sort"
+								aria-label="영상 정렬"
+								name="kub-video-sort"
+								value={sort}
+								onChange={(event) =>
+									setSelection((previous) => ({ ...previous, sort: event.target.value as YoutubeSort, page: 1 }))
+								}
+							>
+								{youtubeSorts.map((option) => (
+									<option key={option.value} value={option.value} disabled={option.value === "popular" && !hasViewCounts}>
+										{option.label}
+									</option>
+								))}
+							</select>
+						</Pagination>
 						<div className="kub-video-grid">
 							{data.items.map((video) => (
 								<VideoCard

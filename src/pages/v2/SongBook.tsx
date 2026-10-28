@@ -5,6 +5,7 @@ import type { Song, SortType } from "../../config/types";
 import { createSongSearch, normalizeKeyword } from "../../lib/search";
 import { filterAndSortSongs, findSelectedSong } from "../../lib/songbook";
 import useSongDataStore from "../../store/useSongDataStore";
+import { toaster } from "../../components/ui/toaster";
 import { RiceCake } from "./Motifs";
 import { Lyrics } from "./Lyrics";
 import { Pagination } from "./Pagination";
@@ -73,7 +74,6 @@ export default function SongBookV2() {
 	const [selection, setSelection] = useState<Song | null>(null);
 	const [copied, setCopied] = useState<string | null>(null);
 	const [copyFallback, setCopyFallback] = useState<Song | null>(null);
-	const [status, setStatus] = useState("");
 	const [knotSwing, setKnotSwing] = useState(0);
 	const [detailClosing, setDetailClosing] = useState(false);
 	const searchRef = useRef<HTMLInputElement>(null);
@@ -235,17 +235,23 @@ export default function SongBookV2() {
 			setCopied(songKey(song));
 			if (findSelectedSong([song], selected)) setKnotSwing((value) => value + 1);
 			setCopyFallback(null);
-			setStatus(`${song.title} - ${song.artist} · 복사했어요.`);
+			toaster.create({
+				type: "success",
+				description: `${song.title} - ${song.artist} · 복사했어요.`,
+				duration: 2400,
+			});
 			clearTimeout(copyTimer.current);
 			copyTimer.current = setTimeout(() => {
 				setCopied(null);
-				setStatus("");
 			}, 2400);
 		} catch {
 			setDetailClosing(false);
 			setSelection(song);
 			setCopyFallback(song);
-			setStatus("복사할 문구를 선택했어요. 직접 복사해 주세요.");
+			toaster.create({
+				type: "info",
+				description: "복사할 문구를 선택했어요. 직접 복사해 주세요.",
+			});
 		}
 	};
 	const filterCount = (source === "false" ? 0 : selectedCheeses.length) + history.length;
@@ -576,15 +582,6 @@ export default function SongBookV2() {
 						</div>
 					</div>
 				</aside>
-			</div>
-			<div className="kub-status" role="status">
-				{status}
-			</div>
-			<div className="kub-notice">
-				<RiceCake color="green" />
-				<span>
-					<strong>듣고 싶은 곡, 찾았나요?</strong>복사한 제목과 가수로 신청해 주세요.
-				</span>
 			</div>
 		</>
 	);

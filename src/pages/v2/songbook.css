@@ -433,6 +433,10 @@
 	font-size: 14px;
 	padding: 6px 10px;
 }
+#kub-music-room .kub-page-meta .kub-page-sort:hover {
+	border-color: var(--kub-green);
+	background: var(--kub-green-soft);
+}
 #kub-music-room .kub-workspace {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 286px;
@@ -686,12 +690,6 @@
 	width: 15px;
 	height: 15px;
 	flex-shrink: 0;
-}
-#kub-music-room .kub-status {
-	font-size: 13px;
-	color: var(--kub-green-deep);
-	min-height: 19px;
-	margin-top: 8px;
 }
 #kub-music-room .kub-help {
 	border-bottom: 1px solid var(--kub-line);

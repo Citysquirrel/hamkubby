@@ -119,14 +119,6 @@
 	font-size: 12px;
 	color: var(--kub-muted);
 }
-#kub-music-room .kub-video-results-heading select {
-	min-height: 38px;
-	padding: 6px 10px;
-	border: 1px solid var(--kub-line);
-	border-radius: 7px;
-	background: var(--kub-bg);
-	font-size: 14px;
-}
 #kub-music-room .kub-video-periods {
 	display: flex;
 	grid-column: 1 / -1;
