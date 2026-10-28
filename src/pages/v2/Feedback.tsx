@@ -243,7 +243,7 @@ function FeedbackDialog({
 						className="kub-feedback-submit"
 						disabled={pending || !validMessage || !token || retrySeconds > 0}
 					>
-						{token
+						{!token
 							? "보안 인증 중…"
 							: pending
 								? "보내는 중…"
