@@ -1,5 +1,6 @@
 import { HAMKUBBY_API_BASE_URL } from "../config/base-url";
 import { formatPlaybackTime } from "./player";
+import { createYoutubeSearch, normalizeKeyword } from "./search";
 
 export interface YoutubeVideo {
 	id: string;
@@ -99,10 +100,17 @@ function compareYoutubeVideos(a: YoutubeVideo, b: YoutubeVideo, sort: YoutubeSor
 	return (sort === "oldest" ? dateOrder : -dateOrder) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
-export function filterAndSortYoutubeVideos(videos: YoutubeVideo[], filters: YoutubeFilters, sort: YoutubeSort): YoutubeVideo[] {
-	const keyword = filters.q.trim().toLowerCase();
-	return videos.filter((video) => {
-		if (keyword && !video.title.toLowerCase().includes(keyword)) return false;
+export function filterAndSortYoutubeVideos(
+	videos: YoutubeVideo[],
+	filters: YoutubeFilters,
+	sort: YoutubeSort,
+	search?: ReturnType<typeof createYoutubeSearch>,
+): YoutubeVideo[] {
+	const keyword = normalizeKeyword(filters.q);
+	const candidates = keyword
+		? (search ?? createYoutubeSearch(videos)).search(keyword).map(({ item }) => item.video)
+		: filters.q.trim() ? [] : videos;
+	return candidates.filter((video) => {
 		if (filters.channel && video.channel !== filters.channel) return false;
 		// if (filters.category && !video.categories.includes(filters.category)) return false;
 		if (filters.broadcastFrom || filters.broadcastTo) {

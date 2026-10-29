@@ -1,6 +1,7 @@
 import Fuse from "fuse.js";
 import Inko from "inko";
 import type { Song } from "../config/types";
+import type { YoutubeVideo } from "./youtube";
 
 const inko = new Inko();
 
@@ -75,6 +76,25 @@ export function createSongSearch(data: Song[]) {
 		})),
 		{
 			keys: ["searchTitle", "searchArtist", "searchTitleCho", "searchArtistCho", "searchTitleEng", "searchArtistEng"],
+			threshold: 0.4,
+			ignoreLocation: true,
+		},
+	);
+}
+
+export function createYoutubeSearch(videos: YoutubeVideo[]) {
+	return new Fuse(
+		videos.map((video) => {
+			const title = normalizeKeyword(video.title.replace(/^\s*\[\d{2}\.\d{2}\.\d{2}\]\s*/, ""));
+			return {
+				video,
+				searchTitle: title,
+				searchTitleCho: getChosung(title),
+				searchTitleEng: inko.ko2en(title),
+			};
+		}),
+		{
+			keys: ["searchTitle", "searchTitleCho", "searchTitleEng"],
 			threshold: 0.4,
 			ignoreLocation: true,
 		},

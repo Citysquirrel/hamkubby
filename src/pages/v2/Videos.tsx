@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Film, Play, RotateCcw, Search, X } from "lucide-react";
+import { Film, LoaderCircle, Play, RotateCcw, Search, X } from "lucide-react";
 import {
 	formatYoutubeDuration,
 	filterAndSortYoutubeVideos,
@@ -17,6 +17,7 @@ import {
 import { Pagination } from "./Pagination";
 import { VideoSongs } from "./VideoSongs";
 import { BroadcastDateFilter } from "./BroadcastDateFilter";
+import { createYoutubeSearch } from "../../lib/search";
 import { toQueueTrack, type QueueTrack } from "../../lib/player";
 import useSongDataStore from "../../store/useSongDataStore";
 import "./videos.css";
@@ -158,7 +159,6 @@ export default function Videos() {
 		return grouped;
 	}, [songs]);
 	const [query, setQuery] = useState("");
-	const [composing, setComposing] = useState(false);
 	const [selection, setSelection] = useState({
 		filters: emptyFilters,
 		page: 1,
@@ -171,11 +171,10 @@ export default function Videos() {
 		filters.broadcastFrom && filters.broadcastTo && filters.broadcastFrom > filters.broadcastTo
 			? "방송일 시작은 종료일보다 늦을 수 없어요."
 			: "";
-	const typing = composing || query.trim() !== filters.q;
+	const typing = query.trim() !== filters.q;
 	const searchRef = useRef<HTMLInputElement>(null);
 	const resultsRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
-		if (composing) return;
 		const timer = setTimeout(
 			() =>
 				setSelection((previous) =>
@@ -186,7 +185,7 @@ export default function Videos() {
 			225,
 		);
 		return () => clearTimeout(timer);
-	}, [query, composing]);
+	}, [query]);
 	useEffect(() => {
 		const timer = setInterval(() => setNow(Date.now()), 60000);
 		return () => clearInterval(timer);
@@ -198,9 +197,10 @@ export default function Videos() {
 		refetchInterval: 60000,
 		retry: 1,
 	});
+	const videoSearch = useMemo(() => createYoutubeSearch(videos.data ?? []), [videos.data]);
 	const filteredVideos = useMemo(
-		() => filterAndSortYoutubeVideos(videos.data ?? [], filters, sort),
-		[videos.data, filters, sort],
+		() => filterAndSortYoutubeVideos(videos.data ?? [], filters, sort, videoSearch),
+		[videos.data, filters, sort, videoSearch],
 	);
 	const broadcastBounds = useMemo(() => {
 		if (!videos.data?.length) return null;
@@ -321,18 +321,22 @@ export default function Videos() {
 			</div>
 			<div className="kub-video-filters" role="search" aria-label="영상 검색과 필터">
 				<div className="kub-video-search-row">
-					<label className="kub-search">
-						<Search size={19} aria-hidden="true" />
+					<label className="kub-search" data-searching={typing}>
+						{typing ? (
+							<LoaderCircle className="kub-video-search-spinner" size={19} aria-hidden="true" />
+						) : (
+							<Search size={19} aria-hidden="true" />
+						)}
 						<input
 							ref={searchRef}
 							type="search"
 							aria-label="영상 제목 검색"
+							aria-busy={typing}
 							placeholder="영상 제목 검색"
 							maxLength={200}
 							value={query}
 							onChange={(event) => setQuery(event.target.value)}
-							onCompositionStart={() => setComposing(true)}
-							onCompositionEnd={() => setComposing(false)}
+							onCompositionEnd={(event) => setQuery(event.currentTarget.value)}
 							onKeyDown={(event) => {
 								if (event.key === "Escape" && !event.nativeEvent.isComposing) clearQuery();
 							}}
@@ -430,11 +434,6 @@ export default function Videos() {
 						{data && !broadcastValidation && <span>{data.total.toLocaleString()}개</span>}
 					</h2>
 				</div>
-				{typing && data && (
-					<p className="kub-video-hint" role="status">
-						검색 조건을 적용하고 있어요.
-					</p>
-				)}
 				{videos.data && !hasViewCounts && (
 					<p className="kub-video-hint">조회수 정보가 아직 제공되지 않아 인기순을 사용할 수 없어요.</p>
 				)}

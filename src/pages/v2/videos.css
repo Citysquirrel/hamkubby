@@ -48,6 +48,20 @@
 #kub-music-room .kub-video-search-row .kub-search input {
 	height: 36px;
 }
+#kub-music-room .kub-video-search-row .kub-search > svg {
+	flex-shrink: 0;
+}
+#kub-music-room .kub-video-search-row .kub-search[data-searching="true"] {
+	border-color: var(--kub-green);
+}
+#kub-music-room .kub-video-search-spinner {
+	animation: kub-video-search-spin 0.8s linear infinite;
+}
+@keyframes kub-video-search-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
 #kub-music-room .kub-video-filters > .kub-video-reset {
 	min-height: 38px;
 	padding: 6px 10px;

@@ -49,7 +49,7 @@ export function PageHelp({ open, onClose }: { open: boolean; onClose: () => void
 				<>
 					<ul>
 						<li>
-							<strong>찾기</strong> — 제목 검색 · 채널·방송일 필터
+							<strong>찾기</strong> — 제목·초성·한영 오입력 검색 · 날짜는 방송일 필터로 선택
 						</li>
 						<li>
 							<strong>보기</strong> — 썸네일·제목을 누르면 YouTube 새탭 열림
