@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { Popover, Portal } from "@chakra-ui/react";
 import { ArrowUpRight, Check, Copy, Search, SlidersHorizontal, X } from "lucide-react";
 import type { Song, SortType } from "../../config/types";
 import { createSongSearch, normalizeKeyword } from "../../lib/search";
@@ -64,6 +65,11 @@ export default function SongBookV2() {
 	const { retrySongbook } = useOutletContext<{ retrySongbook: () => void }>();
 	const initialLoading = !hasLoaded && isLoading;
 	const [filterOpen, setFilterOpen] = useState(false);
+	const [filterPortal, setFilterPortal] = useState<{ current: HTMLElement } | null>(null);
+	useEffect(() => {
+		const container = document.getElementById("kub-music-room");
+		if (container) setFilterPortal({ current: container });
+	}, []);
 	const [query, setQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [source, setSource] = useState("all");
@@ -180,7 +186,7 @@ export default function SongBookV2() {
 	useEffect(() => {
 		const handleKey = (event: KeyboardEvent) => {
 			const active = document.activeElement as HTMLElement | null;
-			if (document.querySelector("dialog[open]")) return;
+			if (filterOpen || document.querySelector("dialog[open]")) return;
 			if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
 			if (active?.closest("input, textarea, select") || active?.isContentEditable) return;
 			if (event.key === "Escape") {
@@ -195,7 +201,7 @@ export default function SongBookV2() {
 		};
 		window.addEventListener("keydown", handleKey);
 		return () => window.removeEventListener("keydown", handleKey);
-	}, []);
+	}, [filterOpen]);
 
 	const reset = () => {
 		setQuery("");
@@ -302,17 +308,65 @@ export default function SongBookV2() {
 						</button>
 					)}
 				</div>
-				<button
-					className="kub-button kub-filter-toggle"
-					aria-label="상세 필터"
-					aria-expanded={filterOpen}
-					aria-controls="kub-filter-panel"
-					onClick={() => setFilterOpen(!filterOpen)}
+				<Popover.Root
+					unstyled open={filterOpen} lazyMount unmountOnExit
+					onOpenChange={({ open }) => setFilterOpen(open)}
+					positioning={{ placement: "bottom-end", strategy: "fixed", gutter: 8, overflowPadding: 12, flip: true, slide: true }}
 				>
-					<SlidersHorizontal />
-					<span>상세 필터</span>
-					{filterCount > 0 && <b>{filterCount}</b>}
-				</button>
+					<Popover.Trigger asChild>
+						<button type="button" className="kub-button kub-filter-toggle" aria-label="상세 필터">
+							<SlidersHorizontal />
+							<span>상세 필터</span>
+							{filterCount > 0 && <b>{filterCount}</b>}
+						</button>
+					</Popover.Trigger>
+					{filterPortal && (
+						<Portal container={filterPortal}>
+							<Popover.Positioner className="kub-filter-positioner">
+								<Popover.Content className="kub-filter-popover">
+									<header className="kub-filter-header">
+										<Popover.Title>상세 필터</Popover.Title>
+										<Popover.CloseTrigger asChild>
+											<button type="button" aria-label="상세 필터 닫기"><X size={18} /></button>
+										</Popover.CloseTrigger>
+									</header>
+									<div className="kub-filter-panel" data-source={source}>
+										<fieldset hidden={source === "false"}>
+											<legend>노래 분류</legend>
+											{cheeses.map((cheese) => (
+												<label key={cheese}>
+													<input type="checkbox" checked={selectedCheeses.includes(cheese)}
+														onChange={() => setSelectedCheeses(toggleValue(selectedCheeses, cheese))} />
+													{cheese}
+												</label>
+											))}
+											<p className="kub-filter-note">분류 필터는 쿠비 등록곡에 적용됩니다.</p>
+										</fieldset>
+										<fieldset>
+											<legend>영상</legend>
+											{[
+												{ value: "yes", label: "영상 있음" },
+												{ value: "no", label: "영상 없음" },
+											].map((item) => (
+												<label key={item.value}>
+													<input type="checkbox" checked={history.includes(item.value)}
+														onChange={() => setHistory(toggleValue(history, item.value))} />
+													{item.label}
+												</label>
+											))}
+										</fieldset>
+									</div>
+									<footer className="kub-filter-footer">
+										<button type="button" className="kub-reset" onClick={reset}>검색·필터 초기화</button>
+										<Popover.CloseTrigger asChild>
+											<button type="button" className="kub-button">닫기</button>
+										</Popover.CloseTrigger>
+									</footer>
+								</Popover.Content>
+							</Popover.Positioner>
+						</Portal>
+					)}
+				</Popover.Root>
 			</div>
 			<div className="kub-sourcebar">
 				<span className="kub-source-label">등록 출처</span>
@@ -334,47 +388,6 @@ export default function SongBookV2() {
 					))}
 				</div>
 			</div>
-			<section
-				className="kub-filter-panel"
-				id="kub-filter-panel"
-				hidden={!filterOpen}
-				data-source={source}
-				aria-label="노래 상세 필터"
-			>
-				<fieldset hidden={source === "false"}>
-					<legend>노래 분류</legend>
-					{cheeses.map((cheese) => (
-						<label key={cheese}>
-							<input
-								type="checkbox"
-								checked={selectedCheeses.includes(cheese)}
-								onChange={() => setSelectedCheeses(toggleValue(selectedCheeses, cheese))}
-							/>
-							{cheese}
-						</label>
-					))}
-					<p className="kub-filter-note">분류 필터는 쿠비 등록곡에 적용됩니다.</p>
-				</fieldset>
-				<fieldset>
-					<legend>영상</legend>
-					{[
-						{ value: "yes", label: "영상 있음" },
-						{ value: "no", label: "영상 없음" },
-					].map((item) => (
-						<label key={item.value}>
-							<input
-								type="checkbox"
-								checked={history.includes(item.value)}
-								onChange={() => setHistory(toggleValue(history, item.value))}
-							/>
-							{item.label}
-						</label>
-					))}
-					<button className="kub-reset" onClick={reset}>
-						검색·필터 초기화
-					</button>
-				</fieldset>
-			</section>
 			<div className="kub-filterbar">
 				<div className="kub-genres" role="group" aria-label="장르 필터">
 					<button className="kub-genre" aria-pressed={!selectedGenres.length} onClick={() => setSelectedGenres([])}>

@@ -101,7 +101,7 @@
 #kub-music-room .kub-player-volume { position: relative; z-index: 6; flex-shrink: 0; cursor: auto; touch-action: auto; }
 #kub-music-room .kub-player-volume > button { min-width: 28px; padding: 4px; }
 #kub-music-room .kub-player-volume-popup { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); padding-top: 8px; visibility: hidden; pointer-events: none; }
-#kub-music-room .kub-player-volume:is(:hover, :focus-within):not([data-dismissed="true"]) .kub-player-volume-popup { visibility: visible; pointer-events: auto; }
+#kub-music-room .kub-player-volume:is(:hover, :focus-within, [data-dragging="true"]):not([data-dismissed="true"]) .kub-player-volume-popup { visibility: visible; pointer-events: auto; }
 #kub-music-room .kub-player[data-list-above="true"] .kub-player-volume-popup { top: auto; bottom: 100%; padding-top: 0; padding-bottom: 8px; }
 #kub-music-room .kub-player-volume-slider { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 10px 8px; border: 1px solid var(--kub-line); border-radius: 10px; background: var(--kub-bg); color: var(--kub-ink); box-shadow: 0 6px 24px #0002; }
 #kub-music-room .kub-player-volume-slider input[type="range"] { writing-mode: vertical-lr; direction: rtl; width: 24px; height: 112px; background: linear-gradient(to top, var(--kub-green) 0 var(--kub-range-fill, 0%), var(--kub-line) var(--kub-range-fill, 0%) 100%) center / 2px 100% no-repeat; touch-action: none; }

@@ -370,13 +370,70 @@
 	background: light-dark(#22625f, #7bd3ce);
 }
 #kub-music-room .kub-filter-panel {
-	background: var(--kub-paper);
-	border-radius: 9px;
-	padding: 15px;
-	margin: 0 0 16px;
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 15px;
+}
+#kub-music-room .kub-filter-popover {
+	position: relative;
+	z-index: 110;
+	width: min(420px, calc(100vw - 24px));
+	max-height: calc(100dvh - 24px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 16px;
+	border: 1px solid var(--kub-line);
+	border-radius: 14px;
+	background: var(--kub-paper);
+	color: var(--kub-ink);
+	box-shadow:
+		0 12px 36px #0002,
+		0 2px 6px #0001;
+}
+#kub-music-room .kub-filter-header,
+#kub-music-room .kub-filter-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+#kub-music-room .kub-filter-header {
+	margin-bottom: 14px;
+	font-size: 15px;
+	font-weight: 700;
+}
+#kub-music-room .kub-filter-header button {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 7px;
+	color: var(--kub-muted);
+}
+#kub-music-room .kub-filter-header button:hover,
+#kub-music-room .kub-filter-panel label:hover,
+#kub-music-room .kub-filter-footer .kub-reset:hover {
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+}
+#kub-music-room .kub-filter-footer {
+	margin-top: 16px;
+	padding-top: 12px;
+	border-top: 1px solid var(--kub-line);
+}
+#kub-music-room .kub-filter-footer .kub-reset {
+	margin: 0;
+	padding: 8px;
+	border-radius: 7px;
+}
+#kub-music-room .kub-filter-footer .kub-button {
+	min-height: 36px;
+	padding: 6px 14px;
+	font-size: 13px;
+}
+#kub-music-room .kub-filter-popover :is(button, input):focus-visible {
+	outline: 2px solid var(--kub-green);
+	outline-offset: 2px;
 }
 #kub-music-room .kub-filter-panel fieldset {
 	border: 0;
@@ -395,6 +452,9 @@
 	align-items: center;
 	font-size: 14px;
 	min-height: 29px;
+	padding: 3px 5px;
+	border-radius: 5px;
+	cursor: pointer;
 }
 #kub-music-room input[type="checkbox"] {
 	accent-color: var(--kub-green);

@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import YouTube from "react-youtube";
 import {
 	ArrowDown,
@@ -50,14 +50,39 @@ function VolumeControl({
 	onChange: (value: number) => void;
 }) {
 	const [dismissed, setDismissed] = useState(false);
+	const [dragging, setDragging] = useState(false);
+	const dragPointer = useRef<number | null>(null);
+	const volumeRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		const dismiss = () => {
+			dragPointer.current = null;
+			setDragging(false);
+			setDismissed(true);
+		};
+		window.addEventListener("blur", dismiss);
+		return () => window.removeEventListener("blur", dismiss);
+	}, []);
+	const endDrag = (event: PointerEvent<HTMLInputElement>) => {
+		if (dragPointer.current !== event.pointerId) return;
+		dragPointer.current = null;
+		setDragging(false);
+		const inside = event.type === "pointerup" &&
+			volumeRef.current?.contains(document.elementFromPoint(event.clientX, event.clientY));
+		setDismissed(!inside);
+	};
 	const silent = muted || value === 0;
 	const volume = muted ? 0 : value;
 	return (
 		<div
+			ref={volumeRef}
 			className="kub-player-volume"
 			data-player-no-drag
 			data-dismissed={dismissed}
+			data-dragging={dragging}
 			onPointerEnter={() => setDismissed(false)}
+			onPointerLeave={() => {
+				if (dragPointer.current === null) setDismissed(true);
+			}}
 			onFocus={() => setDismissed(false)}
 			onKeyDown={(event) => {
 				if (event.key === "Escape") {
@@ -82,6 +107,16 @@ function VolumeControl({
 						step={1}
 						value={volume}
 						style={{ "--kub-range-fill": `${volume}%` } as CSSProperties}
+						onPointerDown={(event) => {
+							if (!event.isPrimary || event.button !== 0) return;
+							dragPointer.current = event.pointerId;
+							setDragging(true);
+							setDismissed(false);
+							event.currentTarget.setPointerCapture(event.pointerId);
+						}}
+						onPointerUp={endDrag}
+						onPointerCancel={endDrag}
+						onLostPointerCapture={endDrag}
 						onChange={(event) => onChange(Number(event.target.value))}
 					/>
 					<output aria-hidden="true">{volume}%</output>

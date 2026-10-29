@@ -1,0 +1,238 @@
+#kub-music-room .kub-broadcast-trigger {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	min-height: 38px;
+	padding: 6px 10px;
+	border: 1px solid var(--kub-line);
+	border-radius: 7px;
+	background: var(--kub-bg);
+	color: var(--kub-muted);
+	font-size: 12px;
+	text-align: left;
+}
+#kub-music-room .kub-broadcast-trigger > span {
+	flex: 1;
+}
+#kub-music-room .kub-broadcast-trigger strong {
+	margin-left: 6px;
+	color: var(--kub-ink);
+	font-weight: 500;
+}
+#kub-music-room .kub-broadcast-trigger > svg {
+	flex-shrink: 0;
+}
+#kub-music-room .kub-broadcast-trigger:not(:disabled):is(:hover, [aria-expanded="true"]) {
+	border-color: var(--kub-green);
+	background: var(--kub-green-soft);
+}
+#kub-music-room .kub-broadcast-calendar {
+	--kub-calendar-body-height: 228px;
+	position: relative;
+	z-index: 110;
+	width: min(300px, calc(100vw - 24px));
+	max-height: calc(100dvh - 24px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 12px;
+	border: 1px solid var(--kub-line);
+	border-radius: 10px;
+	background: var(--kub-paper);
+	color: var(--kub-ink);
+	box-shadow:
+		0 12px 36px #0002,
+		0 2px 6px #0001;
+	font-size: 13px;
+}
+#kub-music-room .kub-broadcast-status {
+	color: var(--kub-muted);
+	font-size: 11px;
+	line-height: 1.5;
+}
+#kub-music-room .kub-broadcast-selection {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--kub-muted);
+	font-size: 11px;
+}
+#kub-music-room .kub-broadcast-selection > span:not([aria-hidden]) {
+	flex: 1;
+	padding: 4px 8px;
+	border: 1px solid var(--kub-line);
+	border-radius: 7px;
+	background: var(--kub-bg);
+}
+#kub-music-room .kub-broadcast-selection > span[data-active="true"] {
+	border-color: var(--kub-green);
+}
+#kub-music-room .kub-broadcast-selection strong {
+	display: block;
+	color: var(--kub-ink);
+	font-size: 12px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+#kub-music-room .kub-broadcast-month {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 8px 0 4px;
+}
+#kub-music-room .kub-broadcast-month button {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 7px;
+}
+#kub-music-room .kub-broadcast-month .kub-broadcast-heading {
+	width: auto;
+	padding: 4px 8px;
+	font-size: 13px;
+	font-weight: 600;
+}
+#kub-music-room .kub-broadcast-month .kub-broadcast-back {
+	width: auto;
+	padding: 4px 8px;
+	font-size: 11px;
+	color: var(--kub-muted);
+}
+#kub-music-room .kub-broadcast-picker {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	height: var(--kub-calendar-body-height);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+	padding: 3px;
+	box-sizing: border-box;
+	scrollbar-width: thin;
+}
+#kub-music-room .kub-broadcast-year {
+	flex-shrink: 0;
+}
+#kub-music-room .kub-broadcast-year h3 {
+	position: sticky;
+	top: -3px;
+	z-index: 2;
+	padding: 4px 5px 6px;
+	background: var(--kub-paper);
+	color: var(--kub-muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+#kub-music-room .kub-broadcast-year-months {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 4px;
+}
+#kub-music-room .kub-broadcast-picker button {
+	min-height: 32px;
+	scroll-margin-top: 30px;
+	border: 1px solid transparent;
+	border-radius: 7px;
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+#kub-music-room .kub-broadcast-picker button[aria-pressed="true"] {
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+	border-color: var(--kub-line);
+	font-weight: 600;
+}
+#kub-music-room .kub-broadcast-picker button:not(:disabled):hover {
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+	border-color: var(--kub-green);
+}
+#kub-music-room .kub-broadcast-days {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	grid-template-rows: 24px repeat(6, 32px);
+	height: var(--kub-calendar-body-height);
+	row-gap: 2px;
+}
+#kub-music-room .kub-broadcast-weekday {
+	padding: 3px 0;
+	color: var(--kub-muted);
+	font-size: 11px;
+	text-align: center;
+}
+#kub-music-room .kub-broadcast-days button {
+	position: relative;
+	min-width: 0;
+	height: 32px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+#kub-music-room .kub-broadcast-days button[data-in-range="true"] {
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+	border-radius: 0;
+}
+#kub-music-room .kub-broadcast-days button[data-preview="true"][data-in-range="true"]:not([data-endpoint="true"]) {
+	background: color-mix(in srgb, var(--kub-green-soft) 65%, var(--kub-paper));
+}
+#kub-music-room .kub-broadcast-days button[data-endpoint="true"] {
+	background: var(--kub-green-deep);
+	color: var(--kub-bg);
+	border-radius: 6px;
+	font-weight: 700;
+}
+#kub-music-room .kub-broadcast-days button[aria-current="date"]::after {
+	content: "";
+	position: absolute;
+	bottom: 3px;
+	left: calc(50% - 2px);
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: currentColor;
+}
+#kub-music-room .kub-broadcast-month button:not(:disabled):hover,
+#kub-music-room .kub-broadcast-footer button:not(:disabled):hover {
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+}
+#kub-music-room .kub-broadcast-days button:not(:disabled):hover {
+	border-color: var(--kub-green);
+	box-shadow: inset 0 0 0 1px var(--kub-green);
+}
+#kub-music-room .kub-broadcast-calendar button:focus-visible {
+	z-index: 1;
+	outline: 2px solid var(--kub-green);
+	outline-offset: 2px;
+}
+#kub-music-room .kub-broadcast-status {
+	min-height: 17px;
+	margin-top: 6px;
+}
+#kub-music-room .kub-broadcast-footer {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 6px;
+	padding-top: 8px;
+	border-top: 1px solid var(--kub-line);
+}
+#kub-music-room .kub-broadcast-footer .kub-button {
+	min-height: 30px;
+	padding: 4px 10px;
+	font-size: 12px;
+}
+#kub-music-room .kub-broadcast-footer .kub-broadcast-done {
+	min-width: 64px;
+	background: var(--kub-green-deep);
+	color: var(--kub-bg);
+	border-color: var(--kub-green-deep);
+}
+#kub-music-room .kub-broadcast-calendar button:disabled,
+#kub-music-room .kub-broadcast-trigger:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}

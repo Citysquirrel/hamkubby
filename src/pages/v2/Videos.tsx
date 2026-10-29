@@ -8,6 +8,7 @@ import {
 	isRecentYoutubeVideo,
 	youtubeBroadcastDate,
 	youtubeDateRange,
+	youtubeVideoDate,
 	youtubeSorts,
 	type YoutubeFilters,
 	type YoutubeSort,
@@ -15,6 +16,7 @@ import {
 } from "../../lib/youtube";
 import { Pagination } from "./Pagination";
 import { VideoSongs } from "./VideoSongs";
+import { BroadcastDateFilter } from "./BroadcastDateFilter";
 import { toQueueTrack, type QueueTrack } from "../../lib/player";
 import useSongDataStore from "../../store/useSongDataStore";
 import "./videos.css";
@@ -200,6 +202,17 @@ export default function Videos() {
 		() => filterAndSortYoutubeVideos(videos.data ?? [], filters, sort),
 		[videos.data, filters, sort],
 	);
+	const broadcastBounds = useMemo(() => {
+		if (!videos.data?.length) return null;
+		let from = youtubeVideoDate(videos.data[0]);
+		let to = from;
+		for (const video of videos.data) {
+			const date = youtubeVideoDate(video);
+			if (date < from) from = date;
+			if (date > to) to = date;
+		}
+		return { from, to };
+	}, [videos.data]);
 	/* 카테고리 제공 시 복원
 	const categories = useMemo(
 		() =>
@@ -330,81 +343,69 @@ export default function Videos() {
 							</button>
 						)}
 					</label>
-					<button className="kub-button" type="button" onClick={reset}>
-						<RotateCcw size={15} />
-						초기화
-					</button>
 				</div>
-				<div className="kub-video-filter-fields">
-					{/* 카테고리 제공 시 복원
-					<label>
-						카테고리
-						<select
-							value={filters.category}
-							disabled={videos.isPending}
-							onChange={(event) => updateFilters({ category: event.target.value })}
-						>
-							<option value="">전체 카테고리</option>
-							{filters.category && !categories.includes(filters.category) && (
-								<option value={filters.category}>{filters.category}</option>
-							)}
-							{categories.map((category) => (
-								<option key={category} value={category}>
-									{category}
-								</option>
-							))}
-						</select>
-					</label> */}
-					<label>
-						방송일 시작
-						<input
-							type="date"
-							value={filters.broadcastFrom}
-							aria-invalid={!!broadcastValidation}
-							aria-describedby={broadcastValidation ? "kub-video-broadcast-error" : "kub-video-broadcast-help"}
-							onChange={(event) => updateFilters({ broadcastFrom: event.target.value })}
-						/>
-					</label>
-					<label>
-						방송일 종료
-						<input
-							type="date"
-							value={filters.broadcastTo}
-							aria-invalid={!!broadcastValidation}
-							aria-describedby={broadcastValidation ? "kub-video-broadcast-error" : "kub-video-broadcast-help"}
-							onChange={(event) => updateFilters({ broadcastTo: event.target.value })}
-						/>
-					</label>
-				</div>
-				<div className="kub-video-periods" role="group" aria-label="방송일 빠른 선택">
-					<span className="kub-video-period-label">방송일</span>
-					<button
-						aria-pressed={!filters.broadcastFrom && !filters.broadcastTo}
-						onClick={() => updateFilters({ broadcastFrom: "", broadcastTo: "" })}
-					>
-						전체 기간
-					</button>
-					{[7, 30, 90].map((days) => {
-						const range = youtubeDateRange(days, now);
-						return (
-							<button
-								key={days}
-								aria-pressed={filters.broadcastFrom === range.from && filters.broadcastTo === range.to}
-								onClick={() => updateFilters({ broadcastFrom: range.from, broadcastTo: range.to })}
+				<div className="kub-video-broadcast-group" role="group" aria-label="방송일 필터">
+					<div className="kub-video-filter-fields">
+						{/* 카테고리 제공 시 복원
+						<label>
+							카테고리
+							<select
+								value={filters.category}
+								disabled={videos.isPending}
+								onChange={(event) => updateFilters({ category: event.target.value })}
 							>
-								최근 {days}일
-							</button>
-						);
-					})}
-				</div>
-				<p id="kub-video-broadcast-help" className="kub-video-hint">
-					제목의 [YY.MM.DD] 기준 · 날짜가 없으면 공개일 기준
-				</p>
-				{broadcastValidation && (
-					<p id="kub-video-broadcast-error" className="kub-video-feedback" role="alert">
-						{broadcastValidation}
+								<option value="">전체 카테고리</option>
+								{filters.category && !categories.includes(filters.category) && (
+									<option value={filters.category}>{filters.category}</option>
+								)}
+								{categories.map((category) => (
+									<option key={category} value={category}>
+										{category}
+									</option>
+								))}
+							</select>
+						</label> */}
+						<BroadcastDateFilter value={filters} bounds={broadcastBounds} onChange={updateFilters} />
+					</div>
+					<div className="kub-video-periods" role="group" aria-label="방송일 빠른 선택">
+						<span className="kub-video-period-label">방송일</span>
+						<button
+							aria-pressed={!filters.broadcastFrom && !filters.broadcastTo}
+							onClick={() => updateFilters({ broadcastFrom: "", broadcastTo: "" })}
+						>
+							전체 기간
+						</button>
+						{[7, 30, 90].map((days) => {
+							const range = youtubeDateRange(days, now);
+							const from = broadcastBounds && range.from < broadcastBounds.from ? broadcastBounds.from : range.from;
+							const to = broadcastBounds && range.to > broadcastBounds.to ? broadcastBounds.to : range.to;
+							const available = !!broadcastBounds && from <= to;
+							return (
+								<button
+									key={days}
+									disabled={!available}
+									aria-pressed={available && filters.broadcastFrom === from && filters.broadcastTo === to}
+									onClick={() => updateFilters({ broadcastFrom: from, broadcastTo: to })}
+								>
+									최근 {days}일
+								</button>
+							);
+						})}
+					</div>
+
+					<p id="kub-video-broadcast-help" className="kub-video-hint">
+						제목의 [YY.MM.DD] 기준 · 날짜가 없으면 공개일 기준
 					</p>
-				)}
+					{broadcastValidation && (
+						<p id="kub-video-broadcast-error" className="kub-video-feedback" role="alert">
+							{broadcastValidation}
+						</p>
+					)}
+				</div>
+				<button className="kub-button kub-video-reset" type="button" onClick={reset}>
+					<RotateCcw size={15} aria-hidden="true" />
+					초기화
+				</button>
 			</div>
 			{activeFilters.length > 0 && (
 				<div className="kub-video-active-filters" aria-label="적용된 검색 조건">

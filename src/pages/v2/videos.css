@@ -26,10 +26,10 @@
 }
 #kub-music-room .kub-video-filters {
 	display: grid;
-	grid-template-columns: minmax(240px, 1fr) minmax(320px, 0.9fr);
-	gap: 8px 14px;
-	align-items: end;
-	padding: 12px;
+	grid-template-columns: minmax(220px, 1fr) auto auto;
+	gap: 10px 14px;
+	align-items: start;
+	padding: 10px;
 	border: 1px solid var(--kub-line);
 	border-radius: 10px;
 	background: var(--kub-paper);
@@ -48,15 +48,26 @@
 #kub-music-room .kub-video-search-row .kub-search input {
 	height: 36px;
 }
-#kub-music-room .kub-video-search-row > .kub-button {
+#kub-music-room .kub-video-filters > .kub-video-reset {
 	min-height: 38px;
 	padding: 6px 10px;
-	flex-shrink: 0;
+	justify-self: end;
 	font-size: 13px;
+}
+#kub-music-room .kub-video-broadcast-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 8px;
+	min-width: 0;
+	max-width: 600px;
 }
 #kub-music-room .kub-video-filter-fields {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	flex: 0 1 auto;
+	min-width: 0;
+	max-width: 100%;
+	grid-template-columns: minmax(0, 1fr);
 	gap: 8px;
 	align-items: end;
 }
@@ -79,8 +90,8 @@
 	color: var(--kub-ink);
 	font-size: 14px;
 }
-#kub-music-room .kub-video-filters > :is(.kub-video-hint, .kub-video-feedback) {
-	grid-column: 1 / -1;
+#kub-music-room .kub-video-broadcast-group > :is(.kub-video-hint, .kub-video-feedback) {
+	flex-basis: 100%;
 	margin: 0;
 }
 #kub-music-room .kub-video-hint {
@@ -121,7 +132,7 @@
 }
 #kub-music-room .kub-video-periods {
 	display: flex;
-	grid-column: 1 / -1;
+	max-width: 100%;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 6px;
@@ -143,6 +154,10 @@
 	border-color: var(--kub-green);
 	background: var(--kub-green-soft);
 	color: var(--kub-green-deep);
+}
+#kub-music-room .kub-video-periods button:not(:disabled):hover {
+	border-color: var(--kub-green);
+	background: var(--kub-green-soft);
 }
 #kub-music-room .kub-video-active-filters {
 	display: flex;
@@ -556,9 +571,20 @@
 	color: var(--kub-green-deep);
 	font-weight: 700;
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
 	#kub-music-room .kub-video-filters {
-		grid-template-columns: minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	#kub-music-room .kub-video-search-row {
+		grid-column: 1;
+		grid-row: 1;
+	}
+	#kub-music-room .kub-video-filters > .kub-video-reset {
+		grid-column: 2;
+		grid-row: 1;
+	}
+	#kub-music-room .kub-video-broadcast-group {
+		grid-column: 1 / -1;
 	}
 }
 @media (max-width: 680px) {
@@ -579,9 +605,6 @@
 		align-items: flex-start;
 		flex-direction: column;
 		gap: 12px;
-	}
-	#kub-music-room .kub-video-filters {
-		padding: 10px;
 	}
 	#kub-music-room .kub-video-channels button {
 		flex: 1;

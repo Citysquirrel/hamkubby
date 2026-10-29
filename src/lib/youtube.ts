@@ -81,6 +81,10 @@ function koreanDate(time: number): string {
 	return new Date(time + 9 * 3600000).toISOString().slice(0, 10);
 }
 
+export function youtubeVideoDate(video: YoutubeVideo): string {
+	return youtubeBroadcastDate(video.title) ?? koreanDate(Date.parse(video.publishedAt));
+}
+
 function compareYoutubeVideos(a: YoutubeVideo, b: YoutubeVideo, sort: YoutubeSort): number {
 	if (sort === "popular") {
 		if (a.viewCount == null && b.viewCount != null) return 1;
@@ -102,7 +106,7 @@ export function filterAndSortYoutubeVideos(videos: YoutubeVideo[], filters: Yout
 		if (filters.channel && video.channel !== filters.channel) return false;
 		// if (filters.category && !video.categories.includes(filters.category)) return false;
 		if (filters.broadcastFrom || filters.broadcastTo) {
-			const broadcast = youtubeBroadcastDate(video.title) ?? koreanDate(Date.parse(video.publishedAt));
+			const broadcast = youtubeVideoDate(video);
 			if (filters.broadcastFrom && broadcast < filters.broadcastFrom ||
 				filters.broadcastTo && broadcast > filters.broadcastTo) return false;
 		}
