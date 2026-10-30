@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Film, LoaderCircle, Play, RotateCcw, Search, X } from "lucide-react";
+import { ArrowUpRight, Clock3, Film, LoaderCircle, Play, RotateCcw, Search, X } from "lucide-react";
 import {
 	formatYoutubeDuration,
 	filterAndSortYoutubeVideos,
-	getAllYoutubeVideos,
+	getYoutubeHypeReset,
 	isRecentYoutubeVideo,
 	youtubeBroadcastDate,
 	youtubeDateRange,
 	youtubeVideoDate,
 	youtubeSorts,
+	youtubeVideosQueryOptions,
 	type YoutubeFilters,
 	type YoutubeSort,
 	type YoutubeVideo,
@@ -35,6 +36,15 @@ const publishedDate = new Intl.DateTimeFormat("ko-KR", {
 	month: "2-digit",
 	day: "2-digit",
 });
+const hypeResetDate = new Intl.DateTimeFormat("ko-KR", {
+	timeZone: "Asia/Seoul",
+	month: "numeric",
+	day: "numeric",
+	weekday: "short",
+	hour: "2-digit",
+	minute: "2-digit",
+	hourCycle: "h23",
+});
 const channels = [
 	{ value: "", label: "전체 영상" },
 	{ value: "main", label: "햄쿠비" },
@@ -44,6 +54,38 @@ const channels = [
 const noTracks: QueueTrack[] = [];
 const youtubeThumbnailPattern =
 	/^(https:\/\/(?:i\d?\.ytimg\.com|img\.youtube\.com)\/vi(?:_webp)?\/[\w-]{11}\/)(?:default|mqdefault|hqdefault|sddefault|maxresdefault)(\.(?:jpg|webp)(?:[?#].*)?)$/;
+
+function HypeCountdown() {
+	const [now, setNow] = useState(Date.now);
+	useEffect(() => {
+		const refreshNow = () => setNow(Date.now());
+		const onVisible = () => {
+			if (document.visibilityState === "visible") refreshNow();
+		};
+		const timer = setInterval(refreshNow, 1000);
+		document.addEventListener("visibilitychange", onVisible);
+		return () => {
+			clearInterval(timer);
+			document.removeEventListener("visibilitychange", onVisible);
+		};
+	}, []);
+	const hypeReset = getYoutubeHypeReset(now);
+	return (
+		<aside className="kub-video-hype" data-soon={hypeReset.soon} aria-label="주간 무료 하이프 초기화 안내">
+			<div className="kub-video-hype-heading">
+				<span className="kub-video-hype-label">
+					<Clock3 size={14} aria-hidden="true" />다음 하이프 충전까지
+				</span>
+				<strong>{hypeReset.remaining} 남음</strong>
+			</div>
+			<p className="kub-video-hype-message">{hypeReset.message}</p>
+			<p className="kub-video-hype-date">
+				<time dateTime={hypeReset.resetAt.toISOString()}>{hypeResetDate.format(hypeReset.resetAt)}</time>
+				{" 초기화 · 한국시간 · 매주 최대 3회 무료"}
+			</p>
+		</aside>
+	);
+}
 
 function VideoCard({
 	video,
@@ -69,6 +111,11 @@ function VideoCard({
 	const broadcastDate = youtubeBroadcastDate(video.title);
 	return (
 		<article className={`kub-video-card${featured ? " kub-video-featured" : ""}`}>
+			{featured && !imageFailed && video.thumbnailUrl && (
+				<div className="kub-video-featured-ambience" aria-hidden="true">
+					<img src={thumbnailUrl} alt="" decoding="async" />
+				</div>
+			)}
 			<a
 				className="kub-video-thumbnail"
 				href={url}
@@ -99,7 +146,7 @@ function VideoCard({
 			<div className="kub-video-card-body">
 				{featured && (
 					<div className="kub-video-featured-label">
-						<span>NEW</span>이번 주, 새로 올라왔어요
+						<span aria-hidden="true" />최근 올라온 영상
 					</div>
 				)}
 				<div className="kub-video-meta">
@@ -119,6 +166,11 @@ function VideoCard({
 				{video.viewCount != null && (
 					<p className="kub-video-views">조회수 {BigInt(video.viewCount).toLocaleString("ko-KR")}회</p>
 				)}
+				{featured && (
+					<a className="kub-video-featured-link" href={url} target="_blank" rel="noopener noreferrer">
+						YouTube에서 보기 <ArrowUpRight size={16} aria-hidden="true" />
+					</a>
+				)}
 				{/* 카테고리 제공 시 복원
 				{video.categories.length > 0 && (
 					<div className="kub-video-tags">
@@ -130,6 +182,7 @@ function VideoCard({
 					</div>
 				)} */}
 				<VideoSongs tracks={tracks} loading={historiesLoading} videoTitle={video.title} />
+				{featured && <HypeCountdown />}
 				{/* <div className="kub-video-actions">
 				<a href={url} target="_blank" rel="noopener noreferrer" aria-label={`${video.title} YouTube에서 열기`}>YouTube에서 보기 <ArrowUpRight size={15} /></a>
 			</div> */}
@@ -187,16 +240,18 @@ export default function Videos() {
 		return () => clearTimeout(timer);
 	}, [query]);
 	useEffect(() => {
-		const timer = setInterval(() => setNow(Date.now()), 60000);
-		return () => clearInterval(timer);
+		const refreshNow = () => setNow(Date.now());
+		const onVisible = () => {
+			if (document.visibilityState === "visible") refreshNow();
+		};
+		const timer = setInterval(refreshNow, 60000);
+		document.addEventListener("visibilitychange", onVisible);
+		return () => {
+			clearInterval(timer);
+			document.removeEventListener("visibilitychange", onVisible);
+		};
 	}, []);
-	const videos = useQuery({
-		queryKey: ["youtube-videos", "all"],
-		queryFn: ({ signal }) => getAllYoutubeVideos(signal),
-		staleTime: 60000,
-		refetchInterval: 60000,
-		retry: 1,
-	});
+	const videos = useQuery(youtubeVideosQueryOptions);
 	const videoSearch = useMemo(() => createYoutubeSearch(videos.data ?? []), [videos.data]);
 	const filteredVideos = useMemo(
 		() => filterAndSortYoutubeVideos(videos.data ?? [], filters, sort, videoSearch),

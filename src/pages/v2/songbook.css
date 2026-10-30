@@ -2316,6 +2316,40 @@
 	color: var(--kub-green-deep);
 	font-weight: 600;
 }
+#kub-music-room .kub-page-tabs .kub-video-page-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	white-space: nowrap;
+}
+#kub-music-room .kub-page-tab-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 7px;
+	border: 1px solid color-mix(in srgb, var(--kub-green) 20%, transparent);
+	border-radius: 20px;
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.5;
+	font-variant-numeric: tabular-nums;
+}
+#kub-music-room .kub-page-tab-badge::before {
+	content: "";
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: var(--kub-green);
+}
+#kub-music-room .kub-video-page-tab:is(:hover, :focus-visible) {
+	color: var(--kub-green-deep);
+}
+#kub-music-room .kub-video-page-tab:is(:hover, :focus-visible) .kub-page-tab-badge {
+	border-color: var(--kub-green);
+	background: color-mix(in srgb, var(--kub-green) 12%, var(--kub-bg));
+}
 #kub-music-room .kub-page-tabs .kub-original-link {
 	display: inline-flex;
 	align-self: center;

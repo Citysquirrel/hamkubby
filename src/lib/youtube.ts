@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { HAMKUBBY_API_BASE_URL } from "../config/base-url";
 import { formatPlaybackTime } from "./player";
 import { createYoutubeSearch, normalizeKeyword } from "./search";
@@ -67,6 +68,13 @@ export async function getAllYoutubeVideos(signal: AbortSignal): Promise<YoutubeV
 	return result.items.sort((a, b) => compareYoutubeVideos(a, b, "newest"));
 }
 
+export const youtubeVideosQueryOptions = queryOptions({
+	queryKey: ["youtube-videos", "all"],
+	queryFn: ({ signal }) => getAllYoutubeVideos(signal),
+	staleTime: 60000,
+	retry: 1,
+});
+
 export function youtubeBroadcastDate(title: string): string | null {
 	const match = /^\[(\d{2})\.(\d{2})\.(\d{2})\]/.exec(title.trimStart());
 	if (!match) return null;
@@ -129,6 +137,42 @@ export function youtubeDateRange(days: number, now = Date.now()): { from: string
 export function isRecentYoutubeVideo(video: YoutubeVideo, now = Date.now()): boolean {
 	const published = Date.parse(video.publishedAt);
 	return video.channel === "main" && published <= now && published >= now - 7 * 86400000;
+}
+
+export function getRecentYoutubeUploadLabel(video: YoutubeVideo, now = Date.now()): string | null {
+	if (!isRecentYoutubeVideo(video, now)) return null;
+	const days = Math.round((Date.parse(koreanDate(now)) - Date.parse(koreanDate(Date.parse(video.publishedAt)))) / 86400000);
+	return days === 0 ? "오늘" : `${days}일 전`;
+}
+
+export function getYoutubeHypeReset(now: number) {
+	const koreaOffset = 9 * 3600000;
+	const current = new Date(now + koreaOffset);
+	const resetDate = new Date(current);
+	// 한국의 주간 초기화 시각(월요일 00:00 KST)을 기기 시간대와 무관하게 계산한다.
+	resetDate.setUTCDate(current.getUTCDate() + ((8 - current.getUTCDay()) % 7 || 7));
+	resetDate.setUTCHours(0, 0, 0, 0);
+	const resetAt = new Date(resetDate.getTime() - koreaOffset);
+	const remainingMs = resetAt.getTime() - now;
+	const showSeconds = remainingMs <= 5 * 60000;
+	const seconds = showSeconds ? Math.ceil(remainingMs / 1000) : Math.ceil(remainingMs / 60000) * 60;
+	const days = Math.floor(seconds / 86400);
+	const hours = Math.floor((seconds % 86400) / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const remaining = [
+		days && `${days}일`,
+		(days || hours) && `${hours}시간`,
+		`${minutes}분`,
+		showSeconds && `${seconds % 60}초`,
+	].filter(Boolean).join(" ");
+	const message = remainingMs <= 3600000
+		? "곧 초기화돼요. 남은 하이프를 확인해 보세요."
+		: remainingMs <= 86400000
+			? "남은 하이프가 있다면, 초기화 전에 응원해 주세요."
+			: current.getUTCDay() === 1
+				? "새로운 한 주, 하이프 횟수가 초기화됐어요."
+				: "하이프 버튼이 보이면 쿠비에게 응원을 보내주세요.";
+	return { resetAt, remaining, message, soon: remainingMs <= 86400000 };
 }
 
 export function formatYoutubeDuration(duration: string): string {
