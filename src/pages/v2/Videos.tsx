@@ -47,7 +47,7 @@ const hypeResetDate = new Intl.DateTimeFormat("ko-KR", {
 });
 const channels = [
 	{ value: "", label: "전체 영상" },
-	{ value: "main", label: "햄쿠비" },
+	{ value: "main", label: "본채널" },
 	{ value: "replay", label: "다시보기" },
 ] as const;
 
@@ -74,7 +74,8 @@ function HypeCountdown() {
 		<aside className="kub-video-hype" data-soon={hypeReset.soon} aria-label="주간 무료 하이프 초기화 안내">
 			<div className="kub-video-hype-heading">
 				<span className="kub-video-hype-label">
-					<Clock3 size={14} aria-hidden="true" />다음 하이프 충전까지
+					<Clock3 size={14} aria-hidden="true" />
+					다음 하이프 충전까지
 				</span>
 				<strong>{hypeReset.remaining} 남음</strong>
 			</div>
@@ -146,7 +147,8 @@ function VideoCard({
 			<div className="kub-video-card-body">
 				{featured && (
 					<div className="kub-video-featured-label">
-						<span aria-hidden="true" />최근 올라온 영상
+						<span aria-hidden="true" />
+						최근 올라온 영상
 					</div>
 				)}
 				<div className="kub-video-meta">
@@ -342,16 +344,6 @@ export default function Videos() {
 	return (
 		<section className="kub-secondary-page kub-videos" aria-label="유튜브 영상">
 			<title>유튜브 영상 | 🐹햄쿠비 노래책🍡</title>
-			<div className="kub-videos-heading">
-				<div>
-					<span className="kub-eyebrow">KUBBY ON AIR</span>
-					<h1>쿠비의 영상 모아보기</h1>
-					<p className="kub-page-description">노래부터 게임까지, 다시 보고 싶은 순간을 찾아보세요.</p>
-				</div>
-				{/* <a className="kub-button" href="https://www.youtube.com/@hamkubby" target="_blank" rel="noopener noreferrer">
-					유튜브 채널 <ArrowUpRight size={16} />
-				</a> */}
-			</div>
 			{hero && (
 				<section className="kub-video-hero" aria-label="최근 7일 내 본채널 최신 영상">
 					<VideoCard
@@ -551,7 +543,11 @@ export default function Videos() {
 								}
 							>
 								{youtubeSorts.map((option) => (
-									<option key={option.value} value={option.value} disabled={option.value === "popular" && !hasViewCounts}>
+									<option
+										key={option.value}
+										value={option.value}
+										disabled={option.value === "popular" && !hasViewCounts}
+									>
 										{option.label}
 									</option>
 								))}

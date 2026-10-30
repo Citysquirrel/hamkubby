@@ -1,6 +1,6 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useColorMode } from "../../components/ui/color-mode";
-import { isBoolean, readStoredValue, writeStoredValue } from "../../lib/storage";
+import { isBoolean, readStoredValue } from "../../lib/storage";
 import { BackgroundEffects, Horn } from "./Motifs";
 import { PageTabs } from "./PageTabs";
 import { PageHelp } from "./PageHelp";
@@ -33,7 +33,13 @@ export function PageShell({
 	onToggleCursor: () => void;
 }) {
 	const { colorMode, toggleColorMode } = useColorMode();
-	const [intro, setIntro] = useState(() => readStoredValue("songbook-v2-intro", true, isBoolean));
+	useEffect(() => {
+		try {
+			localStorage.removeItem("songbook-v2-intro");
+		} catch {
+			// 저장소 접근이 차단되어도 소개는 항상 표시한다.
+		}
+	}, []);
 	const [portrait, setPortrait] = useState(
 		() => portraits[Math.floor(Math.random() * portraits.length)] ?? defaultPortrait,
 	);
@@ -55,14 +61,9 @@ export function PageShell({
 			return;
 		current.close();
 	};
-	const toggleIntro = () => {
-		const next = !intro;
-		setIntro(next);
-		writeStoredValue("songbook-v2-intro", next);
-	};
 
 	return (
-		<div id="kub-music-room" data-theme={colorMode} data-intro={intro} data-effects={effects}>
+		<div id="kub-music-room" data-theme={colorMode} data-effects={effects}>
 			<BackgroundEffects />
 			<GoToTop
 				rightOffset={Number(playerLayout.contentStyle.paddingRight) || 0}
@@ -76,15 +77,9 @@ export function PageShell({
 				>
 					<header className="kub-top">
 						<div className="kub-brand">
-							<button
-								className="kub-avatar-button"
-								aria-label={intro ? "쿠비 소개 접기" : "쿠비 소개 펼치기"}
-								aria-expanded={intro}
-								aria-controls="kub-hero"
-								onClick={toggleIntro}
-							>
+							<span className="kub-brand-avatar">
 								<img className="kub-avatar" src="/images/v2/avatar.png" alt="" />
-							</button>
+							</span>
 							<div>
 								🐹햄쿠비 노래책🎤 <small>HAMKUBBY SONGBOOK</small>
 							</div>
@@ -102,9 +97,6 @@ export function PageShell({
 								<small className="kub-player-beta" aria-hidden="true">
 									BETA
 								</small>
-							</button>
-							<button className="kub-intro-toggle" aria-expanded={intro} aria-controls="kub-hero" onClick={toggleIntro}>
-								{intro ? "소개 접기" : "쿠비 소개"}
 							</button>
 							<button
 								className="kub-help-toggle"
@@ -144,10 +136,7 @@ export function PageShell({
 						}}
 					/>
 					<main className="kub-main">
-						<div className="kub-folded-portrait" aria-hidden="true">
-							<img src={portrait} alt="" draggable={false} onError={handlePortraitError} />
-						</div>
-						<Profile open={intro} portrait={portrait} onPortraitError={handlePortraitError} />
+						<Profile portrait={portrait} onPortraitError={handlePortraitError} />
 						{children}
 					</main>
 					<Footer />

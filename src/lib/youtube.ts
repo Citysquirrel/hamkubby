@@ -51,15 +51,28 @@ async function requestYoutube(path: string, signal: AbortSignal): Promise<unknow
 }
 
 export async function getAllYoutubeVideos(signal: AbortSignal): Promise<YoutubeVideo[]> {
-	const result = await requestYoutube("videos", signal) as YoutubeVideoList | null;
-	if (!result || !Array.isArray(result.items) || !Number.isInteger(result.total) || result.total < 0 ||
+	const result = (await requestYoutube("videos", signal)) as YoutubeVideoList | null;
+	if (
+		!result ||
+		!Array.isArray(result.items) ||
+		!Number.isInteger(result.total) ||
+		result.total < 0 ||
 		result.items.length !== result.total ||
-		!result.items.every((video) => video && /^[\w-]{11}$/.test(video.id) &&
-			["main", "replay"].includes(video.channel) && typeof video.title === "string" &&
-			typeof video.thumbnailUrl === "string" && typeof video.duration === "string" &&
-			typeof video.publishedAt === "string" && Number.isFinite(Date.parse(video.publishedAt)) &&
-			Array.isArray(video.categories) && video.categories.every((category) => typeof category === "string") &&
-			(video.viewCount == null || (typeof video.viewCount === "string" && /^\d{1,20}$/.test(video.viewCount))))) {
+		!result.items.every(
+			(video) =>
+				video &&
+				/^[\w-]{11}$/.test(video.id) &&
+				["main", "replay"].includes(video.channel) &&
+				typeof video.title === "string" &&
+				typeof video.thumbnailUrl === "string" &&
+				typeof video.duration === "string" &&
+				typeof video.publishedAt === "string" &&
+				Number.isFinite(Date.parse(video.publishedAt)) &&
+				Array.isArray(video.categories) &&
+				video.categories.every((category) => typeof category === "string") &&
+				(video.viewCount == null || (typeof video.viewCount === "string" && /^\d{1,20}$/.test(video.viewCount))),
+		)
+	) {
 		throw new Error("전체 영상 목록을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.");
 	}
 	if (new Set(result.items.map((video) => video.id)).size !== result.total) {
@@ -117,17 +130,24 @@ export function filterAndSortYoutubeVideos(
 	const keyword = normalizeKeyword(filters.q);
 	const candidates = keyword
 		? (search ?? createYoutubeSearch(videos)).search(keyword).map(({ item }) => item.video)
-		: filters.q.trim() ? [] : videos;
-	return candidates.filter((video) => {
-		if (filters.channel && video.channel !== filters.channel) return false;
-		// if (filters.category && !video.categories.includes(filters.category)) return false;
-		if (filters.broadcastFrom || filters.broadcastTo) {
-			const broadcast = youtubeVideoDate(video);
-			if (filters.broadcastFrom && broadcast < filters.broadcastFrom ||
-				filters.broadcastTo && broadcast > filters.broadcastTo) return false;
-		}
-		return true;
-	}).sort((a, b) => compareYoutubeVideos(a, b, sort));
+		: filters.q.trim()
+			? []
+			: videos;
+	return candidates
+		.filter((video) => {
+			if (filters.channel && video.channel !== filters.channel) return false;
+			// if (filters.category && !video.categories.includes(filters.category)) return false;
+			if (filters.broadcastFrom || filters.broadcastTo) {
+				const broadcast = youtubeVideoDate(video);
+				if (
+					(filters.broadcastFrom && broadcast < filters.broadcastFrom) ||
+					(filters.broadcastTo && broadcast > filters.broadcastTo)
+				)
+					return false;
+			}
+			return true;
+		})
+		.sort((a, b) => compareYoutubeVideos(a, b, sort));
 }
 
 export function youtubeDateRange(days: number, now = Date.now()): { from: string; to: string } {
@@ -141,7 +161,9 @@ export function isRecentYoutubeVideo(video: YoutubeVideo, now = Date.now()): boo
 
 export function getRecentYoutubeUploadLabel(video: YoutubeVideo, now = Date.now()): string | null {
 	if (!isRecentYoutubeVideo(video, now)) return null;
-	const days = Math.round((Date.parse(koreanDate(now)) - Date.parse(koreanDate(Date.parse(video.publishedAt)))) / 86400000);
+	const days = Math.round(
+		(Date.parse(koreanDate(now)) - Date.parse(koreanDate(Date.parse(video.publishedAt)))) / 86400000,
+	);
 	return days === 0 ? "오늘" : `${days}일 전`;
 }
 
@@ -164,21 +186,25 @@ export function getYoutubeHypeReset(now: number) {
 		(days || hours) && `${hours}시간`,
 		`${minutes}분`,
 		showSeconds && `${seconds % 60}초`,
-	].filter(Boolean).join(" ");
-	const message = remainingMs <= 3600000
-		? "곧 초기화돼요. 남은 하이프를 확인해 보세요."
-		: remainingMs <= 86400000
-			? "남은 하이프가 있다면, 초기화 전에 응원해 주세요."
-			: current.getUTCDay() === 1
-				? "새로운 한 주, 하이프 횟수가 초기화됐어요."
-				: "하이프 버튼이 보이면 쿠비에게 응원을 보내주세요.";
+	]
+		.filter(Boolean)
+		.join(" ");
+	const message =
+		remainingMs <= 3600000
+			? "곧 초기화돼요. 남은 하이프 횟수를 확인해 보세요."
+			: remainingMs <= 86400000
+				? "남은 하이프가 있다면, 초기화 전에 응원해 주세요."
+				: current.getUTCDay() === 1
+					? "새로운 한 주, 햄쿠비의 새로운 영상을 응원해주세요!"
+					: "하이프로 햄쿠비를 응원해주세요!";
 	return { resetAt, remaining, message, soon: remainingMs <= 86400000 };
 }
 
 export function formatYoutubeDuration(duration: string): string {
 	const match = /^P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/.exec(duration);
 	if (!match) return "";
-	return formatPlaybackTime(Number(match[1] || 0) * 86400 + Number(match[2] || 0) * 3600 +
-		Number(match[3] || 0) * 60 + Number(match[4] || 0));
+	return formatPlaybackTime(
+		Number(match[1] || 0) * 86400 + Number(match[2] || 0) * 3600 + Number(match[3] || 0) * 60 + Number(match[4] || 0),
+	);
 }
 
