@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Popover, Portal } from "@chakra-ui/react";
-import { ArrowUpRight, Check, Copy, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUpRight, Check, Copy, List, Search, SlidersHorizontal, Video, X } from "lucide-react";
 import type { Song, SortType } from "../../config/types";
 import { createSongSearch, normalizeKeyword } from "../../lib/search";
 import { filterAndSortSongs, findSelectedSong } from "../../lib/songbook";
+import { isBoolean, readStoredValue, writeStoredValue } from "../../lib/storage";
 import useSongDataStore from "../../store/useSongDataStore";
 import { toaster } from "../../components/ui/toaster";
 import { RiceCake } from "./Motifs";
@@ -28,18 +29,18 @@ const songKey = (song: Song) => song.syncId ?? song.id ?? JSON.stringify([song.t
 const toggleValue = (values: string[], value: string) =>
 	values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 
-function SongTags({ song }: { song: Song }) {
+function SongTags({ song, compact = false }: { song: Song; compact?: boolean }) {
 	return (
 		<>
-			<span className={`kub-tag kub-tag-${tones[song.genre] ?? "brown"}`}>{song.genre}</span>
+			{!compact && <span className={`kub-tag kub-tag-${tones[song.genre] ?? "brown"}`}>{song.genre}</span>}
 			{song.isOfficial && song.cheese && (
 				<span className={`kub-tag kub-tag-${tones[song.cheese] ?? "brown"}`}>{song.cheese}</span>
 			)}
 			<span className={`kub-tag kub-tag-${song.isOfficial ? "green" : "brown"}`}>
 				{song.isOfficial ? "쿠비 등록곡" : "추가 수록곡"}
 			</span>
-			{!!song.lyric?.trim() && <span className="kub-tag kub-tag-cyan">가사 있음</span>}
-			{!!song.song_histories?.length && <span className="kub-tag kub-tag-orange">영상 있음</span>}
+			{!compact && !!song.lyric?.trim() && <span className="kub-tag kub-tag-cyan">가사 있음</span>}
+			{!compact && !!song.song_histories?.length && <span className="kub-tag kub-tag-orange">영상 있음</span>}
 		</>
 	);
 }
@@ -91,6 +92,7 @@ export default function SongBookV2() {
 	const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(20);
+	const [summaryView, setSummaryView] = useState(() => readStoredValue("songbook-v2-summary-view", false, isBoolean));
 	const search = useMemo(() => createSongSearch(data), [data]);
 	const selected = useMemo(() => findSelectedSong(data, selection), [data, selection]);
 	const lyricsSearchUrl = selected
@@ -265,6 +267,11 @@ export default function SongBookV2() {
 	const changePage = (nextPage: number) => {
 		setPage(nextPage);
 	};
+	const toggleSummaryView = () => {
+		const next = !summaryView;
+		setSummaryView(next);
+		writeStoredValue("songbook-v2-summary-view", next);
+	};
 
 	return (
 		<>
@@ -428,7 +435,14 @@ export default function SongBookV2() {
 				</div>
 			</div>
 			<div className="kub-workspace" data-detail-open={!!selected}>
-				<section className="kub-song-section" ref={listRef} tabIndex={-1} aria-label="노래 목록" aria-busy={isLoading}>
+				<section
+					className="kub-song-section"
+					data-summary={summaryView}
+					ref={listRef}
+					tabIndex={-1}
+					aria-label="노래 목록"
+					aria-busy={isLoading}
+				>
 					{error && !initialLoading && (
 						<div className="kub-data-feedback" role="status">
 							<p>{hasLoaded ? "목록을 갱신하지 못해 마지막으로 불러온 노래를 표시하고 있어요." : error}</p>
@@ -459,11 +473,20 @@ export default function SongBookV2() {
 								<option value="artist-asc">가수 오름차순</option>
 								<option value="artist-desc">가수 내림차순</option>
 							</select>
+							<button
+								type="button"
+								className="kub-summary-toggle"
+								aria-pressed={summaryView}
+								onClick={toggleSummaryView}
+							>
+								<List aria-hidden="true" />
+								간단히
+							</button>
 						</Pagination>
 					)}
 					<div className="kub-list-head" aria-hidden="true">
 						<span>곡 / 아티스트</span>
-						<span className="kub-column-tags">분류</span>
+						{!summaryView && <span className="kub-column-tags">분류</span>}
 						<span>복사</span>
 					</div>
 					{initialLoading && <SongListLoading />}
@@ -477,34 +500,51 @@ export default function SongBookV2() {
 								<li key={songKey(song)} className="kub-song" data-selected={isSelected}>
 									<button
 										className="kub-song-main"
-										aria-label={`${song.title} · ${song.artist} 상세 보기${familiarityNotice ? ` · ${familiarityNotice}` : ""}`}
+										aria-label={`${song.title} · ${song.artist} 상세 보기${!summaryView && song.song_histories?.length ? " · 영상 있음" : ""}${!summaryView && familiarityNotice ? ` · ${familiarityNotice}` : ""}`}
 										aria-pressed={isSelected}
 										onClick={() => selectSong(song)}
 									>
 										<span>
 											<span className="kub-song-name">
 												<Highlight text={song.title} query={debouncedQuery} />
+												{!summaryView && familiarityNotice && (
+													<span className="kub-song-familiarity" aria-hidden="true">
+														<img src="/images/v2/kubby_idk.png" alt="" width={20} height={20} />
+														<span className="kub-song-familiarity-hint">{familiarityNotice}</span>
+													</span>
+												)}
+												{!summaryView && !!song.song_histories?.length && (
+													<span className="kub-song-video" aria-hidden="true">
+														<Video />
+														<span className="kub-song-video-hint">영상 있음</span>
+													</span>
+												)}
 											</span>
 											<span className="kub-song-artist">
+												{!summaryView && song.genre && (
+													<span className={`kub-song-genre kub-tag-${tones[song.genre] ?? "brown"}`}>{song.genre}</span>
+												)}
 												<Highlight text={song.artist} query={debouncedQuery} />
 											</span>
-											{song.notes?.trim() && (
+											{!summaryView && song.notes?.trim() && (
 												<span className="kub-song-note" title={song.notes}>
 													쿠비 메모 · {song.notes}
 												</span>
 											)}
 										</span>
-										<span className="kub-song-tags">
-											<SongTags song={song} />
-											{familiarityNotice && <span className="kub-tag kub-tag-amber">{familiarityNotice}</span>}
-										</span>
+										{!summaryView && (
+											<span className="kub-song-tags">
+												<SongTags song={song} compact />
+											</span>
+										)}
 									</button>
 									<button
 										className="kub-copy-icon"
 										aria-label={`${song.title} 신청 문구 복사`}
 										onClick={() => void copySong(song)}
 									>
-										{copied === songKey(song) ? <Check /> : <Copy />}
+										{copied === songKey(song) ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+										{summaryView && <span>{copied === songKey(song) ? "완료" : "복사"}</span>}
 									</button>
 								</li>
 							);
