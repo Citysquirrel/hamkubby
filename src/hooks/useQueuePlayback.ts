@@ -24,7 +24,7 @@ interface PlayerApi {
 	removeEventListener: (event: string, listener: () => void) => void;
 }
 
-export function useQueuePlayback() {
+export function useQueuePlayback(mobile: boolean) {
 	const currentId = usePlayerStore((state) => state.currentId);
 	const revision = usePlayerStore((state) => state.revision);
 	const open = usePlayerStore((state) => state.open);
@@ -48,15 +48,39 @@ export function useQueuePlayback() {
 	const notified = useRef(false);
 	const previousTime = useRef<number | null>(null);
 	const previousTick = useRef(0);
+	const mobileRef = useRef(mobile);
+	mobileRef.current = mobile;
+	const suspended = useRef(false);
 	const blocked = useRef(() => {
 		setLoading(false);
 		usePlayerStore.setState({ playing: false, wantPlay: false });
 		setStatus("재생 버튼을 눌러 시작해 주세요.");
 	});
 
+	const savePosition = () => {
+		const player = playerRef.current;
+		const state = usePlayerStore.getState();
+		const track = state.queue.find((item) => item.id === state.currentId);
+		if (player && track && started.current && loadedRevision.current === state.revision &&
+			player.getVideoData().video_id === track.videoId) {
+			const time = player.getCurrentTime();
+			if (Number.isFinite(time)) usePlayerStore.setState({ position: Math.max(track.start, Math.min(time, track.end ?? Infinity)) });
+		}
+		persistPlayerState();
+	};
+	const pause = (message = "일시정지") => {
+		savePosition();
+		playerRef.current?.pauseVideo();
+		previousTime.current = null;
+		setLoading(false);
+		setStatus(message);
+		usePlayerStore.setState({ playing: false, wantPlay: false });
+	};
+
 	const finish = () => {
 		const state = usePlayerStore.getState();
-		if (ended.current || !started.current || loadedRevision.current !== state.revision) return;
+		if (suspended.current || (mobileRef.current && document.visibilityState !== "visible")) return;
+		if (ended.current || !started.current || !state.wantPlay || loadedRevision.current !== state.revision) return;
 		ended.current = true;
 		setLoading(false);
 		playerRef.current?.pauseVideo();
@@ -74,6 +98,15 @@ export function useQueuePlayback() {
 		if (!player) return;
 		if (!track) { if (event.data === 1) player.pauseVideo(); return; }
 		if (loadedRevision.current !== state.revision || player.getVideoData().video_id !== track.videoId) return;
+		if (suspended.current || (mobileRef.current && document.visibilityState !== "visible")) {
+			suspended.current = true;
+			if (event.data === 1) player.pauseVideo();
+			if (document.visibilityState === "visible" && (event.data === 2 || event.data === 5)) suspended.current = false;
+			setLoading(false);
+			usePlayerStore.setState({ playing: false, wantPlay: false });
+			setStatus("재생 버튼을 눌러 이어보세요.");
+			return;
+		}
 		setLoading(event.data === -1 || event.data === 3);
 		if (event.data === 1) {
 			if (!state.open) { player.pauseVideo(); return; }
@@ -110,6 +143,7 @@ export function useQueuePlayback() {
 		const state = usePlayerStore.getState();
 		const track = state.queue.find((item) => item.id === state.currentId);
 		loadedRevision.current = state.revision;
+		suspended.current = mobileRef.current && document.visibilityState !== "visible";
 		started.current = false;
 		ended.current = false;
 		elapsed.current = 0;
@@ -125,9 +159,13 @@ export function useQueuePlayback() {
 		const position = state.position >= (track.end ?? Infinity) ? track.start : Math.max(track.start, state.position);
 		const options = { videoId: track.videoId, startSeconds: position, ...(track.end !== null ? { endSeconds: track.end } : {}) };
 		usePlayerStore.setState({ position });
-		if (state.wantPlay && state.open) player.loadVideoById(options);
+		if (state.wantPlay && state.open && !suspended.current) player.loadVideoById(options);
 		else player.cueVideoById(options);
-		setStatus(state.wantPlay ? "불러오는 중" : "영상을 준비하고 있어요.");
+		if (suspended.current) {
+			setLoading(false);
+			usePlayerStore.setState({ playing: false, wantPlay: false });
+		}
+		setStatus(suspended.current ? "재생 버튼을 눌러 이어보세요." : state.wantPlay ? "불러오는 중" : "영상을 준비하고 있어요.");
 	}, [ready, currentId, revision]);
 
 	useEffect(() => {
@@ -137,6 +175,7 @@ export function useQueuePlayback() {
 	useEffect(() => {
 		if (!ready) return;
 		const timer = window.setInterval(() => {
+			if (suspended.current || (mobileRef.current && document.visibilityState !== "visible")) return;
 			const player = playerRef.current;
 			const state = usePlayerStore.getState();
 			const track = state.queue.find((item) => item.id === state.currentId);
@@ -167,22 +206,49 @@ export function useQueuePlayback() {
 	}, [ready]);
 
 	useEffect(() => {
-		const savePosition = () => {
+		const hide = () => {
+			savePosition();
+			const state = usePlayerStore.getState();
+			if (mobileRef.current && (state.playing || state.wantPlay)) {
+				suspended.current = true;
+				pause("재생 버튼을 눌러 이어보세요.");
+			}
+		};
+		const restore = () => {
 			const player = playerRef.current;
 			const state = usePlayerStore.getState();
 			const track = state.queue.find((item) => item.id === state.currentId);
-			if (player && track && started.current) {
-				const time = player.getCurrentTime();
-				if (Number.isFinite(time)) usePlayerStore.setState({ position: Math.max(track.start, Math.min(time, track.end ?? Infinity)) });
+			if (!mobileRef.current || document.visibilityState !== "visible" || !player || !track ||
+				loadedRevision.current !== state.revision || player.getVideoData().video_id !== track.videoId) return;
+			previousTime.current = null;
+			if (suspended.current) {
+				player.pauseVideo();
+				const actual = player.getPlayerState();
+				if (actual === 2 || actual === 5 || actual === 0) suspended.current = false;
+				if (actual === 0) ended.current = true;
+				setLoading(false);
+				usePlayerStore.setState({ playing: false, wantPlay: false });
+				setStatus("재생 버튼을 눌러 이어보세요.");
+			} else {
+				const actual = player.getPlayerState();
+				const active = actual === 1;
+				setLoading(actual === 3);
+				usePlayerStore.setState({ playing: active, wantPlay: active || actual === 3 });
+				setStatus(active ? "재생 중" : actual === 3 ? "불러오는 중" : "재생 버튼을 눌러 이어보세요.");
+				if (actual === 0) ended.current = true;
 			}
-			persistPlayerState();
 		};
-		window.addEventListener("pagehide", savePosition);
+		const onVisibility = () => document.visibilityState === "visible" ? restore() : hide();
+		document.addEventListener("visibilitychange", onVisibility);
+		window.addEventListener("pagehide", hide);
+		window.addEventListener("pageshow", restore);
 		return () => {
 			savePosition();
 			usePlayerStore.setState({ playing: false, wantPlay: false });
 			playerRef.current?.removeEventListener("onAutoplayBlocked", blocked.current);
-			window.removeEventListener("pagehide", savePosition);
+			document.removeEventListener("visibilitychange", onVisibility);
+			window.removeEventListener("pagehide", hide);
+			window.removeEventListener("pageshow", restore);
 		};
 	}, []);
 
@@ -203,13 +269,21 @@ export function useQueuePlayback() {
 		const state = usePlayerStore.getState();
 		if (!player || !state.currentId) return;
 		if (state.playing || state.wantPlay) {
-			player.pauseVideo();
-			setLoading(false);
-			setStatus("일시정지");
-			usePlayerStore.setState({ wantPlay: false, playing: false });
+			pause();
 		}
-		else if (error || ended.current) state.select(state.currentId);
-		else { setLoading(true); setStatus("불러오는 중"); usePlayerStore.setState({ wantPlay: true }); player.playVideo(); }
+		else {
+			if (mobileRef.current && document.visibilityState !== "visible") return;
+			suspended.current = false;
+			const track = state.queue.find((item) => item.id === state.currentId);
+			if (error || ended.current || player.getPlayerState() === 0 || (track?.end != null && state.position >= track.end)) {
+				state.select(state.currentId);
+			} else {
+				setLoading(true);
+				setStatus("불러오는 중");
+				usePlayerStore.setState({ wantPlay: true });
+				player.playVideo();
+			}
+		}
 	};
 	const seek = (time: number) => {
 		const state = usePlayerStore.getState();

@@ -2,34 +2,32 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as R
 import { readStoredValue, writeStoredValue } from "../lib/storage";
 
 type DesktopDock = "floating" | "left" | "right" | "bottom";
-type MobileDock = "top" | "bottom" | "expanded";
 type ResizeEdge = "width" | "top" | "bottom" | "corner";
 interface PlayerLayout {
 	dock: DesktopDock;
-	mobileDock: MobileDock;
 	x: number;
 	y: number;
 	width: number;
 	height: number;
 	bottomHeight: number;
 }
-const initial: PlayerLayout = { dock: "floating", mobileDock: "bottom", x: 40, y: 40, width: 360, height: 560, bottomHeight: 72 };
+const initial: PlayerLayout = { dock: "floating", x: 40, y: 40, width: 360, height: 560, bottomHeight: 72 };
 const key = "songbook-player-layout";
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, Math.max(min, max)));
 function isLayout(value: unknown): value is PlayerLayout {
 	if (!value || typeof value !== "object") return false;
 	const layout = value as PlayerLayout;
 	return ["floating", "left", "right", "bottom"].includes(layout.dock) &&
-		["top", "bottom", "expanded"].includes(layout.mobileDock) &&
 		[layout.x, layout.y, layout.width, layout.height, layout.bottomHeight].every(Number.isFinite);
 }
 
-export function usePlayerLayout(open: boolean) {
+export function usePlayerLayout(open: boolean, active: boolean) {
 	const [layout, setLayout] = useState(() => {
 		const saved = readStoredValue(key, initial, isLayout);
 		return saved.dock === "right" && saved.width === 400 && saved.height === 640 && saved.x === 40 && saved.y === 40 ? initial : saved;
 	});
 	const [minimized, setMinimized] = useState(false);
+	const [mobileExpanded, setMobileExpanded] = useState(false);
 	const [listOpen, setListOpen] = useState(false);
 	const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
 	const [candidate, setCandidate] = useState<DesktopDock | null>(null);
@@ -37,16 +35,17 @@ export function usePlayerLayout(open: boolean) {
 	const [reservedDock, setReservedDock] = useState<DesktopDock | null>(null);
 	const panelRef = useRef<HTMLElement>(null);
 	const cancelRef = useRef<(() => void) | null>(null);
-	const mobile = viewport.width < 768;
+	const mobile = viewport.width < 768 || (viewport.width < 1024 && viewport.height < 500 && window.matchMedia("(pointer: coarse)").matches);
 	const width = clamp(layout.width, 360, Math.min(640, viewport.width - 320));
-	const dock = mobile ? layout.mobileDock : layout.dock;
-	const compact = minimized || dock === "bottom";
+	const dock = mobile ? (mobileExpanded ? "expanded" : "bottom") : layout.dock;
+	const compact = mobile ? !mobileExpanded : minimized || dock === "bottom";
+	const mobileVideoVisible = mobile && (!compact || active);
 	const sideDocked = dock === "left" || dock === "right";
 	const bottomHeight = clamp(layout.bottomHeight, 72, Math.min(260, viewport.height * .5));
 	const minHeight = Math.min(listOpen ? 560 : 410, viewport.height - 16);
 	const expandedHeight = Math.min(clamp(layout.height - (listOpen ? 0 : 150), minHeight, viewport.height - 16), viewport.height - 16);
 	const height = compact ? 72 : expandedHeight;
-	const mobileHeight = compact ? 72 : Math.min(listOpen ? 560 : 410, viewport.height - 80);
+	const mobileBarHeight = mobileVideoVisible ? 272 : 72;
 	const x = clamp(layout.x, -width / 2, viewport.width - width / 2);
 	const y = clamp(layout.y, 0, viewport.height - (sideDocked ? height : height / 2));
 
@@ -63,9 +62,13 @@ export function usePlayerLayout(open: boolean) {
 
 	const place = (value: string) => {
 		cancelRef.current?.();
+		if (mobile) {
+			setMobileExpanded(value === "expanded");
+			if (value !== "expanded") setListOpen(false);
+			return;
+		}
 		setMinimized(false);
-		setLayout((prev) => mobile ? { ...prev, mobileDock: value as MobileDock }
-			: { ...prev, dock: value as DesktopDock });
+		setLayout((prev) => ({ ...prev, dock: value as DesktopDock }));
 	};
 	const begin = (event: ReactPointerEvent<HTMLElement>, resize?: ResizeEdge) => {
 		if (mobile || event.button !== 0 || !event.isPrimary || event.defaultPrevented ||
@@ -160,20 +163,23 @@ export function usePlayerLayout(open: boolean) {
 	};
 
 	const panelStyle: CSSProperties = mobile
-		? { left: 0, right: 0, height: dock === "expanded" && !minimized ? viewport.height : mobileHeight, [dock === "top" ? "top" : "bottom"]: 0 }
+		? { left: 0, right: 0, bottom: 0, height: compact
+			? `calc(${mobileBarHeight}px + env(safe-area-inset-bottom, 0px))`
+			: "min(680px, calc(100dvh - env(safe-area-inset-top, 0px) - 12px))" }
 		: dock === "floating" ? { left: x, top: y, width, height }
 		: dock === "bottom" ? { left: 0, right: 0, bottom: 0, height: bottomHeight }
 		: { [dock]: 0, top: y, width, height };
 	const contentDock = reservedDock ?? dock;
 	const contentStyle: CSSProperties = !open ? {} : mobile
-		? dock === "expanded" && !minimized ? {} : { [dock === "top" ? "paddingTop" : "paddingBottom"]: mobileHeight }
+		? { paddingBottom: `calc(${compact ? mobileBarHeight : 72}px + env(safe-area-inset-bottom, 0px))` }
 		: contentDock === "left" && !minimized ? { paddingLeft: width } : contentDock === "right" && !minimized ? { paddingRight: width } : contentDock === "bottom" ? { paddingBottom: bottomHeight } : {};
-	return { panelRef, panelStyle, contentStyle, dock, mobile, moving, candidate, begin, place, compact, minimized, listOpen,
-		listAbove: typeof panelStyle.bottom === "number" ? viewport.height - panelStyle.bottom - Number(panelStyle.height) > viewport.height / 2
-			: typeof panelStyle.top === "number" && panelStyle.top > viewport.height / 2,
-		toggleList: () => setListOpen((prev) => !prev),
+	return { panelRef, panelStyle, contentStyle, dock, mobile, mobileVideoVisible, moving, candidate, begin, place, compact, minimized, listOpen,
+		listAbove: mobile || (typeof panelStyle.bottom === "number" ? viewport.height - panelStyle.bottom - Number(panelStyle.height) > viewport.height / 2
+			: typeof panelStyle.top === "number" && panelStyle.top > viewport.height / 2),
+		toggleList: () => { if (mobile) setMobileExpanded(true); setListOpen((prev) => !prev); },
 		toggleMinimized: () => {
 			cancelRef.current?.();
+			if (mobile) { setMobileExpanded((prev) => !prev); setListOpen(false); return; }
 			if (!minimized && sideDocked) setLayout((prev) => ({ ...prev, dock: "floating", x: dock === "left" ? 16 : viewport.width - width - 16, y }));
 			setMinimized((prev) => !prev);
 			setListOpen(false);

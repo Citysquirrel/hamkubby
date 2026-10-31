@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Popover, Portal } from "@chakra-ui/react";
-import { ArrowUpRight, Check, Copy, List, Search, SlidersHorizontal, Video, X } from "lucide-react";
+import { AppWindow, Check, Copy, ExternalLink, List, Search, SlidersHorizontal, Video, X } from "lucide-react";
 import type { Song, SortType } from "../../config/types";
 import { createSongSearch, normalizeKeyword } from "../../lib/search";
 import { filterAndSortSongs, findSelectedSong } from "../../lib/songbook";
@@ -617,11 +617,13 @@ export default function SongBookV2() {
 											{copied === songKey(selected) ? "문구 복사 완료" : "신청 문구 복사"}
 										</button>
 										<div className="kub-lyrics-links" role="group" aria-label="가사 찾아보기">
+											<span>가사</span>
 											<button
+												type="button"
 												onClick={() => window.open(lyricsSearchUrl, "lyrics", "noopener,width=540,height=600")}
 												aria-label="가사 찾아보기 새 창으로 열기"
 											>
-												가사 새 창 <ArrowUpRight aria-hidden="true" />
+												<AppWindow aria-hidden="true" />
 											</button>
 											<a
 												href={lyricsSearchUrl}
@@ -629,7 +631,7 @@ export default function SongBookV2() {
 												rel="noopener noreferrer"
 												aria-label="가사 찾아보기 새 탭으로 열기"
 											>
-												가사 새 탭 <ArrowUpRight aria-hidden="true" />
+												<ExternalLink aria-hidden="true" />
 											</a>
 										</div>
 									</div>

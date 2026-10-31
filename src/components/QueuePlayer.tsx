@@ -3,6 +3,8 @@ import YouTube from "react-youtube";
 import {
 	ArrowDown,
 	ArrowUp,
+	ChevronDown,
+	ChevronUp,
 	ExternalLink,
 	GripHorizontal,
 	ListMusic,
@@ -66,7 +68,8 @@ function VolumeControl({
 		if (dragPointer.current !== event.pointerId) return;
 		dragPointer.current = null;
 		setDragging(false);
-		const inside = event.type === "pointerup" &&
+		const inside =
+			event.type === "pointerup" &&
 			volumeRef.current?.contains(document.elementFromPoint(event.clientX, event.clientY));
 		setDismissed(!inside);
 	};
@@ -183,7 +186,7 @@ function TrackList({
 
 export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof usePlayerLayout>; onClose: () => void }) {
 	const state = usePlayerStore();
-	const playback = useQueuePlayback();
+	const playback = useQueuePlayback(layout.mobile);
 	const [tab, setTab] = useState("queue");
 	const [name, setName] = useState("");
 	const [selectedList, setSelectedList] = useState("");
@@ -194,7 +197,10 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 		writeStoredValue("songbook-player-segment-only", segmentOnly);
 	}, [segmentOnly]);
 	const track = state.queue.find((item) => item.id === state.currentId);
-	const showThumbnail = !!track && !state.playing && !state.wantPlay;
+	const showThumbnail = !layout.mobile && !!track && !state.playing && !state.wantPlay;
+	const togglePlayback = () => {
+		playback.toggle();
+	};
 	const playLabel = playback.loading
 		? playback.ready && state.wantPlay
 			? "불러오는 중 · 일시정지"
@@ -228,12 +234,12 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 			state.open &&
 			layout.mobile &&
 			layout.dock === "expanded" &&
-			!layout.minimized &&
+			!layout.compact &&
 			!layout.panelRef.current?.contains(document.activeElement)
 		) {
-			layout.panelRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+			layout.panelRef.current?.querySelector<HTMLButtonElement>(".kub-player-expand")?.focus({ preventScroll: true });
 		}
-	}, [state.open, layout.mobile, layout.dock, layout.minimized, layout.panelRef]);
+	}, [state.open, layout.mobile, layout.dock, layout.compact, layout.panelRef]);
 
 	return (
 		<>
@@ -248,6 +254,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 				style={{ ...layout.panelStyle, "--kub-bar-height": `${layout.panelStyle.height}px` } as CSSProperties}
 				data-dock={layout.dock}
 				data-mobile={layout.mobile}
+				data-mobile-video={layout.mobileVideoVisible}
 				data-moving={layout.moving}
 				data-compact={layout.compact}
 				data-list-above={layout.listAbove}
@@ -266,7 +273,9 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 				>
 					<GripHorizontal aria-hidden="true" />
 					<strong>쿠비 플레이어</strong>
-					<VolumeControl value={state.volume} muted={state.muted} onMute={playback.mute} onChange={playback.volume} />
+					{!layout.mobile && (
+						<VolumeControl value={state.volume} muted={state.muted} onMute={playback.mute} onChange={playback.volume} />
+					)}
 					<button
 						aria-label={layout.listOpen ? "목록 접기" : "목록 펼치기"}
 						title="재생 목록"
@@ -289,34 +298,28 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 							<MoreHorizontal />
 						</summary>
 						<div className="kub-player-menu-content">
-							<label>
-								배치{" "}
-								<select
-									name="kub-player-dock"
-									aria-label="플레이어 배치"
-									value={layout.dock}
-									onChange={(event) => layout.place(event.target.value)}
-								>
-									{layout.mobile ? (
-										<>
-											<option value="top">상단</option>
-											<option value="bottom">하단</option>
-											<option value="expanded">펼쳐 보기</option>
-										</>
-									) : (
-										<>
+							{!layout.mobile && (
+								<>
+									<label>
+										배치{" "}
+										<select
+											name="kub-player-dock"
+											aria-label="플레이어 배치"
+											value={layout.dock}
+											onChange={(event) => layout.place(event.target.value)}
+										>
 											<option value="floating">떠 있기</option>
 											<option value="left">왼쪽</option>
 											<option value="right">오른쪽</option>
 											<option value="bottom">하단</option>
-										</>
-									)}
-								</select>
-							</label>
-							<button onClick={layout.reset}>
-								<RotateCcw />
-								크기·위치 초기화
-							</button>
+										</select>
+									</label>
+									<button onClick={layout.reset}>
+										<RotateCcw />
+										크기·위치 초기화
+									</button>
+								</>
+							)}
 							<button
 								aria-pressed={segmentOnly && track?.end != null}
 								disabled={track?.end == null}
@@ -362,14 +365,26 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 						</div>
 					</details>
 					<button
-						aria-label={layout.compact ? "플레이어 펼치기" : "플레이어 최소화"}
-						title={layout.compact ? "펼치기" : "최소화"}
+						className="kub-player-expand"
+						aria-label={layout.compact ? "플레이어 펼치기" : layout.mobile ? "플레이어 접기" : "플레이어 최소화"}
+						title={layout.compact ? "펼치기" : "접기"}
+						aria-expanded={!layout.compact}
 						onClick={() => {
 							if (layout.dock === "bottom") layout.place(layout.mobile ? "expanded" : "floating");
 							else layout.toggleMinimized();
 						}}
 					>
-						{layout.compact ? <Maximize2 /> : <Minimize2 />}
+						{layout.mobile ? (
+							layout.compact ? (
+								<ChevronUp />
+							) : (
+								<ChevronDown />
+							)
+						) : layout.compact ? (
+							<Maximize2 />
+						) : (
+							<Minimize2 />
+						)}
 					</button>
 					<button aria-label="플레이어 닫기" title="닫기" onClick={onClose}>
 						<X />
@@ -397,8 +412,8 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 							data-player-no-drag
 							data-empty={!track}
 							data-thumbnail={showThumbnail}
-							aria-hidden={!track}
-							inert={!track}
+							aria-hidden={!track || (layout.mobile && !layout.mobileVideoVisible)}
+							inert={!track || (layout.mobile && !layout.mobileVideoVisible)}
 						>
 							{(track || playback.ready) && (
 								<YouTube
@@ -414,7 +429,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 									className="kub-player-thumbnail"
 									aria-label={`${track.title} 재생`}
 									disabled={!playback.ready || playback.loading}
-									onClick={playback.toggle}
+									onClick={togglePlayback}
 								>
 									<img src={`https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`} alt="" draggable={false} />
 								</button>
@@ -434,6 +449,9 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 								</small>
 							)}
 							<p role="status">{track ? playback.status : "노래 상세에서 + 버튼으로 대기열에 담을 수 있어요."}</p>
+							{layout.mobile && track && (
+								<p className="kub-player-note">화면을 잠그거나 다른 앱으로 이동하면 일시정지돼요.</p>
+							)}
 							{track?.end === null && <p className="kub-player-note">종료 지점 미등록 · 원본 영상 끝까지 재생해요.</p>}
 							{playback.error && (
 								<p role="alert">
@@ -469,7 +487,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 									title={playLabel}
 									aria-busy={playback.loading}
 									disabled={!track || !playback.ready || (playback.loading && !state.wantPlay)}
-									onClick={playback.toggle}
+									onClick={togglePlayback}
 								>
 									{playback.loading ? (
 										<LoaderCircle className="kub-player-loading" aria-hidden="true" />

@@ -51,8 +51,9 @@ export function PageShell({
 	const [help, setHelp] = useState(false);
 	const helpTriggerRef = useRef<HTMLButtonElement>(null);
 	const playerOpen = usePlayerStore((state) => state.open);
+	const playerActive = usePlayerStore((state) => state.playing || state.wantPlay);
 	const showPlayer = usePlayerStore((state) => state.show);
-	const playerLayout = usePlayerLayout(playerOpen);
+	const playerLayout = usePlayerLayout(playerOpen, playerActive);
 	const closePlayer = () => {
 		const current = usePlayerStore.getState();
 		if (
@@ -70,13 +71,10 @@ export function PageShell({
 			<GoToTop
 				rightOffset={Number(playerLayout.contentStyle.paddingRight) || 0}
 				bottomOffset={Number(playerLayout.contentStyle.paddingBottom) || 0}
-				disabled={playerOpen && playerLayout.dock === "expanded" && !playerLayout.minimized}
+				disabled={playerOpen && playerLayout.mobile}
 			/>
 			<div style={playerLayout.contentStyle}>
-				<div
-					className="kub-content"
-					inert={playerOpen && playerLayout.mobile && playerLayout.dock === "expanded" && !playerLayout.minimized}
-				>
+				<div className="kub-content">
 					<header className="kub-top">
 						<div className="kub-brand">
 							<span className="kub-brand-avatar">

@@ -615,25 +615,63 @@
 	gap: 8px 12px;
 }
 #kub-music-room .kub-lyrics-links {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px;
+	border: 1px solid var(--kub-line);
+	border-radius: 10px;
 	font-size: 13px;
 }
-#kub-music-room .kub-lyrics-links :is(a, button) {
-	display: flex;
-	gap: 5px;
-	align-items: center;
-	color: var(--kub-brown);
-	padding: 6px 0;
-	min-height: 38px;
+#kub-music-room .kub-lyrics-links > span {
+	padding-inline: 9px;
+	color: var(--kub-muted);
 }
-#kub-music-room .kub-lyrics-links :is(a, button):hover {
-	text-decoration: underline;
-	text-underline-offset: 3px;
+#kub-music-room .kub-lyrics-links :is(a, button) {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 7px;
+	color: var(--kub-muted);
+}
+#kub-music-room .kub-lyrics-links button {
+	background: var(--kub-green-soft);
+	color: var(--kub-green-deep);
+}
+#kub-music-room .kub-lyrics-links :is(a, button):is(:hover, :focus-visible) {
+	background: var(--kub-green);
+	color: var(--kub-bg);
+}
+#kub-music-room .kub-lyrics-links :is(a, button)::after {
+	content: attr(aria-label);
+	position: absolute;
+	bottom: calc(100% + 8px);
+	right: 0;
+	z-index: 2;
+	width: max-content;
+	padding: 6px 9px;
+	border: 1px solid var(--kub-line);
+	border-radius: 6px;
+	background: var(--kub-bg);
+	color: var(--kub-ink);
+	font-size: 12px;
+	pointer-events: none;
+	visibility: hidden;
+}
+#kub-music-room .kub-lyrics-links :is(a, button):is(:hover, :focus-visible)::after {
+	visibility: visible;
 }
 #kub-music-room .kub-lyrics-links svg {
-	width: 13px;
+	width: 16px;
+	height: 16px;
+}
+@media (pointer: coarse) {
+	#kub-music-room .kub-lyrics-links :is(a, button) {
+		width: 44px;
+		height: 44px;
+	}
 }
 #kub-music-room .kub-copy-fallback {
 	margin-top: 10px;
