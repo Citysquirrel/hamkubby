@@ -309,9 +309,19 @@ export default function SongBookV2() {
 					)}
 				</div>
 				<Popover.Root
-					unstyled open={filterOpen} lazyMount unmountOnExit
+					unstyled
+					open={filterOpen}
+					lazyMount
+					unmountOnExit
 					onOpenChange={({ open }) => setFilterOpen(open)}
-					positioning={{ placement: "bottom-end", strategy: "fixed", gutter: 8, overflowPadding: 12, flip: true, slide: true }}
+					positioning={{
+						placement: "bottom-end",
+						strategy: "fixed",
+						gutter: 8,
+						overflowPadding: 12,
+						flip: true,
+						slide: true,
+					}}
 				>
 					<Popover.Trigger asChild>
 						<button type="button" className="kub-button kub-filter-toggle" aria-label="상세 필터">
@@ -327,7 +337,9 @@ export default function SongBookV2() {
 									<header className="kub-filter-header">
 										<Popover.Title>상세 필터</Popover.Title>
 										<Popover.CloseTrigger asChild>
-											<button type="button" aria-label="상세 필터 닫기"><X size={18} /></button>
+											<button type="button" aria-label="상세 필터 닫기">
+												<X size={18} />
+											</button>
 										</Popover.CloseTrigger>
 									</header>
 									<div className="kub-filter-panel" data-source={source}>
@@ -335,8 +347,11 @@ export default function SongBookV2() {
 											<legend>노래 분류</legend>
 											{cheeses.map((cheese) => (
 												<label key={cheese}>
-													<input type="checkbox" checked={selectedCheeses.includes(cheese)}
-														onChange={() => setSelectedCheeses(toggleValue(selectedCheeses, cheese))} />
+													<input
+														type="checkbox"
+														checked={selectedCheeses.includes(cheese)}
+														onChange={() => setSelectedCheeses(toggleValue(selectedCheeses, cheese))}
+													/>
 													{cheese}
 												</label>
 											))}
@@ -349,17 +364,24 @@ export default function SongBookV2() {
 												{ value: "no", label: "영상 없음" },
 											].map((item) => (
 												<label key={item.value}>
-													<input type="checkbox" checked={history.includes(item.value)}
-														onChange={() => setHistory(toggleValue(history, item.value))} />
+													<input
+														type="checkbox"
+														checked={history.includes(item.value)}
+														onChange={() => setHistory(toggleValue(history, item.value))}
+													/>
 													{item.label}
 												</label>
 											))}
 										</fieldset>
 									</div>
 									<footer className="kub-filter-footer">
-										<button type="button" className="kub-reset" onClick={reset}>검색·필터 초기화</button>
+										<button type="button" className="kub-reset" onClick={reset}>
+											검색·필터 초기화
+										</button>
 										<Popover.CloseTrigger asChild>
-											<button type="button" className="kub-button">닫기</button>
+											<button type="button" className="kub-button">
+												닫기
+											</button>
 										</Popover.CloseTrigger>
 									</footer>
 								</Popover.Content>
@@ -552,7 +574,7 @@ export default function SongBookV2() {
 									<div className="kub-detail-actions">
 										<button className="kub-button kub-button-primary" onClick={() => void copySong(selected)}>
 											{copied === songKey(selected) ? <Check /> : <Copy />}
-											{copied === songKey(selected) ? "신청 문구 복사 완료" : "신청 문구 복사"}
+											{copied === songKey(selected) ? "문구 복사 완료" : "신청 문구 복사"}
 										</button>
 										<div className="kub-lyrics-links" role="group" aria-label="가사 찾아보기">
 											<button
