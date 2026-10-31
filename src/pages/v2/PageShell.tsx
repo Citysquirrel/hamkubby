@@ -7,6 +7,7 @@ import { PageHelp } from "./PageHelp";
 import { Profile } from "./Profile";
 import { Footer } from "./Footer";
 import { GoToTop } from "./GoToTop";
+import { NavigationLoading } from "./LoadingState";
 import { QueuePlayer } from "../../components/QueuePlayer";
 import { usePlayerLayout } from "../../hooks/usePlayerLayout";
 import { usePlayerStore } from "../../store/usePlayerStore";
@@ -65,6 +66,7 @@ export function PageShell({
 	return (
 		<div id="kub-music-room" data-theme={colorMode} data-effects={effects}>
 			<BackgroundEffects />
+			<NavigationLoading />
 			<GoToTop
 				rightOffset={Number(playerLayout.contentStyle.paddingRight) || 0}
 				bottomOffset={Number(playerLayout.contentStyle.paddingBottom) || 0}

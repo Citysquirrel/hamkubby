@@ -12,6 +12,36 @@
 	border-top-color: currentColor;
 	border-radius: 50%;
 }
+.kub-navigation-loading {
+	position: fixed;
+	top: calc(16px + env(safe-area-inset-top, 0px));
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 120;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: max-content;
+	max-width: calc(100% - 32px);
+	padding: 12px 18px;
+	border: 1px solid var(--kub-line);
+	border-radius: 999px;
+	background: var(--kub-bg);
+	color: var(--kub-green-deep);
+	box-shadow: 0 4px 20px #0002;
+	font-size: 14px;
+	pointer-events: none;
+}
+.kub-navigation-loading:empty {
+	display: none;
+}
+.kub-navigation-loading .kub-route-spinner {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	border-width: 2px;
+	color: var(--kub-green);
+}
 .kub-loading {
 	color: var(--kub-muted, light-dark(#7c615a, #d1c2bd));
 }

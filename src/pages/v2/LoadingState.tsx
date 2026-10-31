@@ -1,4 +1,19 @@
+import { useNavigation } from "react-router-dom";
 import "./loading.css";
+
+export function NavigationLoading() {
+	const navigation = useNavigation();
+	return (
+		<div className="kub-navigation-loading" role="status" aria-atomic="true">
+			{navigation.state !== "idle" && (
+				<>
+					<span className="kub-route-spinner" aria-hidden="true" />
+					<span>페이지를 불러오고 있어요.</span>
+				</>
+			)}
+		</div>
+	);
+}
 
 export function SongListLoading({ label = "노래 목록을 불러오고 있어요." }: { label?: string }) {
 	return (
