@@ -291,15 +291,31 @@ export function BroadcastDateFilter({
 									</>
 								)}
 							</div>
-							<p className="kub-broadcast-status" role="status">
-								{view === "years"
-									? "월을 선택하면 날짜로 돌아가요."
-									: choosingEnd
-										? "종료일을 선택해 주세요."
-										: draft.broadcastTo
-											? "다시 클릭하면 새로 선택해요."
-											: "시작일을 선택해 주세요."}
-							</p>
+							<div className="kub-broadcast-status-wrapper" aria-live="polite">
+								<p className="kub-broadcast-status" role="status">
+									{view === "years"
+										? "월을 선택하면 날짜로 돌아가요."
+										: choosingEnd
+											? "종료일을 선택해 주세요."
+											: draft.broadcastTo
+												? "다시 클릭하면 새로 선택해요."
+												: "시작일을 선택해 주세요."}
+								</p>
+
+								{month !== today.slice(0, 7) ? (
+									<button
+										type="button"
+										className="kub-button kub-broadcast-recent"
+										onClick={() => {
+											setMonth(today.slice(0, 7));
+											setView("days");
+										}}
+									>
+										최근
+									</button>
+								) : null}
+							</div>
+
 							<footer className="kub-broadcast-footer">
 								<button
 									type="button"
