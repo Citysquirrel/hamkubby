@@ -161,12 +161,12 @@
 	inset: 0 0 0 auto;
 	width: min(54%, 420px);
 	overflow: hidden;
-	opacity: 0.22;
+	opacity: 0.625;
 	mask-image: linear-gradient(to right, transparent, #000 55%);
 	pointer-events: none;
 }
 #kub-music-room[data-theme="dark"] .kub-portrait-wrap {
-	opacity: 0.16;
+	opacity: 0.5;
 }
 #kub-music-room .kub-portrait {
 	width: 100%;
