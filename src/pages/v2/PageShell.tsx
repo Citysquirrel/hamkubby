@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useColorMode } from "../../components/ui/color-mode";
-import { isBoolean, readStoredValue } from "../../lib/storage";
+import { isBoolean, readStoredValue, writeStoredValue } from "../../lib/storage";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import { BackgroundEffects, Horn } from "./Motifs";
 import { PageTabs } from "./PageTabs";
 import { PageHelp } from "./PageHelp";
@@ -22,6 +23,24 @@ const portraits = Object.keys(
 	),
 ).map((path) => path.slice(1));
 
+const portraitHistoryKey = "songbook-v2-portrait-history";
+function choosePortrait() {
+	const stored = readStoredValue<string[]>(
+		portraitHistoryKey,
+		[],
+		(value): value is string[] => Array.isArray(value) && value.every((item) => typeof item === "string"),
+	);
+	let seen = [...new Set(stored.filter((path) => portraits.includes(path)))];
+	let candidates = portraits.filter((path) => !seen.includes(path));
+	if (!candidates.length) {
+		seen = [];
+		candidates = portraits.filter((path) => path !== stored.at(-1));
+		if (!candidates.length) candidates = portraits;
+	}
+	const src = candidates[Math.floor(Math.random() * candidates.length)] ?? defaultPortrait;
+	return { src, seen: [...seen, src] };
+}
+
 export function PageShell({
 	children,
 	cursorAvailable,
@@ -34,6 +53,7 @@ export function PageShell({
 	onToggleCursor: () => void;
 }) {
 	const { colorMode, toggleColorMode } = useColorMode();
+	const isMobileDevice = useIsMobile();
 	useEffect(() => {
 		try {
 			localStorage.removeItem("songbook-v2-intro");
@@ -41,10 +61,13 @@ export function PageShell({
 			// 저장소 접근이 차단되어도 소개는 항상 표시한다.
 		}
 	}, []);
-	const [portrait, setPortrait] = useState(
-		() => portraits[Math.floor(Math.random() * portraits.length)] ?? defaultPortrait,
-	);
-	const handlePortraitError = () => setPortrait(defaultPortrait);
+	const [portraitSelection] = useState(choosePortrait);
+	const [portraitFailed, setPortraitFailed] = useState(false);
+	useEffect(() => {
+		writeStoredValue(portraitHistoryKey, portraitSelection.seen);
+	}, [portraitSelection]);
+	const portrait = portraitFailed ? defaultPortrait : portraitSelection.src;
+	const handlePortraitError = () => setPortraitFailed(true);
 	const [effects] = useState(() =>
 		readStoredValue("songbook-v2-effects", !window.matchMedia("(prefers-reduced-motion: reduce)").matches, isBoolean),
 	);
@@ -65,7 +88,7 @@ export function PageShell({
 	};
 
 	return (
-		<div id="kub-music-room" data-theme={colorMode} data-effects={effects}>
+		<div id="kub-music-room" data-theme={colorMode} data-effects={effects} data-mobile-device={isMobileDevice}>
 			<BackgroundEffects />
 			<NavigationLoading />
 			<GoToTop

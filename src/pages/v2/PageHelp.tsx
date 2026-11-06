@@ -18,7 +18,7 @@ function SongbookHelp() {
 			<p>
 				<span className="kub-tag kub-tag-brown">추가 수록곡</span> 가창 기록을 바탕으로 추가한 곡
 			</p>
-			<p>아무 글자 키로 검색창 이동이 가능해요</p>
+			<p className="kub-keyboard-hint">아무 글자 키로 검색창 이동이 가능해요</p>
 			<a
 				href="https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE"
 				target="_blank"

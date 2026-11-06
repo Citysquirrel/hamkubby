@@ -310,7 +310,7 @@ export default function SongBookV2() {
 								searchRef.current?.focus();
 							}}
 						>
-							<span>ESC</span>
+							<span className="kub-keyboard-hint">ESC</span>
 							<X aria-hidden="true" />
 						</button>
 					)}

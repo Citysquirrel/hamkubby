@@ -3,7 +3,7 @@ import { ProfileEffects } from "./Motifs";
 const socials = [
 	{ label: "치지직", image: "chzzk.svg", href: "https://chzzk.naver.com/9351fb8417f73405c84e0846409e3263" },
 	{ label: "YouTube", image: "youtube.svg", href: "https://www.youtube.com/@hamkubby" },
-	{ label: "다시보기", image: "youtube.svg", href: "https://www.youtube.com/@kubbyreplay" },
+	{ label: "다시보기", image: "youtube.svg", mobileImage: "youtube-replay.svg", href: "https://www.youtube.com/@kubbyreplay" },
 	{ label: "팬카페", image: "naver_cafe.svg", href: "https://cafe.naver.com/f-e/cafes/30907241/menus/104?viewType=L" },
 	{ label: "X", image: "x.svg", href: "https://x.com/hamkubby" },
 ];
@@ -11,10 +11,13 @@ const socials = [
 function SocialLinks() {
 	return (
 		<div className="kub-socials" aria-label="햄쿠비 바로가기">
-			{socials.map(({ label, image, href }) => (
-				<a key={label} href={href} target="_blank" rel="noopener noreferrer">
-					<img className="kub-platform" src={`/images/${image}`} alt="" />
-					{label}
+			{socials.map(({ label, image, mobileImage, href }) => (
+				<a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
+					<picture>
+						{mobileImage && <source media="(width < 768px)" srcSet={`/images/${mobileImage}`} />}
+						<img className="kub-platform" src={`/images/${image}`} alt="" />
+					</picture>
+					<span className="kub-social-label">{label}</span>
 				</a>
 			))}
 		</div>

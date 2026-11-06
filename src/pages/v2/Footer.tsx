@@ -14,11 +14,11 @@ export function Footer() {
 			<nav className="kub-footer-contacts" aria-label="사이트 링크 및 개발자 연락처">
 				<Feedback />
 				<Link to="/old">구버전 노래책</Link>
-				<a href="https://github.com/Citysquirrel/hamkubby" target="_blank" rel="noopener noreferrer">
-					<FaGithub aria-hidden="true" /> GitHub
+				<a className="kub-footer-icon-link" href="https://github.com/Citysquirrel/hamkubby" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+					<FaGithub aria-hidden="true" /> <span className="kub-footer-contact-label">GitHub</span>
 				</a>
-				<a href="mailto:tok1324@naver.com">
-					<Mail aria-hidden="true" /> tok1324@naver.com
+				<a className="kub-footer-icon-link" href="mailto:tok1324@naver.com" aria-label="이메일: tok1324@naver.com">
+					<Mail aria-hidden="true" /> <span className="kub-footer-contact-label">tok1324@naver.com</span>
 				</a>
 			</nav>
 		</footer>

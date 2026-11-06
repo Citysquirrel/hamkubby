@@ -41,12 +41,14 @@ export function PageTabs() {
 			<NavLink to="/recap">리캡</NavLink>
 			<a
 				className="kub-original-link"
+				aria-label="원본 노래책 열기"
 				href="https://docs.google.com/spreadsheets/d/1KcU5pDIiE6rsiTzbSj5-OEF2pzEKbBkPSgjNT2pq2KE"
 				target="_blank"
 				rel="noopener noreferrer"
 			>
 				<img src="/images/spreadsheet.svg" alt="" />
-				원본 노래책 열기
+				<span className="kub-original-label">원본 노래책 열기</span>
+				<span className="kub-original-mobile-label" aria-hidden="true">원본</span>
 				<ArrowUpRight size={16} aria-hidden="true" />
 			</a>
 		</nav>
