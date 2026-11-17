@@ -635,7 +635,7 @@ export default function AdminPanel() {
 					{historyRooms.length > 0 && (
 						<Flex gap={2} align="center" flexWrap="wrap" mb={2}>
 							<Text fontSize="xs" fontWeight="bold" color="gray.500">
-								히스토리:
+								기록:
 							</Text>
 							{historyRooms.map((r) => (
 								<Group attached key={r}>

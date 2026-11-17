@@ -14,6 +14,7 @@ export interface HamkubbySongHistoryModel {
 	end: number | null;
 	memo?: string | null;
 	priority: number;
+	is3dRendered: boolean;
 	hamkubby_id: number;
 }
 export interface Song {

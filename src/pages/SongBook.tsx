@@ -127,16 +127,21 @@ export default function SongBook() {
 	const [isOpenMobileView, setIsOpenMobileView] = useState(false);
 	const [copiedId, setCopiedId] = useState<string | null>(null);
 	const [lyricIndex, setLyricIndex] = useState(() =>
-		readStoredValue(LOCAL_STORAGE_KEY, 2, (value): value is number =>
-			typeof value === "number" && Number.isInteger(value) && value >= 0 && value < LYRIC_SIZES.length,
+		readStoredValue(
+			LOCAL_STORAGE_KEY,
+			2,
+			(value): value is number =>
+				typeof value === "number" && Number.isInteger(value) && value >= 0 && value < LYRIC_SIZES.length,
 		),
 	);
 	const [isLyricBold, setIsLyricBold] = useState(() => readStoredValue(LOCAL_STORAGE_BOLD_KEY, false, isBoolean));
 
 	// 디테일 뷰의 너비 조정 상태
 	const [detailWidth, setDetailWidth] = useState(() =>
-		readStoredValue("detail-view-width", 450, (value): value is number =>
-			typeof value === "number" && Number.isFinite(value) && value >= 450 && value <= 600,
+		readStoredValue(
+			"detail-view-width",
+			450,
+			(value): value is number => typeof value === "number" && Number.isFinite(value) && value >= 450 && value <= 600,
 		),
 	);
 	const [isDragging, setIsDragging] = useState(false);
@@ -1084,7 +1089,7 @@ const SongHistorySection = ({
 						userSelect="none"
 					>
 						<Text fontWeight="bold" fontSize="sm" color="gray.500">
-							📺 방송 히스토리 {sortedHistories.length > 1 && `(${sortedHistories.length})`}
+							📺 방송 기록 {sortedHistories.length > 1 && `(${sortedHistories.length})`}
 						</Text>
 
 						{sortedHistories.length > 1 && (
@@ -1113,3 +1118,4 @@ const SongHistorySection = ({
 		</Collapsible.Root>
 	);
 };
+

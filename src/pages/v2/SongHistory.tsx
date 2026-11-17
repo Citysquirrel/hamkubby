@@ -33,6 +33,7 @@ function HistoryItems({
 							<span>
 								<time dateTime={formatDateToYYYYMMDD(item.sungAt)}>{formatDateToYYYYMMDD(item.sungAt)}</time>
 								{item.priority === 7 && " · 추천"}
+								{item.is3dRendered === true && " · 3D"}
 								<small>
 									{!item.youtubeVideoId
 										? "등록된 영상이 없어요"
@@ -66,10 +67,14 @@ function HistoryItems({
 								else add(track);
 							}}
 						>
-							{added ? <>
-								<Check className="kub-history-check-icon" aria-hidden="true" />
-								<Minus className="kub-history-remove-icon" aria-hidden="true" />
-							</> : <Plus aria-hidden="true" />}
+							{added ? (
+								<>
+									<Check className="kub-history-check-icon" aria-hidden="true" />
+									<Minus className="kub-history-remove-icon" aria-hidden="true" />
+								</>
+							) : (
+								<Plus aria-hidden="true" />
+							)}
 						</button>
 					</div>
 				);
@@ -143,16 +148,12 @@ function HistoryDialog({
 		>
 			<header className="kub-history-header">
 				<div>
-					<h2 id="kub-history-title">방송 히스토리</h2>
+					<h2 id="kub-history-title">방송 기록</h2>
 					<p>
 						{song.title} · {song.artist}
 					</p>
 				</div>
-				<button
-					className="kub-history-close"
-					aria-label="방송 히스토리 닫기"
-					onClick={() => dialogRef.current?.close()}
-				>
+				<button className="kub-history-close" aria-label="방송 기록 닫기" onClick={() => dialogRef.current?.close()}>
 					<X />
 				</button>
 			</header>
@@ -170,7 +171,7 @@ function HistoryDialog({
 				</label>
 				<select
 					name="kub-history-sort"
-					aria-label="방송 히스토리 정렬"
+					aria-label="방송 기록 정렬"
 					value={sort}
 					onChange={(event) => setSort(event.target.value as HistorySort)}
 				>
@@ -246,3 +247,4 @@ export function SongHistory({ song }: { song: Song }) {
 		</section>
 	);
 }
+

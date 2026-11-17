@@ -621,16 +621,11 @@ export default function SongBookV2() {
 											<button
 												type="button"
 												onClick={() => window.open(lyricsSearchUrl, "lyrics", "noopener,width=540,height=600")}
-												aria-label="가사 찾아보기 새 창으로 열기"
+												aria-label="새 창으로 열기"
 											>
 												<AppWindow aria-hidden="true" />
 											</button>
-											<a
-												href={lyricsSearchUrl}
-												target="_blank"
-												rel="noopener noreferrer"
-												aria-label="가사 찾아보기 새 탭으로 열기"
-											>
+											<a href={lyricsSearchUrl} target="_blank" rel="noopener noreferrer" aria-label="새 탭으로 열기">
 												<ExternalLink aria-hidden="true" />
 											</a>
 										</div>
