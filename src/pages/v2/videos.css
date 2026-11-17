@@ -280,10 +280,22 @@
 	color: var(--kub-pink-deep);
 }
 #kub-music-room .kub-video-views {
-	margin-top: 7px;
+	position: absolute;
+	bottom: 8px;
+	left: 8px;
+	border-radius: 4px;
+	background: #000c;
+	padding: 1px 6px;
 	font-size: 12px;
-	color: var(--kub-muted);
+	font-variant-numeric: tabular-nums;
+	color: var(--kub-green);
+	opacity: 0;
+	transition: opacity 150ms;
 }
+#kub-music-room .kub-video-thumbnail:is(:hover, :focus-visible) .kub-video-views {
+	opacity: 1;
+}
+
 #kub-music-room .kub-video-broadcast-date {
 	margin-top: 7px;
 	font-size: 11px;
@@ -593,10 +605,12 @@
 		background-position: 100% 100%;
 		opacity: 0;
 	}
-	12%, 64% {
+	12%,
+	64% {
 		opacity: 0.85;
 	}
-	80%, 100% {
+	80%,
+	100% {
 		background-position: 0% 0%;
 		opacity: 0;
 	}
@@ -632,7 +646,9 @@
 	background: #fff;
 	color: var(--kub-ink);
 	border-color: var(--kub-line);
-	box-shadow: inset 0 0 0 1px #fff, 0 6px 24px #397b690a;
+	box-shadow:
+		inset 0 0 0 1px #fff,
+		0 6px 24px #397b690a;
 }
 #kub-music-room[data-theme="light"] .kub-video-featured::before {
 	background:
@@ -686,7 +702,7 @@
 	font-size: 12px;
 	font-weight: 700;
 	color: var(--kub-green);
-	margin-bottom: 20px;
+	margin-bottom: 4px;
 }
 #kub-music-room .kub-video-featured-label span {
 	width: 6px;
@@ -698,7 +714,7 @@
 #kub-music-room .kub-video-featured .kub-video-meta {
 	justify-content: flex-start;
 	gap: 6px 12px;
-	margin-bottom: 10px;
+	margin-bottom: 8px;
 	font-size: 12px;
 }
 #kub-music-room .kub-video-featured h2 {
@@ -741,8 +757,8 @@
 	margin-top: 12px;
 }
 #kub-music-room .kub-video-hype {
-	margin-top: 18px;
-	padding-top: 14px;
+	margin-top: 8px;
+	padding-top: 12px;
 	border-top: 1px solid color-mix(in srgb, var(--kub-green) 18%, var(--kub-line));
 	font-size: 12px;
 }

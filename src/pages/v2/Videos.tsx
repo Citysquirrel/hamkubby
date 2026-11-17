@@ -142,6 +142,9 @@ function VideoCard({
 				<span className="kub-video-play">
 					<Play size={21} fill="currentColor" aria-hidden="true" />
 				</span>
+				{video.viewCount != null && (
+					<p className="kub-video-views">조회수 {BigInt(video.viewCount).toLocaleString("ko-KR")}회</p>
+				)}
 				{duration && <span className="kub-video-duration">{duration}</span>}
 			</a>
 			<div className="kub-video-card-body">
@@ -152,7 +155,7 @@ function VideoCard({
 					</div>
 				)}
 				<div className="kub-video-meta">
-					<span data-channel={video.channel}>{video.channel === "main" ? "햄쿠비" : "다시보기"}</span>
+					<span data-channel={video.channel}>{video.channel === "main" ? "메인채널" : "다시보기"}</span>
 					<time dateTime={video.publishedAt}>공개 {publishedDate.format(new Date(video.publishedAt))}</time>
 				</div>
 				<h2>
@@ -165,14 +168,11 @@ function VideoCard({
 						방송 <time dateTime={broadcastDate}>{broadcastDate.replaceAll("-", ".")}</time>
 					</p>
 				)}
-				{video.viewCount != null && (
-					<p className="kub-video-views">조회수 {BigInt(video.viewCount).toLocaleString("ko-KR")}회</p>
-				)}
-				{featured && (
+				{/* {featured && (
 					<a className="kub-video-featured-link" href={url} target="_blank" rel="noopener noreferrer">
 						YouTube에서 보기 <ArrowUpRight size={16} aria-hidden="true" />
 					</a>
-				)}
+				)} */}
 				{/* 카테고리 제공 시 복원
 				{video.categories.length > 0 && (
 					<div className="kub-video-tags">
