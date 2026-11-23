@@ -181,7 +181,7 @@ function HistoryDialog({
 				</select>
 			</div>
 			<p className="kub-history-count" role="status">
-				{results.length} / {items.length}
+				{results.length} / {items.length} 곡
 			</p>
 			<div className="kub-history-results">
 				{results.length ? (
