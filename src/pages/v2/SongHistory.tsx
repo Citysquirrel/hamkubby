@@ -163,8 +163,8 @@ function HistoryDialog({
 					<input
 						ref={searchRef}
 						type="search"
-						aria-label="방송 날짜·메모 검색"
-						placeholder="날짜·메모 검색"
+						aria-label="방송 날짜, 메모 검색"
+						placeholder="날짜, 메모 검색"
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
 					/>
@@ -181,7 +181,7 @@ function HistoryDialog({
 				</select>
 			</div>
 			<p className="kub-history-count" role="status">
-				전체 {items.length}개 · {results.length}개 표시
+				{results.length} / {items.length}
 			</p>
 			<div className="kub-history-results">
 				{results.length ? (

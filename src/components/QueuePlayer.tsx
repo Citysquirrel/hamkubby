@@ -316,7 +316,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 									</label>
 									<button onClick={layout.reset}>
 										<RotateCcw />
-										크기·위치 초기화
+										크기/위치 초기화
 									</button>
 								</>
 							)}
@@ -356,12 +356,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 									YouTube에서 열기 <ExternalLink />
 								</a>
 							)}
-							{track && (
-								<small>
-									{playback.status}
-									{track.end === null && " · 종료 지점 미등록"}
-								</small>
-							)}
+							{track && <small>{playback.status}</small>}
 						</div>
 					</details>
 					<button
@@ -452,7 +447,7 @@ export function QueuePlayer({ layout, onClose }: { layout: ReturnType<typeof use
 							{layout.mobile && track && (
 								<p className="kub-player-note">화면을 잠그거나 다른 앱으로 이동하면 일시정지돼요.</p>
 							)}
-							{track?.end === null && <p className="kub-player-note">종료 지점 미등록 · 원본 영상 끝까지 재생해요.</p>}
+
 							{playback.error && (
 								<p role="alert">
 									{playback.error} <button onClick={() => track && state.select(track.id)}>다시 시도</button>

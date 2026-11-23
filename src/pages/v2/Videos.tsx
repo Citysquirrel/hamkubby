@@ -156,7 +156,7 @@ function VideoCard({
 				)}
 				<div className="kub-video-meta">
 					<span data-channel={video.channel}>{video.channel === "main" ? "메인채널" : "다시보기"}</span>
-					<time dateTime={video.publishedAt}>공개 {publishedDate.format(new Date(video.publishedAt))}</time>
+					<time dateTime={video.publishedAt}>{publishedDate.format(new Date(video.publishedAt))}</time>
 				</div>
 				<h2>
 					<a href={url} target="_blank" rel="noopener noreferrer" title={video.title}>
