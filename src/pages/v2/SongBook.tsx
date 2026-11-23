@@ -245,7 +245,7 @@ export default function SongBookV2() {
 			setCopyFallback(null);
 			toaster.create({
 				type: "success",
-				description: `${song.title} - ${song.artist} · 복사했어요.`,
+				description: `${song.title} - ${song.artist} 복사 완료!`,
 				duration: 2400,
 			});
 			clearTimeout(copyTimer.current);
