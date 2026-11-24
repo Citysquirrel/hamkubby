@@ -117,7 +117,12 @@ function FeedbackDialog({
 				credentials: "omit",
 				cache: "no-store",
 				signal: controller.signal,
-				body: JSON.stringify({ category, sourceSite: FEEDBACK_SOURCE_SITE, message: normalizedMessage, turnstileToken: token }),
+				body: JSON.stringify({
+					category,
+					sourceSite: FEEDBACK_SOURCE_SITE,
+					message: normalizedMessage,
+					turnstileToken: token,
+				}),
 			});
 			if (!mountedRef.current) return;
 			if (response.status === 201) {
@@ -213,7 +218,7 @@ function FeedbackDialog({
 						onChange={(event) => setMessage(event.target.value)}
 					/>
 					<div className="kub-feedback-meta">
-						<span id="kub-feedback-hint">10~300자 · 연속 공백은 한 칸으로 계산</span>
+						<span id="kub-feedback-hint">10~300자</span>
 						<span id="kub-feedback-count">{length} / 300</span>
 					</div>
 					<p className="kub-feedback-note">개인정보는 적지 말아 주세요. 별도 답변은 제공되지 않아요.</p>

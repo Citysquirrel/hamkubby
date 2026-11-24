@@ -6,7 +6,7 @@ function SongbookHelp() {
 		<>
 			<ol>
 				<li>
-					<strong>검색</strong> — 곡명·가수·초성으로 찾기
+					<strong>검색</strong> — 곡명/가수/초성으로 찾기
 				</li>
 				<li>
 					<strong>신청</strong> — 제목 - 가수 복사 후, 원본 시트의 가격에 맞춰 미션 신청
@@ -49,16 +49,16 @@ export function PageHelp({ open, onClose }: { open: boolean; onClose: () => void
 				<>
 					<ul>
 						<li>
-							<strong>찾기</strong> — 제목·초성·한영 오입력 검색 · 날짜는 방송일 필터로 선택
+							<strong>찾기</strong> — 제목/초성/한영 오입력 검색 · 날짜는 방송일 필터로 선택
 						</li>
 						<li>
-							<strong>보기</strong> — 썸네일·제목을 누르면 YouTube 새탭 열림
+							<strong>보기</strong> — 썸네일, 제목을 누르면 YouTube 새탭 열림
 						</li>
 					</ul>
 					<a href="https://www.youtube.com/@hamkubby" target="_blank" rel="noopener noreferrer">
 						햄쿠비 유튜브 ↗
 					</a>
-					{" · "}
+					{" 　 "}
 					<a href="https://www.youtube.com/@kubbyreplay" target="_blank" rel="noopener noreferrer">
 						방송 다시보기 ↗
 					</a>

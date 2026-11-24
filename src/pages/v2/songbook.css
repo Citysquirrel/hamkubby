@@ -213,6 +213,7 @@
 	color: var(--kub-muted);
 	white-space: nowrap;
 	flex-shrink: 0;
+	user-select: none;
 }
 #kub-music-room .kub-search:focus-within .kub-search-hint,
 #kub-music-room .kub-search:has(input:not(:placeholder-shown)) .kub-search-hint {

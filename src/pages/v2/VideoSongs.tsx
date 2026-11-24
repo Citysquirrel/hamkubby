@@ -122,17 +122,21 @@ export function VideoSongs({
 														setNotice(`${track.title} ${added ? "대기열에서 제외했어요." : "대기열에 담았어요."}`);
 													}}
 												>
-													{added ? <>
-														<Check className="kub-history-check-icon" aria-hidden="true" />
-														<Minus className="kub-history-remove-icon" aria-hidden="true" />
-													</> : <Plus size={18} aria-hidden="true" />}
+													{added ? (
+														<>
+															<Check className="kub-history-check-icon" aria-hidden="true" />
+															<Minus className="kub-history-remove-icon" aria-hidden="true" />
+														</>
+													) : (
+														<Plus size={18} aria-hidden="true" />
+													)}
 												</button>
 											</li>
 										);
 									})}
 								</ul>
 								<p className="kub-video-songs-notice" role="status">
-									{notice || "곡을 누르면 바로 재생 · ↗ 새 탭 열기 · + 대기열 담기"}
+									{notice || "곡을 누르면 바로 재생 | ↗ 새 탭 열기 | + 대기열 담기"}
 								</p>
 							</Popover.Content>
 						</Popover.Positioner>
@@ -142,3 +146,4 @@ export function VideoSongs({
 		</section>
 	);
 }
+

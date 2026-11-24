@@ -7,14 +7,20 @@ export function Footer() {
 	return (
 		<footer className="kub-footer">
 			<span>
-				<strong>햄님들과 함께 모으는 노래책.</strong>
+				<strong>햄님들과 함께 모으는 노래책</strong>
 				<br />
-				비공식 팬 사이트 · 원작물의 저작권은 소속사 및 라이버에게 있습니다.
+				비공식 팬 사이트입니다. 원작물의 저작권은 소속사 및 라이버에게 있습니다.
 			</span>
 			<nav className="kub-footer-contacts" aria-label="사이트 링크 및 개발자 연락처">
 				<Feedback />
 				<Link to="/old">구버전 노래책</Link>
-				<a className="kub-footer-icon-link" href="https://github.com/Citysquirrel/hamkubby" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+				<a
+					className="kub-footer-icon-link"
+					href="https://github.com/Citysquirrel/hamkubby"
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="GitHub"
+				>
 					<FaGithub aria-hidden="true" /> <span className="kub-footer-contact-label">GitHub</span>
 				</a>
 				<a className="kub-footer-icon-link" href="mailto:tok1324@naver.com" aria-label="이메일: tok1324@naver.com">

@@ -528,7 +528,7 @@ export default function SongBookV2() {
 											</span>
 											{!summaryView && song.notes?.trim() && (
 												<span className="kub-song-note" title={song.notes}>
-													쿠비 메모 · {song.notes}
+													쿠비 메모 - {song.notes}
 												</span>
 											)}
 										</span>
@@ -614,7 +614,7 @@ export default function SongBookV2() {
 									<div className="kub-detail-actions">
 										<button className="kub-button kub-button-primary" onClick={() => void copySong(selected)}>
 											{copied === songKey(selected) ? <Check /> : <Copy />}
-											{copied === songKey(selected) ? "문구 복사 완료" : "신청 문구 복사"}
+											{copied === songKey(selected) ? "완료" : "복사"}
 										</button>
 										<div className="kub-lyrics-links" role="group" aria-label="가사 찾아보기">
 											<span>가사</span>

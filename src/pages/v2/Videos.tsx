@@ -82,7 +82,7 @@ function HypeCountdown() {
 			<p className="kub-video-hype-message">{hypeReset.message}</p>
 			<p className="kub-video-hype-date">
 				<time dateTime={hypeReset.resetAt.toISOString()}>{hypeResetDate.format(hypeReset.resetAt)}</time>
-				{" 초기화 · 한국시간 · 매주 최대 3회 무료"}
+				{" 초기화"}
 			</p>
 		</aside>
 	);
