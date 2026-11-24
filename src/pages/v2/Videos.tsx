@@ -163,11 +163,11 @@ function VideoCard({
 						{video.title}
 					</a>
 				</h2>
-				{broadcastDate && (
+				{/* {broadcastDate && (
 					<p className="kub-video-broadcast-date">
 						방송 <time dateTime={broadcastDate}>{broadcastDate.replaceAll("-", ".")}</time>
 					</p>
-				)}
+				)} */}
 				{/* {featured && (
 					<a className="kub-video-featured-link" href={url} target="_blank" rel="noopener noreferrer">
 						YouTube에서 보기 <ArrowUpRight size={16} aria-hidden="true" />
