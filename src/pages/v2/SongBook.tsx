@@ -383,7 +383,7 @@ export default function SongBookV2() {
 									</div>
 									<footer className="kub-filter-footer">
 										<button type="button" className="kub-reset" onClick={reset}>
-											검색·필터 초기화
+											검색/필터 초기화
 										</button>
 										<Popover.CloseTrigger asChild>
 											<button type="button" className="kub-button">
@@ -555,7 +555,7 @@ export default function SongBookV2() {
 							<p>{isFiltered ? "조건에 맞는 곡이 없어요." : "아직 등록된 노래가 없어요."}</p>
 							{isFiltered ? (
 								<button className="kub-reset" onClick={reset}>
-									검색·필터 초기화
+									검색/필터 초기화
 								</button>
 							) : (
 								<p>노래가 등록되면 이곳에서 볼 수 있어요.</p>
